@@ -170,3 +170,59 @@
 
 @keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes dockIn { from { opacity: 0; transform: translateY(30px) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* ============================================================
+   الجولة الثانية: قوائم أصلية بدل الجداول، ومؤشرات قابلة للسحب
+   ============================================================ */
+@media (max-width: 900px) {
+  /* المؤشرات: شريط أفقي يُسحب بالإصبع مع التقاط */
+  .grid.g-4:has(> .kpi), .grid.g-3:has(> .kpi), .grid.g-5:has(> .kpi) {
+    display: flex !important; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--s4)); padding: 4px var(--s4) 10px; scroll-padding-inline: var(--s4);
+  }
+  .grid:has(> .kpi)::-webkit-scrollbar { display: none; }
+  .grid > .kpi { flex: 0 0 42%; scroll-snap-align: start; min-width: 148px; }
+  .kpi-top { flex-direction: column-reverse; align-items: flex-start; gap: var(--s2); margin-bottom: 0; }
+  .kpi-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .kpi-value { font-size: 30px !important; line-height: 1.1; }
+  .kpi-meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* الجداول تصبح قوائم خلايا على نمط iOS */
+  .tbl-wrap { overflow: visible; }
+  .tbl-wrap::after { display: none !important; }
+  .tbl-wrap table.tbl, table.tbl { min-width: 0 !important; display: block; }
+  table.tbl thead { display: none; }
+  table.tbl tbody { display: block; }
+  table.tbl tbody tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s3);
+    padding: 14px var(--s4); border-bottom: 1px solid var(--line-2); position: relative;
+  }
+  table.tbl tbody tr:last-child { border-bottom: 0; }
+  table.tbl tbody tr:active { background: var(--navy-50); }
+  table.tbl td { display: block; padding: 0 !important; border: 0 !important; min-width: 0; }
+  table.tbl td:first-child { flex: 1 1 0; font-weight: 700; color: var(--ink); font-size: 14.5px; line-height: 1.5; }
+  table.tbl td:last-child:not(:first-child) { order: 1; flex: none; }
+  table.tbl td:not(:first-child):not(:last-child) {
+    order: 2; flex: 0 1 auto; font-size: 12px; color: var(--muted); line-height: 1.5;
+  }
+  table.tbl td:not(:first-child):not(:last-child):nth-child(2) { flex-basis: 100%; }
+  table.tbl td .ava-row { gap: 6px; }
+  table.tbl td .t-sub { display: none; }
+  table.tbl td .ava.sm { width: 22px; height: 22px; font-size: 10px; }
+  table.tbl td:first-child .t-sub, table.tbl td:first-child .tiny { display: block; font-weight: 500; }
+
+  /* التزام الجهات: اسم ورقم في سطر، والشريط تحته */
+  .compliance-row { grid-template-columns: 1fr auto !important; gap: 6px var(--s3) !important; padding: 12px 0; border-bottom: 1px solid var(--line-2); }
+  .compliance-row:last-child { border-bottom: 0; }
+  .cr-name { grid-row: 1; grid-column: 1; font-weight: 700; }
+  .cr-meta { grid-row: 1; grid-column: 2; }
+  .cr-bar { grid-row: 2; grid-column: 1 / -1; }
+
+  /* بطاقات العناصر: عناوين أوضح وأزرار لا تتكسّر */
+  .card-head { padding: var(--s4) var(--s4) var(--s3); }
+  .card-body { padding: var(--s4); }
+  .card-body.flush { padding: 0; }
+  .split { gap: var(--s4) !important; }
+  .grid.stagger { gap: var(--s4) !important; }
+  .btn { white-space: nowrap; }
+}

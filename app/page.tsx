@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Building2, Check, Landmark, Lock, LogOut, Network, ShieldCheck,
+  ArrowLeft, Check, Landmark, Lock, LogOut, Network, ShieldCheck,
 } from "lucide-react";
 import { entityOf } from "@/lib/lookup";
 import { portalsFor, reachLabel } from "@/lib/access";
@@ -55,8 +55,8 @@ export default function Gate() {
   return (
     <DarkStage className="gate">
       <header className="gate-top">
-        <div className="brand">
-          <span className="brand-mark"><Building2 size={22} /></span>
+        <div className="brand official-brand">
+          <img className="official-brand-mark" src="/branding/aleppo-mark-white.svg" alt="" />
           <div>
             <b>محافظة حلب</b>
             <span>منظومة العمل التنفيذي</span>
@@ -68,8 +68,8 @@ export default function Gate() {
       <section className="gate-body">
         <div className="gate-head gate-head-compact">
           <p className="eyebrow">مرحباً بك</p>
-          <h1>اختر <em>مساحة العمل</em> التي تريد الدخول إليها</h1>
-          <p className="gate-head-sub">اختر البوابة المناسبة للدخول إلى منظومة العمل التنفيذي.</p>
+          <h1>اختر <em>مساحة العمل</em> للدخول</h1>
+          <p className="gate-head-sub">اختر البوابة المناسبة.</p>
         </div>
 
         <div className="gate-grid gate-grid-two">

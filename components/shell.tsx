@@ -29,6 +29,14 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   const [open, setOpen] = useState(false);
   const [bell, setBell] = useState(false);
   const [more, setMore] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 56);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const nav = navByPortal[portal];
   const meta = metaOf(portal, section);
@@ -72,7 +80,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   }
 
   return (
-    <div className={`shell ${dense ? "dense" : ""}`}>
+    <div className={`shell ${dense ? "dense" : ""} ${scrolled ? "scrolled" : ""}`}>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
 
       <aside className={`rail ${mini ? "mini" : ""} ${open ? "open" : ""}`}>
@@ -144,6 +152,13 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
 
       <div className="main">
         <header className="topbar">
+          <button className="m-me" onClick={() => setMore(true)} aria-label="الحساب">
+            <span className={`ava ${me.role === "governor" ? "gold" : me.role === "director" ? "teal" : ""}`}>{me.initials}</span>
+          </button>
+          <div className="m-title">
+            <span>{portalLabels[portal].title}</span>
+            <b>{meta.label}</b>
+          </div>
           <button className="icon-btn rail-mobile-toggle" onClick={() => setOpen(true)} aria-label="فتح القائمة">
             <Menu size={19} />
           </button>
@@ -172,6 +187,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
           <button
             className="icon-btn"
             onClick={() => setDense(!dense)}
+            data-desk
             aria-label="كثافة العرض"
             title="كثافة العرض"
           >
@@ -185,8 +201,9 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
             </button>
             {bell && (
               <>
-                <div style={{ position: "fixed", inset: 0, zIndex: 49 }} onClick={() => setBell(false)} />
+                <div className="pop-scrim" onClick={() => setBell(false)} />
                 <div className="pop-panel">
+                  <span className="m-grab" aria-hidden />
                   <div className="pop-head">
                     <b style={{ fontSize: 14 }}>الإشعارات</b>
                     <button className="btn quiet sm" onClick={markAllRead}>
@@ -218,7 +235,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
             )}
           </div>
 
-          <button className="icon-btn" onClick={() => void logout()} aria-label="تسجيل الخروج" title="تسجيل الخروج">
+          <button className="icon-btn top-logout" onClick={() => void logout()} aria-label="تسجيل الخروج" title="تسجيل الخروج">
             <LogOut size={18} />
           </button>
         </header>
@@ -226,6 +243,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
         <main className="canvas" key={`${portal}-${section}`}>
           <div className="page-head">
             <div>
+              <p className="m-greet">{greeting()}، {me.name.split(" ").slice(0, 2).join(" ")}</p>
               <h1>{meta.title}</h1>
               <p className="sub">{meta.sub}</p>
             </div>
@@ -255,4 +273,9 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
       </div>
     </div>
   );
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "صباح الخير" : "مساء الخير";
 }

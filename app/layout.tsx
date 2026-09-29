@@ -6,6 +6,7 @@ import Toasts from "@/components/toasts";
 import "./globals.css";
 import "./gate-polish.css";
 import "./no-background.css";
+import "./mobile-app.css";
 
 const cairo = Cairo({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "900"], display: "swap" });
 

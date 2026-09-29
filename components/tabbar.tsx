@@ -36,6 +36,7 @@ export default function TabBar({
   const tabs = keys.map((k) => nav.find((n) => n.key === k)).filter(Boolean) as typeof nav;
   const rest = nav.filter((n) => !keys.includes(n.key));
   const allowed = portalsFor(me);
+  const tap = () => { try { navigator.vibrate?.(8); } catch {} };
 
   return (
     <>
@@ -48,15 +49,15 @@ export default function TabBar({
               key={t.key}
               href={`/${portal}/${t.key}/`}
               className={`tab ${on ? "on" : ""}`}
-              onClick={() => setMoreOpen(false)}
+              onClick={() => { tap(); setMoreOpen(false); }}
             >
-              <Icon size={21} />
+              <span className="tab-ico"><Icon size={21} /></span>
               <span>{t.label.split(" ")[0]}</span>
             </Link>
           );
         })}
-        <button className={`tab ${moreOpen ? "on" : ""}`} onClick={() => setMoreOpen(!moreOpen)}>
-          <MoreHorizontal size={21} />
+        <button className={`tab ${moreOpen ? "on" : ""}`} onClick={() => { tap(); setMoreOpen(!moreOpen); }}>
+          <span className="tab-ico"><MoreHorizontal size={21} /></span>
           <span>المزيد</span>
         </button>
       </nav>
@@ -65,8 +66,10 @@ export default function TabBar({
         <>
           <div className="scrim" style={{ zIndex: 58 }} onClick={() => setMoreOpen(false)} />
           <div className="more-sheet" role="dialog" aria-label="المزيد">
+            <span className="m-grab" aria-hidden />
             <div className="more-head">
-              <div>
+              <span className={`ava lg ${me.role === "governor" ? "gold" : me.role === "director" ? "teal" : ""}`}>{me.initials}</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <b>{portalLabels[portal].title}</b>
                 <span>{me.name} · {me.title}</span>
               </div>

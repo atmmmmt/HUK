@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ArrowLeft, ArrowRight, Bell, Building2, Check, ClipboardCheck, DoorOpen, Network, ShieldCheck,
@@ -45,8 +45,10 @@ const steps = [
 
 export default function Welcome() {
   const router = useRouter();
-  const params = useSearchParams();
-  const next = params.get("next") ?? "/";
+  const [next] = useState(() => {
+    if (typeof window === "undefined") return "/";
+    return new URLSearchParams(window.location.search).get("next") ?? "/";
+  });
   const [i, setI] = useState(0);
   const step = steps[i];
   const last = i === steps.length - 1;

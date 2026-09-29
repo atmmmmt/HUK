@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, ArrowRight, Building2, CheckCircle2, Eye, EyeOff, LockKeyhole, ShieldCheck, TriangleAlert, User,
+  ArrowLeft, ArrowRight, Building2, Eye, EyeOff, LockKeyhole, TriangleAlert, User,
 } from "lucide-react";
 
 const portalNames = {
@@ -120,12 +120,6 @@ function LoginForm() {
           {busy ? "جارٍ التحقق…" : <>دخول <ArrowLeft size={17} /></>}
         </button>
       </form>
-
-      <div className="sep" />
-      <div className="grid" style={{ gap: 9 }}>
-        <span className="row tiny muted" style={{ gap: 8 }}><ShieldCheck size={15} style={{ color: "var(--gold)" }} /> جلسة مؤمّنة تنتهي تلقائياً بعد ثماني ساعات</span>
-        <span className="row tiny muted" style={{ gap: 8 }}><CheckCircle2 size={15} style={{ color: "var(--gold)" }} /> كل عملية دخول تُسجَّل في سجل التدقيق</span>
-      </div>
     </div>
   );
 }
@@ -136,7 +130,6 @@ export default function LoginPage() {
       <Suspense fallback={<div className="auth-card"><div className="skel" style={{ height: 320 }} /></div>}>
         <LoginForm />
       </Suspense>
-      <footer className="auth-foot">تصميم وتنفيذ · ProoTech Agency</footer>
     </DarkStage>
   );
 }

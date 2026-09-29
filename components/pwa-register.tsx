@@ -47,13 +47,97 @@ export default function PwaRegister() {
     setInstallPrompt(null);
   }
 
-  return <>
-    {offline && <div className="offline-status" role="status"><WifiOff />أنت تعمل دون اتصال — البيانات المحفوظة متاحة</div>}
-    {installPrompt && !dismissed && <aside className="pwa-install" aria-label="تثبيت التطبيق">
-      <span className="pwa-install-icon"><ShieldCheck /></span>
-      <span><b>ثبّت المكتب التنفيذي</b><small>وصول أسرع وتجربة تطبيق كاملة</small></span>
-      <button className="pwa-install-button" onClick={install}><Download /> تثبيت</button>
-      <button className="pwa-install-close" aria-label="إخفاء اقتراح التثبيت" onClick={() => setDismissed(true)}><X /></button>
-    </aside>}
-  </>;
+  return (
+    <>
+      {offline && (
+        <div className="offline-status" role="status">
+          <WifiOff />أنت تعمل دون اتصال — البيانات المحفوظة متاحة
+        </div>
+      )}
+
+      {installPrompt && !dismissed && (
+        <aside
+          aria-label="تثبيت التطبيق"
+          dir="rtl"
+          style={{
+            position: "fixed",
+            right: 16,
+            left: 16,
+            bottom: 18,
+            margin: "0 auto",
+            maxWidth: 620,
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+            padding: "12px 14px",
+            borderRadius: 16,
+            border: "1px solid #e3e9f2",
+            background: "#ffffff",
+            color: "#0e1826",
+            boxShadow: "0 14px 44px rgba(10, 26, 48, .20)",
+          }}
+        >
+          <span
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 12,
+              display: "grid",
+              placeItems: "center",
+              background: "#f7efdc",
+              color: "#8d6d26",
+              flex: "none",
+            }}
+          >
+            <ShieldCheck size={21} />
+          </span>
+
+          <span style={{ flex: "1 1 220px", minWidth: 0, lineHeight: 1.45 }}>
+            <b style={{ display: "block", fontSize: 14 }}>ثبّت المكتب التنفيذي</b>
+            <small style={{ display: "block", marginTop: 2, color: "#61728c", fontSize: 12 }}>
+              وصول أسرع وتجربة تطبيق كاملة
+            </small>
+          </span>
+
+          <button
+            onClick={install}
+            style={{
+              height: 40,
+              padding: "0 16px",
+              borderRadius: 10,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 7,
+              background: "#0f2545",
+              color: "#ffffff",
+              fontWeight: 700,
+              flex: "none",
+            }}
+          >
+            <Download size={17} /> تثبيت
+          </button>
+
+          <button
+            aria-label="إخفاء اقتراح التثبيت"
+            onClick={() => setDismissed(true)}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              display: "grid",
+              placeItems: "center",
+              background: "#f2f6fc",
+              color: "#61728c",
+              flex: "none",
+            }}
+          >
+            <X size={18} />
+          </button>
+        </aside>
+      )}
+    </>
+  );
 }

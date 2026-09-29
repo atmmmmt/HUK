@@ -1,0 +1,235 @@
+/* Gateway-only visual refinements. Loaded after globals.css. */
+
+.gate-head-compact {
+  max-width: 980px;
+  margin-bottom: 30px;
+}
+
+.gate-head-compact .eyebrow {
+  margin-bottom: 8px;
+}
+
+.gate-head-compact h1 {
+  white-space: nowrap;
+  font-size: clamp(30px, 3.4vw, 48px);
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+
+.gate-head-sub {
+  white-space: nowrap;
+  max-width: none !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  color: #aebfd6 !important;
+}
+
+.gate-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  max-width: 920px;
+}
+
+.portal-card-compact {
+  min-height: 260px;
+  padding: 22px 24px 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-card-compact .pc-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+}
+
+.portal-card-compact h2 {
+  font-size: 19px;
+  margin-bottom: 4px;
+}
+
+.portal-card-compact .pc-sub {
+  font-size: 12.5px;
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.portal-card-compact .pc-list {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+}
+
+.portal-card-compact .pc-list span {
+  font-size: 13px;
+  line-height: 1.55;
+  gap: 7px;
+}
+
+.portal-card-compact .pc-go {
+  margin-top: auto;
+  font-size: 13.5px;
+}
+
+@media (max-width: 720px) {
+  .gate {
+    padding: 18px 14px 112px;
+    min-height: 100dvh;
+  }
+
+  .gate-top {
+    gap: 10px;
+  }
+
+  .gate-top .brand-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gate-top .brand b {
+    font-size: 13px;
+  }
+
+  .gate-top .brand span {
+    font-size: 10px;
+  }
+
+  .gate-top .tag-pill {
+    font-size: 10px;
+    padding-inline: 10px;
+  }
+
+  .gate-body {
+    justify-content: flex-start;
+    padding: 26px 0 12px;
+  }
+
+  .gate-head-compact {
+    margin-bottom: 18px;
+    max-width: 100%;
+  }
+
+  .gate-head-compact .eyebrow {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+
+  .gate-head-compact h1 {
+    font-size: clamp(20px, 5.7vw, 27px);
+    line-height: 1.25;
+    margin-bottom: 7px;
+    letter-spacing: -.02em;
+  }
+
+  .gate-head-sub {
+    font-size: clamp(10px, 2.8vw, 12px) !important;
+    line-height: 1.5 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gate-grid-two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .portal-card-compact {
+    min-height: 238px;
+    padding: 14px 12px 13px;
+    border-radius: 15px;
+  }
+
+  .portal-card-compact:hover {
+    transform: none;
+  }
+
+  .portal-card-compact .pc-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    margin-bottom: 12px;
+  }
+
+  .portal-card-compact .pc-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .portal-card-compact h2 {
+    font-size: clamp(13px, 3.8vw, 15px);
+    line-height: 1.35;
+    margin-bottom: 4px;
+    white-space: nowrap;
+  }
+
+  .portal-card-compact .pc-sub {
+    font-size: 10px;
+    line-height: 1.45;
+    min-height: 29px;
+    margin-bottom: 10px;
+  }
+
+  .portal-card-compact .pc-list {
+    gap: 5px;
+    margin-bottom: 11px;
+  }
+
+  .portal-card-compact .pc-list span {
+    font-size: 10.5px;
+    line-height: 1.4;
+    gap: 5px;
+  }
+
+  .portal-card-compact .pc-list svg {
+    width: 11px;
+    height: 11px;
+  }
+
+  .portal-card-compact .pc-go {
+    font-size: 11.5px;
+    gap: 5px;
+  }
+
+  .portal-card-compact .pc-go svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .gate-foot {
+    display: none;
+  }
+
+  .pwa-install {
+    left: 10px !important;
+    right: 10px !important;
+    bottom: 10px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .gate-head-compact h1 {
+    font-size: 19px;
+  }
+
+  .gate-head-sub {
+    font-size: 9.5px !important;
+  }
+
+  .portal-card-compact {
+    padding-inline: 10px;
+  }
+
+  .portal-card-compact h2 {
+    font-size: 12.5px;
+  }
+
+  .portal-card-compact .pc-sub,
+  .portal-card-compact .pc-list span {
+    font-size: 9.5px;
+  }
+}

@@ -106,6 +106,15 @@ export default function Gate() {
           })}
         </div>
       </section>
+
+      <a
+        className="photo-credit"
+        href="https://commons.wikimedia.org/wiki/File:The_Citadel_of_Aleppo,_Syria,_panoramic.jpg"
+        target="_blank"
+        rel="noreferrer"
+      >
+        صورة قلعة حلب: James Gordon · CC BY 2.0 · معالجة لونية
+      </a>
     </DarkStage>
   );
 }

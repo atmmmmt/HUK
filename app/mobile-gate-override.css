@@ -1,34 +1,60 @@
-/* Mobile gateway overrides: exact user-provided background, darker readability layer, lower content. */
+/* Mobile gateway override: use the supplied mobile artwork as a full-screen, sharp background. */
 @media (max-width: 720px) {
   .gate-citadel {
+    position: relative;
     min-height: 100dvh;
     padding: 12px 10px 98px;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(4, 18, 36, .14) 0%,
-        rgba(5, 24, 47, .24) 22%,
-        rgba(6, 27, 52, .48) 52%,
-        rgba(6, 26, 50, .72) 100%
-      ),
-      url("/branding/mobile-gate-bg.svg") center top / cover no-repeat !important;
+    background: #071b34 !important;
+    background-image: none !important;
+    overflow: hidden;
   }
 
+  /* Exact supplied artwork, filling the whole mobile viewport. */
+  .gate-citadel::before {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 0 !important;
+    pointer-events: none !important;
+    background-image: url("/branding/mobile-gate-bg.svg") !important;
+    background-position: center center !important;
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Very light readability tint only — no blur. */
   .gate-citadel::after {
+    content: "" !important;
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 1 !important;
+    pointer-events: none !important;
     background: linear-gradient(
       180deg,
-      rgba(2, 15, 30, .08) 0%,
-      rgba(3, 19, 38, .12) 40%,
-      rgba(4, 22, 43, .28) 100%
+      rgba(4, 18, 36, .04) 0%,
+      rgba(4, 18, 36, .07) 38%,
+      rgba(4, 18, 36, .12) 100%
     ) !important;
+    filter: none !important;
+    backdrop-filter: none !important;
   }
 
-  /* The supplied mobile background already contains the Syrian flag. */
+  .gate-top-official,
+  .gate-body-citadel {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* The supplied artwork already contains the Syrian flag. */
   .gate-flag {
     display: none !important;
   }
 
-  /* Push the main content down to preserve the background composition. */
+  /* Keep the content comfortably below the top artwork. */
   .gate-body-citadel {
     padding-top: 112px !important;
   }
@@ -40,7 +66,7 @@
   .gate-head-hero .eyebrow,
   .gate-head-hero h1,
   .gate-head-hero > p:last-child {
-    text-shadow: 0 3px 14px rgba(0, 0, 0, .34);
+    text-shadow: 0 2px 7px rgba(0, 0, 0, .28) !important;
   }
 
   .gate-grid-showcase {

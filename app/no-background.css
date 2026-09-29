@@ -1,15 +1,165 @@
-/* Final gateway background override: no images on any viewport. */
+/* Final gateway visual: same navy system background, no imagery. */
 .gate-citadel {
-  background: linear-gradient(180deg, #071b34 0%, #082641 50%, #061a31 100%) !important;
+  min-height: 100dvh;
+  background: var(--navy-900) !important;
   background-image: none !important;
 }
 
-.gate-citadel::before,
+/* Match the subtle grid used across the dark system pages. */
+.gate-citadel::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .032) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .032) 1px, transparent 1px) !important;
+  background-size: 68px 68px !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}
+
 .gate-citadel::after {
   content: none !important;
   display: none !important;
-  background: none !important;
-  background-image: none !important;
-  filter: none !important;
-  backdrop-filter: none !important;
+}
+
+.gate-body-citadel {
+  flex: 1 !important;
+  justify-content: center !important;
+  padding-top: 28px !important;
+  padding-bottom: 42px !important;
+}
+
+.gate-head-hero {
+  max-width: 980px !important;
+  margin-bottom: 34px !important;
+}
+
+.gate-head-hero .eyebrow {
+  font-size: 19px !important;
+}
+
+.gate-head-hero h1 {
+  font-size: clamp(42px, 5.2vw, 66px) !important;
+}
+
+.gate-head-hero > p:last-child {
+  font-size: 18px !important;
+}
+
+.gate-grid-showcase {
+  width: min(980px, 100%) !important;
+  gap: 24px !important;
+}
+
+.portal-card-showcase {
+  min-height: 455px !important;
+  padding: 38px 34px 30px !important;
+}
+
+@media (max-width: 720px) {
+  .gate-citadel {
+    padding: 12px 10px 100px !important;
+  }
+
+  .gate-top-official {
+    flex: 0 0 auto;
+  }
+
+  .gate-body-citadel {
+    min-height: calc(100dvh - 165px);
+    padding: 34px 0 92px !important;
+    justify-content: center !important;
+  }
+
+  .gate-head-hero {
+    margin-bottom: 22px !important;
+    padding-inline: 2px !important;
+  }
+
+  .gate-head-hero .eyebrow {
+    font-size: 14px !important;
+    margin-bottom: 7px !important;
+  }
+
+  .gate-head-hero h1 {
+    font-size: clamp(31px, 8.6vw, 38px) !important;
+    line-height: 1.2 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .gate-head-hero > p:last-child {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  .gate-grid-showcase {
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .portal-card-showcase {
+    min-height: 332px !important;
+    padding: 20px 10px 15px !important;
+  }
+
+  .pc-icon-showcase {
+    width: 52px !important;
+    height: 52px !important;
+    margin-bottom: 13px !important;
+  }
+
+  .portal-card-showcase h2 {
+    font-size: clamp(16px, 4.25vw, 19px) !important;
+  }
+
+  .portal-card-showcase .pc-sub {
+    font-size: 10px !important;
+    min-height: 40px !important;
+  }
+
+  .pc-list-showcase span {
+    font-size: 10.3px !important;
+  }
+
+  .pc-go-showcase {
+    min-height: 44px !important;
+    font-size: 13.5px !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .gate-body-citadel {
+    min-height: calc(100dvh - 155px);
+    padding-top: 28px !important;
+    padding-bottom: 86px !important;
+  }
+
+  .gate-head-hero h1 {
+    font-size: 29px !important;
+  }
+
+  .gate-head-hero > p:last-child {
+    font-size: 11px !important;
+  }
+
+  .portal-card-showcase {
+    min-height: 316px !important;
+    padding-inline: 8px !important;
+  }
+
+  .portal-card-showcase h2 {
+    font-size: 15px !important;
+  }
+
+  .portal-card-showcase .pc-sub,
+  .pc-list-showcase span {
+    font-size: 9.2px !important;
+  }
+
+  .pc-go-showcase {
+    font-size: 12.5px !important;
+  }
 }

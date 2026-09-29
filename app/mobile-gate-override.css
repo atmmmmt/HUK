@@ -1,0 +1,55 @@
+/* Mobile gateway overrides: exact user-provided background, darker readability layer, lower content. */
+@media (max-width: 720px) {
+  .gate-citadel {
+    min-height: 100dvh;
+    padding: 12px 10px 98px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(4, 18, 36, .14) 0%,
+        rgba(5, 24, 47, .24) 22%,
+        rgba(6, 27, 52, .48) 52%,
+        rgba(6, 26, 50, .72) 100%
+      ),
+      url("/branding/mobile-gate-bg.svg") center top / cover no-repeat !important;
+  }
+
+  .gate-citadel::after {
+    background: linear-gradient(
+      180deg,
+      rgba(2, 15, 30, .08) 0%,
+      rgba(3, 19, 38, .12) 40%,
+      rgba(4, 22, 43, .28) 100%
+    ) !important;
+  }
+
+  /* The supplied mobile background already contains the Syrian flag. */
+  .gate-flag {
+    display: none !important;
+  }
+
+  /* Push the main content down to preserve the background composition. */
+  .gate-body-citadel {
+    padding-top: 112px !important;
+  }
+
+  .gate-head-hero {
+    margin-bottom: 22px !important;
+  }
+
+  .gate-head-hero .eyebrow,
+  .gate-head-hero h1,
+  .gate-head-hero > p:last-child {
+    text-shadow: 0 3px 14px rgba(0, 0, 0, .34);
+  }
+
+  .gate-grid-showcase {
+    margin-top: 2px;
+  }
+}
+
+@media (max-width: 390px) {
+  .gate-body-citadel {
+    padding-top: 104px !important;
+  }
+}

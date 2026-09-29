@@ -1,0 +1,37 @@
+{
+  "name": "governor-executive-office",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "node scripts/seed.mjs",
+    "seed:fresh": "node scripts/seed.mjs --fresh",
+    "db:check": "node scripts/check-db.mjs",
+    "db:up": "node scripts/dev-db.mjs",
+    "db:stop": "node scripts/dev-db.mjs --stop",
+    "db:status": "node scripts/dev-db.mjs --status",
+    "dev:lan": "next dev -H 0.0.0.0",
+    "start:lan": "next start -H 0.0.0.0",
+    "dev:phone": "next dev -H 0.0.0.0 --experimental-https"
+  },
+  "dependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.6",
+    "@types/react-dom": "^19.0.3",
+    "bcryptjs": "^3.0.3",
+    "jose": "^6.2.12",
+    "lucide-react": "^0.468.0",
+    "mongodb": "^7.6.0",
+    "next": "^16.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "mongodb-memory-server": "^11.3.0"
+  }
+}

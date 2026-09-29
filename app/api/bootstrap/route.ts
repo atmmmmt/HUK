@@ -1,0 +1,93 @@
+import { cleanAll, collections } from "@/lib/db";
+import { requireUser } from "@/lib/session";
+import { handle } from "@/lib/api";
+import { clearanceRank, seesAssignment } from "@/lib/access";
+import { runReviewSweep } from "@/lib/review";
+import type { Assignment, DocFile, Letter, Person } from "@/lib/types";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * كل ما تحتاجه الواجهة في طلب واحد — مُرشَّح على الخادم حسب صلاحية المستخدم.
+ * الترشيح هنا هو خط الدفاع الحقيقي، لا إخفاء العناصر في المتصفح.
+ */
+export async function GET() {
+  return handle(async () => {
+    const me = await requireUser();
+
+    // فحص المهل المنتهية وإرسال إشعارات المراجعة لمُصدِري التكليفات
+    await runReviewSweep();
+
+    const [
+      rolesCol, entitiesCol, peopleCol, hallsCol, bookingsCol, assignmentsCol,
+      meetingsCol, lettersCol, decisionsCol, delegationsCol, filesCol,
+      notesCol, notifsCol, auditCol, requestsCol,
+    ] = await Promise.all([
+      collections.roles(), collections.entities(), collections.users(), collections.halls(),
+      collections.bookings(), collections.assignments(), collections.meetings(), collections.letters(),
+      collections.decisions(), collections.delegations(), collections.files(), collections.notes(),
+      collections.notifications(), collections.audit(), collections.requests(),
+    ]);
+
+    const [
+      roles, entities, rawPeople, halls, bookings, rawAssignments,
+      meetings, letters, decisions, delegations, rawFiles, notes, notifications, audit, requests,
+    ] = await Promise.all([
+      rolesCol.find().toArray(),
+      entitiesCol.find().toArray(),
+      peopleCol.find({}, { projection: { passwordHash: 0, username: 0 } }).toArray(),
+      hallsCol.find().toArray(),
+      bookingsCol.find().toArray(),
+      assignmentsCol.find().toArray(),
+      meetingsCol.find().toArray(),
+      lettersCol.find().toArray(),
+      decisionsCol.find().toArray(),
+      delegationsCol.find().toArray(),
+      filesCol.find().toArray(),
+      notesCol.find().toArray(),
+      notifsCol.find().toArray(),
+      auditCol.find().sort({ _id: -1 }).limit(120).toArray(),
+      requestsCol.find().toArray(),
+    ]);
+
+    const people = cleanAll(rawPeople) as unknown as Person[];
+    const myRank = clearanceRank(me.clearance);
+
+    // التكليفات: نطاق الدور + درجة التصريح
+    const assignments = cleanAll(rawAssignments as unknown as Assignment[])
+      .filter((a) => seesAssignment(me, a, { entities: entities, people }));
+
+    // الملفات: تُحجب فوق درجة التصريح
+    const files = cleanAll(rawFiles as unknown as DocFile[]).map((f) =>
+      clearanceRank(f.classification) > myRank
+        ? { ...f, name: "ملف محجوب", ownerId: "", items: 0, locked: true }
+        : { ...f, locked: false },
+    );
+
+    // المراسلات السرّية لا تُرسل أصلاً لمن لا يملك التصريح
+    const visibleLetters = cleanAll(letters as unknown as Letter[])
+      .filter((l) => clearanceRank(l.classification) <= myRank);
+
+    const isAdmin = me.role === "admin" || me.role === "governor";
+
+    return {
+      me: cleanAll([me])[0],
+      roles: cleanAll(roles),
+      entities: cleanAll(entities),
+      people,
+      halls: cleanAll(halls),
+      bookings: cleanAll(bookings),
+      assignments,
+      meetings: cleanAll(meetings),
+      letters: visibleLetters,
+      decisions: cleanAll(decisions),
+      delegations: cleanAll(delegations),
+      files,
+      notes: cleanAll(notes).filter((n) => n.scope !== "خاصة" || n.authorId === me.id),
+      notifications: cleanAll(notifications).filter((n) => n.toId === me.id),
+      audit: isAdmin ? cleanAll(audit) : [],
+      requests: cleanAll(requests),
+    };
+  });
+}

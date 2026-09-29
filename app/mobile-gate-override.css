@@ -1,37 +1,20 @@
-/* Mobile gateway override: custom Aleppo Citadel illustration, sharp and full-screen. */
+/* Mobile gateway override: no background image. */
 @media (max-width: 720px) {
   .gate-citadel {
     position: relative;
     min-height: 100dvh;
     padding: 12px 10px 98px;
-    background: #061a33 !important;
+    background: linear-gradient(180deg, #071b34 0%, #082641 48%, #061a31 100%) !important;
     background-image: none !important;
     overflow: hidden;
   }
 
-  .gate-citadel::before {
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 0 !important;
-    pointer-events: none !important;
-    background-image: url("/branding/aleppo-citadel-illustration.svg?v=1") !important;
-    background-position: center top !important;
-    background-size: cover !important;
-    background-repeat: no-repeat !important;
-    filter: none !important;
-    backdrop-filter: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
+  .gate-citadel::before,
   .gate-citadel::after {
-    content: "" !important;
-    position: absolute !important;
-    inset: 0 !important;
-    z-index: 1 !important;
-    pointer-events: none !important;
-    background: rgba(4, 18, 36, .035) !important;
+    content: none !important;
+    display: none !important;
+    background: none !important;
+    background-image: none !important;
     filter: none !important;
     backdrop-filter: none !important;
   }
@@ -47,7 +30,7 @@
   }
 
   .gate-body-citadel {
-    padding-top: 112px !important;
+    padding-top: 72px !important;
   }
 
   .gate-head-hero {
@@ -57,7 +40,7 @@
   .gate-head-hero .eyebrow,
   .gate-head-hero h1,
   .gate-head-hero > p:last-child {
-    text-shadow: 0 2px 7px rgba(0, 0, 0, .24) !important;
+    text-shadow: none !important;
   }
 
   .gate-grid-showcase {
@@ -67,6 +50,6 @@
 
 @media (max-width: 390px) {
   .gate-body-citadel {
-    padding-top: 104px !important;
+    padding-top: 64px !important;
   }
 }

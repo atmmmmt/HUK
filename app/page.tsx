@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, Building2, Check, Landmark, Lock, LogOut, Network, ShieldCheck, SlidersHorizontal,
+  ArrowLeft, Building2, Check, Landmark, Lock, LogOut, Network, ShieldCheck,
 } from "lucide-react";
 import { entityOf } from "@/lib/lookup";
 import { portalsFor, reachLabel } from "@/lib/access";
@@ -19,10 +19,6 @@ const cards: { portal: Portal; title: string; sub: string; icon: typeof Landmark
     portal: "directorates", title: "مديريات المحافظة", sub: "المديريات والمؤسسات والجهات التابعة", icon: Network,
     points: ["التكليفات الواردة من الديوان وحالتها", "المهام الداخلية وتوزيعها على الموظفين", "رفع الردود والتقارير والمرفقات", "طلب حجز قاعة أو موعد لدى المحافظ"],
   },
-  {
-    portal: "admin", title: "لوحة التحكم", sub: "إدارة الجهات والأدوار والإعدادات", icon: SlidersHorizontal,
-    points: ["إضافة المديريات والمؤسسات ديناميكياً", "الأدوار والصلاحيات والمستخدمون", "قواعد التصعيد والقوالب", "سجل التدقيق الكامل"],
-  },
 ];
 
 const landing: Record<Portal, string> = { diwan: "overview", directorates: "entities", admin: "entities" };
@@ -30,8 +26,8 @@ const landing: Record<Portal, string> = { diwan: "overview", directorates: "enti
 export default function Gate() {
   const router = useRouter();
   const { me, ready, anon, error, logout } = useStore();
-  // قبل تسجيل الدخول تُعرض المساحات كلها، وبعده تُقيَّد بصلاحية المستخدم
-  const allowed: Portal[] = ready ? portalsFor(me) : anon ? ["diwan", "directorates", "admin"] : [];
+  // قبل تسجيل الدخول تُعرض المساحات العامة فقط، ولوحة التحكم تبقى عبر رابطها المباشر.
+  const allowed: Portal[] = ready ? portalsFor(me) : anon ? ["diwan", "directorates"] : [];
 
   function open(p: Portal) {
     if (!allowed.includes(p)) return;

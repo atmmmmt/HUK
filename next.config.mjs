@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   devIndicators: false,
   // خادم كامل: صفحات ديناميكية + مسارات API + قاعدة بيانات MongoDB
   trailingSlash: true,

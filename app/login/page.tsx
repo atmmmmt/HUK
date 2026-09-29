@@ -4,7 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, ArrowRight, Building2, Eye, EyeOff, LockKeyhole, TriangleAlert, User,
+  ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, TriangleAlert, User,
 } from "lucide-react";
 import { DarkStage } from "@/components/motion";
 
@@ -62,9 +62,9 @@ function LoginForm() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 22 }}>
         <div
           className="auth-crest"
-          style={{ width: 48, height: 48, marginBottom: 0, borderRadius: 12, flex: "none" }}
+          style={{ width: 52, height: 52, marginBottom: 0, borderRadius: 13, flex: "none", padding: 5, overflow: "hidden" }}
         >
-          <Building2 size={23} />
+          <img src="/icons/icon.svg" alt="محافظة حلب" style={{ width: "100%", height: "100%", display: "block", borderRadius: 9 }} />
         </div>
         {portal && (
           <Link

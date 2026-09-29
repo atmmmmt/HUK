@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="شعار المكتب التنفيذي">
-  <rect width="512" height="512" fill="#0D1730"/>
-  <rect x="38" y="38" width="436" height="436" rx="104" fill="none" stroke="#B69A62" stroke-width="8"/>
-  <path d="M256 105 109 184v30h294v-30L256 105Z" fill="#F7F5F0"/>
-  <path d="M142 229h228v139H142z" fill="#FFFFFF"/>
-  <path d="M174 229h34v139h-34zm65 0h34v139h-34zm65 0h34v139h-34z" fill="#4B18B8"/>
-  <path d="M116 368h280v35H116z" fill="#B69A62"/>
-  <circle cx="256" cy="174" r="24" fill="#B69A62"/>
-  <path d="m256 158 5 11 12 2-9 9 2 12-10-6-10 6 2-12-9-9 12-2 5-11Z" fill="#0D1730"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="محافظة حلب">
+  <rect width="512" height="512" rx="112" fill="#071528"/>
+  <circle cx="256" cy="184" r="112" fill="#D6AA3E"/>
+  <path d="M102 226h22v-18h18v18h22v-18h18v18h24v-18h18v18h22v-18h18v18h20v178h-50v-78c0-30-22-54-50-54s-50 24-50 54v78h-52V226Z" fill="#fff"/>
+  <path d="M302 214c36-18 76-20 108-3v193H302V214Z" fill="#fff"/>
+  <path d="M318 233c24-10 50-11 74-2v173h-74V233Z" fill="#071528"/>
+  <path d="M333 257h14v28h-14zm28-7h14v35h-14zm-140 8h14v22h-14zm-35 0h14v22h-14zm-35 0h14v22h-14z" fill="#071528"/>
+  <path d="M170 326c0-20 14-36 32-36s32 16 32 36v78h-64v-78Z" fill="#071528"/>
+  <rect x="91" y="404" width="330" height="22" rx="11" fill="#D6AA3E"/>
 </svg>

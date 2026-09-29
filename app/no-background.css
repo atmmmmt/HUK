@@ -1,0 +1,15 @@
+/* Final gateway background override: no images on any viewport. */
+.gate-citadel {
+  background: linear-gradient(180deg, #071b34 0%, #082641 50%, #061a31 100%) !important;
+  background-image: none !important;
+}
+
+.gate-citadel::before,
+.gate-citadel::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}

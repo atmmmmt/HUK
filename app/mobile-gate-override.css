@@ -1,4 +1,4 @@
-/* Mobile gateway override: use the supplied mobile artwork as a full-screen, sharp background. */
+/* Mobile gateway override: exact supplied artwork, full-screen and sharp. */
 @media (max-width: 720px) {
   .gate-citadel {
     position: relative;
@@ -9,15 +9,14 @@
     overflow: hidden;
   }
 
-  /* Exact supplied artwork, filling the whole mobile viewport. */
   .gate-citadel::before {
     content: "" !important;
     position: absolute !important;
     inset: 0 !important;
     z-index: 0 !important;
     pointer-events: none !important;
-    background-image: url("/branding/mobile-gate-bg.svg") !important;
-    background-position: center center !important;
+    background-image: url("/branding/mobile-gate-bg.svg?v=20260929-4") !important;
+    background-position: center top !important;
     background-size: cover !important;
     background-repeat: no-repeat !important;
     filter: none !important;
@@ -26,7 +25,7 @@
     transform: none !important;
   }
 
-  /* Very light readability tint only — no blur. */
+  /* Barely-there tint for text readability; no blur. */
   .gate-citadel::after {
     content: "" !important;
     position: absolute !important;
@@ -35,9 +34,9 @@
     pointer-events: none !important;
     background: linear-gradient(
       180deg,
-      rgba(4, 18, 36, .04) 0%,
-      rgba(4, 18, 36, .07) 38%,
-      rgba(4, 18, 36, .12) 100%
+      rgba(4, 18, 36, .015) 0%,
+      rgba(4, 18, 36, .025) 45%,
+      rgba(4, 18, 36, .06) 100%
     ) !important;
     filter: none !important;
     backdrop-filter: none !important;
@@ -49,12 +48,10 @@
     z-index: 2;
   }
 
-  /* The supplied artwork already contains the Syrian flag. */
   .gate-flag {
     display: none !important;
   }
 
-  /* Keep the content comfortably below the top artwork. */
   .gate-body-citadel {
     padding-top: 112px !important;
   }
@@ -66,7 +63,7 @@
   .gate-head-hero .eyebrow,
   .gate-head-hero h1,
   .gate-head-hero > p:last-child {
-    text-shadow: 0 2px 7px rgba(0, 0, 0, .28) !important;
+    text-shadow: 0 2px 5px rgba(0, 0, 0, .22) !important;
   }
 
   .gate-grid-showcase {

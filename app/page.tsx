@@ -1,11 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft, Check, Landmark, Lock, LogOut, Network, ShieldCheck,
-} from "lucide-react";
-import { entityOf } from "@/lib/lookup";
-import { portalsFor, reachLabel } from "@/lib/access";
+import { ArrowLeft, Check, Landmark, Lock, Network } from "lucide-react";
+import { portalsFor } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import { DarkStage } from "@/components/motion";
 import type { Portal } from "@/lib/types";
@@ -16,14 +13,14 @@ const cards: { portal: Portal; title: string; sub: string; icon: typeof Landmark
     title: "مديرية المحافظة",
     sub: "مكتب السيد المحافظ — الديوان المركزي",
     icon: Landmark,
-    points: ["المواعيد والقرارات", "الاجتماعات والمحاضر", "الوارد والصادر"],
+    points: ["المواعيد والزيارات", "الاجتماعات والمحاضر", "القرارات والتوجيهات", "الملفات والمراسلات"],
   },
   {
     portal: "directorates",
     title: "مديريات المحافظة",
     sub: "المديريات والمؤسسات والجهات التابعة",
     icon: Network,
-    points: ["التكليفات الواردة", "المهام والردود", "الطلبات والتقارير"],
+    points: ["التعليمات واللوائح", "المهام والردود", "الطلبات والتقارير", "متابعة تنفيذ التوجيهات"],
   },
 ];
 
@@ -31,7 +28,7 @@ const landing: Record<Portal, string> = { diwan: "overview", directorates: "enti
 
 export default function Gate() {
   const router = useRouter();
-  const { me, ready, anon, error, logout } = useStore();
+  const { me, ready, anon, error } = useStore();
   const allowed: Portal[] = ready ? portalsFor(me) : anon ? ["diwan", "directorates"] : [];
 
   function open(p: Portal) {
@@ -53,79 +50,62 @@ export default function Gate() {
   }
 
   return (
-    <DarkStage className="gate">
-      <header className="gate-top">
-        <div className="brand official-brand">
-          <img className="official-brand-mark" src="/branding/aleppo-mark-white.svg" alt="" />
-          <div>
+    <DarkStage className="gate gate-citadel">
+      <header className="gate-top gate-top-official">
+        <div className="official-brand" aria-label="محافظة حلب">
+          <img src="/branding/aleppo-mark-white.svg" alt="" className="official-brand-mark" />
+          <span className="official-brand-copy">
             <b>محافظة حلب</b>
-            <span>منظومة العمل التنفيذي</span>
-          </div>
+            <small>Aleppo Governorate</small>
+          </span>
         </div>
-        <span className="tag-pill">{anon ? "اختر مساحة عملك للمتابعة" : "الإصدار 1.0 · بيئة عرض"}</span>
       </header>
 
-      <section className="gate-body">
-        <div className="gate-head gate-head-compact">
-          <p className="eyebrow">مرحباً بك</p>
-          <h1>اختر <em>مساحة العمل</em> للدخول</h1>
-          <p className="gate-head-sub">اختر البوابة المناسبة.</p>
+      <div className="gate-flag" aria-label="علم الجمهورية العربية السورية">
+        <span className="flag-pole" />
+        <span className="flag-cloth">
+          <span className="flag-green" />
+          <span className="flag-white"><i>★</i><i>★</i><i>★</i></span>
+          <span className="flag-black" />
+        </span>
+      </div>
+
+      <section className="gate-body gate-body-citadel">
+        <div className="gate-head gate-head-hero">
+          <p className="eyebrow">مرحباً بك في</p>
+          <h1>منظومة العمل التنفيذي</h1>
+          <p>اختر البوابة المناسبة للدخول إلى منظومة العمل التنفيذي</p>
         </div>
 
-        <div className="gate-grid gate-grid-two">
+        <div className="gate-grid gate-grid-showcase">
           {cards.map((c) => {
             const locked = !allowed.includes(c.portal);
             const Icon = c.icon;
             return (
               <button
                 key={c.portal}
-                className={`portal-card portal-card-compact ${locked ? "locked" : ""}`}
+                className={`portal-card portal-card-showcase ${locked ? "locked" : ""}`}
                 onClick={() => open(c.portal)}
                 aria-disabled={locked}
               >
                 {locked && <Lock size={17} className="pc-lock" />}
-                <div className="pc-icon"><Icon size={24} /></div>
+                <div className="pc-icon-showcase"><Icon size={30} /></div>
                 <h2>{c.title}</h2>
                 <p className="pc-sub">{c.sub}</p>
-                <div className="pc-list">
+                <div className="pc-divider" />
+                <div className="pc-list pc-list-showcase">
                   {c.points.map((p) => (
-                    <span key={p}><Check size={14} />{p}</span>
+                    <span key={p}><Check size={15} />{p}</span>
                   ))}
                 </div>
-                <span className="pc-go">
-                  {locked ? "لا تملك صلاحية الدخول" : anon ? "تسجيل الدخول" : "الدخول"} <ArrowLeft size={16} />
+                <span className="pc-go pc-go-showcase">
+                  {locked ? "لا تملك صلاحية الدخول" : anon ? "تسجيل الدخول" : "الدخول"} <ArrowLeft size={18} />
                 </span>
               </button>
             );
           })}
         </div>
       </section>
-
-      <footer className="gate-foot">
-        {anon ? (
-          <span className="who">
-            <ShieldCheck size={15} style={{ color: "var(--gold)" }} />
-            اختر مساحة العمل ثم أدخل باسم المستخدم وكلمة المرور
-          </span>
-        ) : (
-          <div className="who">
-            <span className="who-label">أنت داخل بصفة</span>
-            <span className="who-chip">
-              <span className="ava sm gold">{me.initials}</span>
-              <span>
-                <b style={{ fontSize: 13 }}>{me.name}</b>
-                <small style={{ display: "block", fontSize: 11, color: "#9fb4d0" }}>{me.title}</small>
-              </span>
-            </span>
-            <span className="chip gold" style={{ background: "rgba(201,163,78,.16)", color: "var(--gold-2)" }}>
-              <ShieldCheck size={13} /> {reachLabel(me, entityOf(me.entityId).short)}
-            </span>
-            <button className="who-chip" onClick={() => void logout()}>
-              <LogOut size={15} /> خروج
-            </button>
-          </div>
-        )}
-      </footer>
     </DarkStage>
   );
 }

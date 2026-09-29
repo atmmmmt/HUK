@@ -125,7 +125,6 @@ export default function Gate() {
             </button>
           </div>
         )}
-        <span>تصميم وتنفيذ · ProoTech Agency</span>
       </footer>
     </DarkStage>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, ShieldCheck, WifiOff, X } from "lucide-react";
+import { Download, WifiOff, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -57,6 +57,7 @@ export default function PwaRegister() {
 
       {installPrompt && !dismissed && (
         <aside
+          className="pwa-install"
           aria-label="تثبيت التطبيق"
           dir="rtl"
           style={{
@@ -80,28 +81,30 @@ export default function PwaRegister() {
           }}
         >
           <span
+            className="pwa-install-icon"
             style={{
               width: 42,
               height: 42,
               borderRadius: 12,
               display: "grid",
               placeItems: "center",
-              background: "#f7efdc",
-              color: "#8d6d26",
+              background: "#071528",
               flex: "none",
+              overflow: "hidden",
             }}
           >
-            <ShieldCheck size={21} />
+            <img src="/icons/icon.svg" alt="" style={{ width: "100%", height: "100%", display: "block" }} />
           </span>
 
-          <span style={{ flex: "1 1 220px", minWidth: 0, lineHeight: 1.45 }}>
-            <b style={{ display: "block", fontSize: 14 }}>ثبّت المكتب التنفيذي</b>
+          <span className="pwa-install-copy" style={{ flex: "1 1 220px", minWidth: 0, lineHeight: 1.45 }}>
+            <b style={{ display: "block", fontSize: 14 }}>ثبّت محافظة حلب</b>
             <small style={{ display: "block", marginTop: 2, color: "#61728c", fontSize: 12 }}>
               وصول أسرع وتجربة تطبيق كاملة
             </small>
           </span>
 
           <button
+            className="pwa-install-button"
             onClick={install}
             style={{
               height: 40,
@@ -121,6 +124,7 @@ export default function PwaRegister() {
           </button>
 
           <button
+            className="pwa-install-close"
             aria-label="إخفاء اقتراح التثبيت"
             onClick={() => setDismissed(true)}
             style={{

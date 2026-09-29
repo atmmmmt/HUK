@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="محافظة حلب">
+  <circle cx="90" cy="61" r="45" fill="#D6AA3E"/>
+  <path d="M30 77h8v-7h7v7h8v-7h7v7h9v-7h7v7h8v-7h7v7h8v71H79v-29c0-12-9-22-20-22s-20 10-20 22v29H30V77Z" fill="#fff"/>
+  <path d="M104 72c15-7 31-8 44-1v77h-44V72Z" fill="#fff"/>
+  <path d="M111 80c10-4 20-4 30-1v69h-30V80Z" fill="#071528"/>
+  <path d="M117 90h6v12h-6zm11-3h6v15h-6zM63 89h6v9h-6zm-14 0h6v9h-6z" fill="#071528"/>
+  <path d="M46 117c0-8 6-15 13-15s13 7 13 15v31H46v-31Z" fill="#071528"/>
+</svg>

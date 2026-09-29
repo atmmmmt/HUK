@@ -10,10 +10,10 @@ const cairo = Cairo({ subsets: ["arabic"], weight: ["400", "500", "600", "700", 
 
 export const metadata: Metadata = {
   title: "منظومة العمل التنفيذي | محافظة حلب",
-  description: "نظام موحّد لإدارة المهام والاجتماعات والقاعات والصلاحيات والإشعارات في محافظة حلب",
-  applicationName: "منظومة العمل التنفيذي",
+  description: "منظومة محافظة حلب لإدارة العمل التنفيذي والمهام والاجتماعات والتكليفات",
+  applicationName: "محافظة حلب",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "العمل التنفيذي" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "محافظة حلب" },
   formatDetection: { telephone: false },
   icons: {
     icon: [
@@ -21,7 +21,10 @@ export const metadata: Metadata = {
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 

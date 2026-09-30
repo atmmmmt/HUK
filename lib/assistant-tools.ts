@@ -61,7 +61,7 @@ export const assistantTools: Tool[] = [
   },
   {
     name: "resolve_decision",
-    description: "يعتمد معاملة أو يعيدها. يتطلّب تأكيد المستخدم، ولا يملكه إلا المحافظ ونائبه ومعاونه ومدير المكتب.",
+    description: "يعتمد معاملة أو يعيدها. يتطلّب تأكيد المستخدم، ولا يملكه إلا المحافظ ونائبه ومعاونه.",
     input_schema: obj({
       decision_id: { type: "string" },
       action: { type: "string", enum: ["approve", "return"] },

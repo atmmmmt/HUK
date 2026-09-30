@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { decisions, entityOf, letters } from "@/lib/lookup";
 import { todaySchedule } from "@/lib/constants";
-import { seesAssignment } from "@/lib/access";
+import { canApproveDecision, seesAssignment } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Decision } from "@/lib/types";
 
@@ -22,7 +22,7 @@ export default function MobileToday() {
   const pct = open.length ? Math.round(open.reduce((s, a) => s + a.progress, 0) / open.length) : 100;
   const now = todaySchedule.find((s) => s.tone === "now");
   const next = todaySchedule.find((s) => s.tone !== "done" && s.tone !== "now");
-  const canApprove = me.role === "governor" || me.role === "deputy" || me.role === "chief";
+  const canApprove = canApproveDecision(me);
   const pending = decisions.filter((d) => decisionIds.includes(d.id) && d.awaiting === "governor");
   const unhandled = letters.filter((l) => !l.handled).length;
 

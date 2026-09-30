@@ -189,7 +189,12 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
 
           <label className="top-search">
             <Search size={16} />
-            <input placeholder="بحث في التكليفات والكتب والأشخاص…" />
+            <input
+              placeholder="بحث في التكليفات والكتب والأشخاص…"
+              readOnly
+              onFocus={(e) => { e.currentTarget.blur(); setFinding(true); }}
+              onClick={() => setFinding(true)}
+            />
           </label>
 
           <button

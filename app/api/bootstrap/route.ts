@@ -1,4 +1,4 @@
-import { cleanAll, collections } from "@/lib/db";
+import { cleanAll, collections, db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { handle } from "@/lib/api";
 import { clearanceRank, seesAssignment } from "@/lib/access";
@@ -70,6 +70,7 @@ export async function GET() {
       .filter((l) => clearanceRank(l.classification) <= myRank);
 
     const isAdmin = me.role === "admin" || me.role === "governor";
+    const esc = await (await db()).collection("settings").findOne({ id: "escalation" });
 
     return {
       me: cleanAll([me])[0],
@@ -79,7 +80,12 @@ export async function GET() {
       halls: cleanAll(halls),
       bookings: cleanAll(bookings),
       assignments,
-      meetings: cleanAll(meetings),
+      // الحقول الجماعية مضمونة دائماً حتى لو خُزّن اجتماع قديم دونها
+      meetings: cleanAll(meetings).map((m) => ({
+        ...m,
+        outcomes: m.outcomes ?? [], inviteeIds: m.inviteeIds ?? [], confirmed: m.confirmed ?? [],
+        apologized: m.apologized ?? [], agenda: m.agenda ?? [],
+      })),
       letters: visibleLetters,
       decisions: cleanAll(decisions),
       delegations: cleanAll(delegations),
@@ -88,6 +94,7 @@ export async function GET() {
       notifications: cleanAll(notifications).filter((n) => n.toId === me.id),
       audit: isAdmin ? cleanAll(audit) : [],
       requests: cleanAll(requests),
+      settings: { escalationLevels: Array.isArray(esc?.levels) ? (esc.levels as number[]) : null },
     };
   });
 }

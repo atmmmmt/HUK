@@ -6,10 +6,11 @@ import {
   Send, TrendingUp, TriangleAlert, Users,
 } from "lucide-react";
 import { entities, entityOf, letters, people, personOf, requests } from "@/lib/lookup";
-import { seesAssignment } from "@/lib/access";
+import { canRaiseRequest, seesAssignment } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Assignment, Entity } from "@/lib/types";
 import { AssignmentSheet } from "@/components/diwan";
+import { NewRequestSheet } from "@/components/forms";
 import {
   Ava, Bar, Empty, Kpi, NoteBoard, Panel, PersonLine, Pills, PriorityChip, Sheet, StatusChip,
 } from "@/components/ui";
@@ -337,8 +338,12 @@ export function EntityReplies() {
 
 export function EntityRequests() {
   const scope = useScope();
+  const { me, requests: live } = useStore();
   const [kind, setKind] = useState("الكل");
-  const mine = requests.filter((r) => r.entityId === scope.entityId);
+  const [adding, setAdding] = useState(false);
+  // يرفع الطلب من يعمل في هذه الجهة نفسها
+  const canRaise = canRaiseRequest(me) && me.entityId === scope.entityId;
+  const mine = live.filter((r) => r.entityId === scope.entityId);
   const kinds = ["الكل", "حجز قاعة", "موعد لدى المحافظ", "طلب اجتماع", "تمديد مهلة"];
   const list = kind === "الكل" ? mine : mine.filter((r) => r.kind === kind);
 
@@ -348,7 +353,7 @@ export function EntityRequests() {
 
       <div className="row between wrap" style={{ gap: 12 }}>
         <Pills value={kind} onChange={setKind} items={kinds.map((k) => ({ key: k, label: k, n: k === "الكل" ? mine.length : mine.filter((r) => r.kind === k).length }))} />
-        <button className="btn gold"><MailQuestion size={16} /> طلب جديد</button>
+        {canRaise && <button className="btn gold" onClick={() => setAdding(true)}><MailQuestion size={16} /> طلب جديد</button>}
       </div>
 
       {list.length === 0 ? <Empty text="لا طلبات من هذه الجهة" /> : (
@@ -369,6 +374,8 @@ export function EntityRequests() {
           ))}
         </div>
       )}
+
+      {adding && <NewRequestSheet onClose={() => setAdding(false)} />}
     </div>
   );
 }

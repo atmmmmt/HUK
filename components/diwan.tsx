@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlarmClock, ArrowLeft, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
   FileCheck2, Gavel, Inbox, ListTodo, MapPin, MessageSquare, Paperclip, Repeat2, Stamp, TriangleAlert,
@@ -8,15 +8,16 @@ import {
 } from "lucide-react";
 import { decisions, entities, entityOf, hallOf, letters, meetings } from "@/lib/lookup";
 import { lifecycle, todaySchedule } from "@/lib/constants";
-import { seesAssignment, slaLabel } from "@/lib/access";
+import { canAdvance, canApproveDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
-import type { Assignment, Meeting } from "@/lib/types";
+import type { Assignment, Meeting, Person } from "@/lib/types";
 import {
   AvaStack, Ava, Bar, Chain, ClassChip, Empty, Kpi, NoteBoard, Panel, PersonLine, Pills, PriorityChip,
   Sheet, StatusChip, Tabs,
 } from "@/components/ui";
 import MobileToday from "@/components/mobile-home";
 import { useSwipeRow } from "@/components/swipe-row";
+import { AssignOutcomes, NewAssignmentSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
 
@@ -173,6 +174,11 @@ function PriorityChipInline({ p }: { p: Assignment["priority"] }) {
 /* ═══════════════════════ التقويم والمواعيد ═══════════════════════ */
 
 export function Calendar() {
+  const { me, requests, respondRequest } = useStore();
+  const [slot, setSlot] = useState<{ id: string; mode: "schedule" | "propose" } | null>(null);
+  const interviews = requests.filter((r) => r.kind === "موعد لدى المحافظ" && r.status === "بانتظار الرد");
+  const canRespond = canRespondRequest(me, "موعد لدى المحافظ");
+  const slotReq = slot ? requests.find((r) => r.id === slot.id) : null;
   const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
   const load = [3, 5, 2, 4, 1];
 
@@ -214,28 +220,38 @@ export function Calendar() {
           </div>
         </Panel>
 
-        <Panel title="طلبات المقابلة" icon={<Users size={17} />} hint="بانتظار التحديد">
-          <div className="grid" style={{ gap: 12 }}>
-            {[
-              { who: "p12", sub: "عرض خطة معالجة الانقطاعات", need: "30 دقيقة" },
-              { who: "p8", sub: "المصادقة على التصميم الأساسي لحي النور", need: "20 دقيقة" },
-              { who: "p16", sub: "جاهزية فرق الإنقاذ قبل الموسم", need: "15 دقيقة" },
-            ].map((r) => (
-              <div key={r.who} className="card pad hover" style={{ padding: 13 }}>
-                <PersonLine id={r.who} />
-                <p className="tiny" style={{ margin: "8px 0" }}>{r.sub}</p>
-                <div className="row between">
-                  <span className="chip">{r.need}</span>
-                  <div className="row" style={{ gap: 6 }}>
-                    <button className="btn ghost sm">اقتراح وقت</button>
-                    <button className="btn primary sm">تحديد</button>
+        <Panel title="طلبات المقابلة" icon={<Users size={17} />} hint={`${interviews.length} بانتظار التحديد`}>
+          {interviews.length === 0 ? <Empty text="لا طلبات مقابلة معلّقة" hint="تصل هنا طلبات «موعد لدى المحافظ» من الجهات" /> : (
+            <div className="grid" style={{ gap: 12 }}>
+              {interviews.map((r) => (
+                <div key={r.id} className="card pad hover" style={{ padding: 13 }}>
+                  <PersonLine id={r.byId} />
+                  <p className="tiny" style={{ margin: "8px 0" }}>{r.title}</p>
+                  <div className="row between wrap" style={{ gap: 8 }}>
+                    <span className="chip">{r.detail}</span>
+                    {canRespond ? (
+                      <div className="row" style={{ gap: 6 }}>
+                        <button className="btn ghost sm" onClick={() => setSlot({ id: r.id, mode: "propose" })}>اقتراح وقت</button>
+                        <button className="btn primary sm" onClick={() => setSlot({ id: r.id, mode: "schedule" })}>تحديد</button>
+                      </div>
+                    ) : <span className="chip">اطلاع فقط</span>}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </Panel>
       </div>
+
+      {slot && slotReq && (
+        <SlotSheet
+          title={slot.mode === "schedule" ? "تحديد موعد المقابلة" : "اقتراح وقت بديل"}
+          sub={slotReq.title}
+          cta={slot.mode === "schedule" ? "تحديد وإضافة إلى الاجتماعات" : "إرسال الاقتراح"}
+          onSubmit={(dayISO, time, note) => respondRequest(slotReq.id, { action: slot.mode, dayISO, time, note })}
+          onClose={() => setSlot(null)}
+        />
+      )}
     </div>
   );
 }
@@ -243,9 +259,16 @@ export function Calendar() {
 /* ═══════════════════════ الاجتماعات ═══════════════════════ */
 
 export function Meetings() {
-  const [open, setOpen] = useState<Meeting | null>(null);
+  const { me, meetings: live, approveMinutes } = useStore();
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const open = live.find((m) => m.id === openId) ?? null;
+  const setOpen = (m: Meeting | null) => { setOpenId(m?.id ?? null); setAssigning(false); };
+  const canManage = !!open && (canManageMeetings(me) || open.chairId === me.id || open.secretaryId === me.id);
+  const unassigned = open ? open.outcomes.filter((o) => !o.assignmentRef && !o.closed).length : 0;
   const [tab, setTab] = useState("all");
-  const list = meetings.filter((m) => (tab === "all" ? true : tab === "upcoming" ? m.status !== "منعقد" : m.status === "منعقد"));
+  const list = live.filter((m) => (tab === "all" ? true : tab === "upcoming" ? m.status !== "منعقد" : m.status === "منعقد"));
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -302,10 +325,23 @@ export function Meetings() {
           sub={`${open.kind} · ${open.day} · ${open.time}`}
           onClose={() => setOpen(null)}
           footer={
-            <>
-              <button className="btn primary"><FileCheck2 size={16} /> اعتماد المحضر</button>
-              <button className="btn ghost"><Repeat2 size={16} /> تحويل المخرجات إلى تكليفات</button>
-            </>
+            canManage ? (
+              <>
+                {!open.minutesApproved && (open.status === "منعقد" || open.status === "جارٍ الآن") && (
+                  <button
+                    className="btn primary"
+                    disabled={busy}
+                    onClick={async () => { setBusy(true); try { await approveMinutes(open.id); } catch { /* المتجر يعرض السبب */ } finally { setBusy(false); } }}
+                  >
+                    <FileCheck2 size={16} /> اعتماد المحضر
+                  </button>
+                )}
+                {unassigned > 0 && !assigning && (
+                  <button className="btn ghost" onClick={() => setAssigning(true)}><Repeat2 size={16} /> تحويل المخرجات إلى تكليفات ({unassigned})</button>
+                )}
+                {open.minutesApproved && unassigned === 0 && <span className="chip ok"><CheckCircle2 size={13} /> المحضر معتمد وكل المخرجات مُسندة</span>}
+              </>
+            ) : <span className="chip">اطلاع فقط ضمن صلاحيتك</span>
           }
         >
           <div className="grid" style={{ gap: 14 }}>
@@ -358,7 +394,7 @@ export function Meetings() {
             )}
 
             <Panel title="المخرجات ومتابعتها" icon={<Gavel size={17} />} hint={`${open.outcomes.length} مخرج`}>
-              {open.outcomes.length === 0 ? <p className="muted tiny">لم تُسجَّل مخرجات بعد.</p> : (
+              {assigning ? <AssignOutcomes meetingId={open.id} outcomes={open.outcomes} onDone={() => setAssigning(false)} /> : open.outcomes.length === 0 ? <p className="muted tiny">لم تُسجَّل مخرجات بعد.</p> : (
                 <div className="grid" style={{ gap: 11 }}>
                   {open.outcomes.map((o) => (
                     <div key={o.id} className="card pad" style={{ padding: 13, background: o.closed ? "var(--ok-bg)" : undefined, borderColor: o.closed ? "#c6e8da" : undefined }}>
@@ -393,9 +429,10 @@ export function Meetings() {
 /* ═══════════════════════ القرارات ═══════════════════════ */
 
 export function Decisions() {
-  const { me, resolveDecision } = useStore();
+  const { me, resolveDecision, requests, respondRequest } = useStore();
   const [busy, setBusy] = useState<string | null>(null);
-  const canApprove = me.role === "governor" || me.role === "deputy" || me.role === "chief";
+  const canApprove = canApproveDecision(me);
+  const pendingReqs = requests.filter((r) => r.kind !== "موعد لدى المحافظ" && r.status === "بانتظار الرد" && canRespondRequest(me, r.kind));
 
   async function decide(id: string, action: "approve" | "return") {
     setBusy(id);
@@ -448,6 +485,30 @@ export function Decisions() {
           );
         })}
       </div>
+
+      {pendingReqs.length > 0 && (
+        <Panel title="طلبات المديريات بانتظار الرد" icon={<Inbox size={17} />} hint={`${pendingReqs.length} طلب`}>
+          <div className="grid g-2">
+            {pendingReqs.map((r) => (
+              <div key={r.id} className="card pad" style={{ padding: 13 }}>
+                <div className="row between wrap" style={{ gap: 8, marginBottom: 8 }}>
+                  <span className="chip navy">{r.kind}</span>
+                  <span className="tiny muted">{r.at}</span>
+                </div>
+                <b style={{ fontSize: 14, display: "block", marginBottom: 4 }}>{r.title}</b>
+                <p className="tiny muted" style={{ marginBottom: 10 }}>{r.detail}</p>
+                <div className="row between wrap" style={{ gap: 8 }}>
+                  <PersonLine id={r.byId} />
+                  <div className="row" style={{ gap: 6 }}>
+                    <button className="btn ghost sm" disabled={busy === r.id} onClick={async () => { setBusy(r.id); try { await respondRequest(r.id, { action: "reject" }); } catch { /* */ } finally { setBusy(null); } }}>رفض</button>
+                    <button className="btn gold sm" disabled={busy === r.id} onClick={async () => { setBusy(r.id); try { await respondRequest(r.id, { action: "approve" }); } catch { /* */ } finally { setBusy(null); } }}><BadgeCheck size={15} /> موافقة</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      )}
     </div>
   );
 }
@@ -458,6 +519,7 @@ const statusFilters = ["الكل", "متأخر", "قيد التنفيذ", "قي�
 
 export function Assignments() {
   const { assignments, me } = useStore();
+  const [issuing, setIssuing] = useState(false);
   const [filter, setFilter] = useState("الكل");
   const [open, setOpen] = useState<string | null>(null);
 
@@ -474,13 +536,18 @@ export function Assignments() {
         <Kpi label="مُغلقة" value={visible.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
       </div>
 
-      <Pills
-        value={filter}
-        onChange={setFilter}
-        items={statusFilters.map((s) => ({
-          key: s, label: s, n: s === "الكل" ? visible.length : visible.filter((a) => a.status === s).length,
-        }))}
-      />
+      <div className="row between wrap" style={{ gap: 12 }}>
+        <Pills
+          value={filter}
+          onChange={setFilter}
+          items={statusFilters.map((s) => ({
+            key: s, label: s, n: s === "الكل" ? visible.length : visible.filter((a) => a.status === s).length,
+          }))}
+        />
+        {canIssueAssignment(me) && (
+          <button className="btn gold" onClick={() => setIssuing(true)}><ListTodo size={16} /> تكليف جديد</button>
+        )}
+      </div>
 
       <section className="card">
         <div className="card-body flush">
@@ -505,19 +572,24 @@ export function Assignments() {
       </section>
 
       {current && <AssignmentSheet a={current} onClose={() => setOpen(null)} />}
+      {issuing && <NewAssignmentSheet onClose={() => setIssuing(false)} />}
     </div>
   );
 }
 
 /** الإجراء التالي المسموح به على التكليف — نفس قواعد أزرار اللوح التفصيلي */
-function nextStep(a: Assignment, me: { id: string; role: string }): { to: Assignment["status"]; label: string } | null {
-  const isOwner = a.ownerId === me.id;
-  const isBoss = ["governor", "deputy", "chief"].includes(me.role);
-  if (isOwner && a.status === "مُسند") return { to: "مُستلَم", label: "إقرار الاستلام" };
-  if (isOwner && a.status === "مُستلَم") return { to: "قيد التنفيذ", label: "بدء التنفيذ" };
-  if (isOwner && a.status === "قيد التنفيذ") return { to: "قيد المراجعة", label: "تسليم للمراجعة" };
-  if (isBoss && a.status === "قيد المراجعة") return { to: "مُغلق", label: "اعتماد وإغلاق" };
-  return null;
+function nextStep(a: Assignment, me: Person): { to: Assignment["status"]; label: string } | null {
+  const step: Partial<Record<Assignment["status"], { to: Assignment["status"]; label: string }>> = {
+    "مُسند": { to: "مُستلَم", label: "إقرار الاستلام" },
+    "مُستلَم": { to: "قيد التنفيذ", label: "بدء التنفيذ" },
+    "قيد التنفيذ": { to: "قيد المراجعة", label: "تسليم للمراجعة" },
+    "مُعاد للتصحيح": { to: "قيد التنفيذ", label: "استئناف التنفيذ" },
+    "متأخر": { to: "قيد المراجعة", label: "تسليم للمراجعة" },
+    "قيد المراجعة": { to: "مُغلق", label: "اعتماد وإغلاق" },
+  };
+  const s = step[a.status];
+  // نفس قواعد الخادم تماماً، فلا يظهر إجراء سيُرفض
+  return s && canAdvance(me, a, s.to) ? s : null;
 }
 
 function AssignmentRow({ a, onOpen }: { a: Assignment; onOpen: () => void }) {
@@ -541,23 +613,27 @@ function AssignmentRow({ a, onOpen }: { a: Assignment; onOpen: () => void }) {
 }
 
 export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => void }) {
-  const { me, advance } = useStore();
-  const isOwner = a.ownerId === me.id;
-  const isBoss = ["governor", "deputy", "chief"].includes(me.role);
+  const { me, advance, setProgress } = useStore();
   const stepIndex = lifecycle.findIndex((l) => l.key === a.status);
-
   const [busy, setBusy] = useState(false);
+  const [pct, setPct] = useState(a.progress);
+  useEffect(() => setPct(a.progress), [a.progress]);
 
-  async function act(to: Assignment["status"]) {
+  // الإجراءات المتاحة تُستخرج من قواعد الخادم نفسها (canAdvance)
+  const flow: { to: Assignment["status"]; label: string; tone: string; when: Assignment["status"][] }[] = [
+    { to: "مُستلَم", label: "إقرار الاستلام", tone: "gold", when: ["مُسند"] },
+    { to: "قيد التنفيذ", label: a.status === "مُعاد للتصحيح" ? "استئناف التنفيذ" : "بدء التنفيذ", tone: "primary", when: ["مُستلَم", "مُعاد للتصحيح"] },
+    { to: "قيد المراجعة", label: "تسليم للمراجعة", tone: "primary", when: ["قيد التنفيذ", "متأخر", "مُعاد للتصحيح"] },
+    { to: "مُغلق", label: "اعتماد وإغلاق", tone: "gold", when: ["قيد المراجعة"] },
+    { to: "مُعاد للتصحيح", label: "إعادة للتصحيح", tone: "ghost", when: ["قيد المراجعة"] },
+  ];
+  const actions = flow.filter((f) => f.when.includes(a.status) && canAdvance(me, a, f.to));
+  const canProgress = a.ownerId === me.id && ["مُستلَم", "قيد التنفيذ", "متأخر", "مُعاد للتصحيح"].includes(a.status);
+
+  async function act(fn: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
-    try {
-      await advance(a.id, to);
-    } catch {
-      /* رسالة الرفض تظهر من المتجر */
-    } finally {
-      setBusy(false);
-    }
+    try { await fn(); } catch { /* رسالة الرفض تظهر من المتجر */ } finally { setBusy(false); }
   }
 
   return (
@@ -567,31 +643,25 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
       onClose={onClose}
       footer={
         <>
-          {isOwner && a.status === "مُسند" && (
-            <button className="btn gold" disabled={busy} onClick={() => act("مُستلَم")}>
-              <CheckCircle2 size={16} /> إقرار الاستلام
+          {actions.map((f) => (
+            <button key={f.to} className={`btn ${f.tone}`} disabled={busy} onClick={() => act(() => advance(a.id, f.to))}>
+              {f.to === "مُغلق" ? <BadgeCheck size={16} /> : f.to === "مُستلَم" ? <CheckCircle2 size={16} /> : f.to === "قيد المراجعة" ? <ArrowLeft size={16} /> : null} {f.label}
             </button>
-          )}
-          {isOwner && a.status === "مُستلَم" && (
-            <button className="btn primary" disabled={busy} onClick={() => act("قيد التنفيذ")}>بدء التنفيذ</button>
-          )}
-          {isOwner && a.status === "قيد التنفيذ" && (
-            <button className="btn primary" disabled={busy} onClick={() => act("قيد المراجعة")}>
-              <ArrowLeft size={16} /> تسليم للمراجعة
-            </button>
-          )}
-          {isBoss && a.status === "قيد المراجعة" && (
-            <>
-              <button className="btn gold" disabled={busy} onClick={() => act("مُغلق")}>
-                <BadgeCheck size={16} /> اعتماد وإغلاق
-              </button>
-              <button className="btn ghost" disabled={busy} onClick={() => act("مُعاد للتصحيح")}>إعادة للتصحيح</button>
-            </>
-          )}
-          {!isOwner && !isBoss && <span className="chip">اطلاع فقط ضمن صلاحيتك</span>}
+          ))}
+          {!actions.length && <span className="chip">{a.status === "مُغلق" ? "التكليف مُغلق" : "اطلاع فقط ضمن صلاحيتك"}</span>}
         </>
       }
     >
+      {canProgress && (
+        <div className="card pad" style={{ marginBottom: 14 }}>
+          <div className="row between" style={{ marginBottom: 8 }}>
+            <b style={{ fontSize: 14 }}>تحديث نسبة الإنجاز</b>
+            <span className="chip navy">{pct}%</span>
+          </div>
+          <input type="range" min={0} max={100} step={5} value={pct} onChange={(e) => setPct(Number(e.target.value))} style={{ width: "100%", accentColor: "var(--gold)" }} aria-label="نسبة الإنجاز" />
+          <button className="btn primary sm" style={{ marginTop: 8 }} disabled={busy || pct === a.progress} onClick={() => act(() => setProgress(a.id, pct))}>حفظ النسبة</button>
+        </div>
+      )}
       <div className="grid" style={{ gap: 14 }}>
         <div className="card pad">
           <div className="row wrap" style={{ gap: 8, marginBottom: 14 }}>
@@ -664,8 +734,16 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
 /* ═══════════════════════ المراسلات ═══════════════════════ */
 
 export function Correspondence() {
+  const { me, letters, letterAction } = useStore();
   const [tab, setTab] = useState("وارد");
+  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const canEdit = canRegisterLetters(me);
   const list = letters.filter((l) => l.direction === tab);
+  const act = async (id: string, action: "handle" | "archive") => {
+    setBusy(id);
+    try { await letterAction(id, action); } catch { /* المتجر يعرض السبب */ } finally { setBusy(null); }
+  };
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -676,6 +754,7 @@ export function Correspondence() {
         <Kpi label="كتب سرّية" value={letters.filter((l) => l.classification === "سرّي").length} icon={<TriangleAlert size={17} />} tone="danger" />
       </div>
 
+      <div className="row between wrap" style={{ gap: 12 }}>
       <Tabs
         value={tab}
         onChange={setTab}
@@ -685,6 +764,8 @@ export function Correspondence() {
           { key: "مؤرشف", label: "المؤرشف", n: letters.filter((l) => l.direction === "مؤرشف").length },
         ]}
       />
+        {canEdit && <button className="btn gold" onClick={() => setAdding(true)}><Inbox size={16} /> قيد كتاب</button>}
+      </div>
 
       <section className="card">
         <div className="card-body flush">
@@ -700,7 +781,15 @@ export function Correspondence() {
                     <td className="t-main" style={{ fontSize: 13 }}>{l.party}</td>
                     <td style={{ maxWidth: 300 }}>{l.subject}</td>
                     <td className="tiny">{l.referredTo}</td>
-                    <td className="tiny muted">{l.action}</td>
+                    <td className="tiny muted">
+                      {l.action}
+                      {canEdit && l.direction !== "مؤرشف" && (
+                        <span className="row" style={{ gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+                          {!l.handled && <button className="btn primary sm" disabled={busy === l.id} onClick={() => act(l.id, "handle")}><CheckCircle2 size={14} /> معالجة</button>}
+                          <button className="btn ghost sm" disabled={busy === l.id} onClick={() => act(l.id, "archive")}>أرشفة</button>
+                        </span>
+                      )}
+                    </td>
                     <td><ClassChip c={l.classification} /></td>
                     <td>
                       {l.handled ? <span className="chip ok">مُعالَج</span>
@@ -712,8 +801,11 @@ export function Correspondence() {
               </tbody>
             </table>
           </div>
+          {list.length === 0 && <Empty text="لا كتب في هذا التبويب" />}
         </div>
       </section>
+
+      {adding && <NewLetterSheet onClose={() => setAdding(false)} direction={tab === "صادر" ? "صادر" : "وارد"} />}
     </div>
   );
 }

@@ -3,7 +3,22 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { setData, type Bootstrap } from "./lookup";
-import type { Assignment, AssignmentStatus, Booking, Note, Notification, Person } from "./types";
+import type {
+  Assignment, AssignmentStatus, Booking, Classification, Letter, Meeting, Note, Notification, Person, Priority,
+  RequestItem, RoleKey,
+} from "./types";
+
+export interface NewAssignmentInput {
+  title: string; source: string; ownerId: string; priority: Priority; dueISO: string;
+  closeCriteria: string; partnerIds?: string[]; classification?: Classification;
+}
+export type RequestResponse =
+  | { action: "approve" | "reject"; note?: string }
+  | { action: "schedule" | "propose"; dayISO: string; time: string; note?: string };
+export interface NewUserInput {
+  name: string; title: string; username: string; password: string; role: RoleKey;
+  entityId: string; unit?: string; clearance?: Classification; phone?: string;
+}
 
 type Toast = { id: number; text: string; tone: "ok" | "info" | "warn" };
 
@@ -29,6 +44,21 @@ interface Store {
   addEntity: (input: { name: string; kind: string; units: string[] }) => Promise<void>;
   toggleEntity: (id: string, active: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  meetings: Meeting[];
+  letters: Letter[];
+  requests: RequestItem[];
+  people: Person[];
+  escalationLevels: number[] | null;
+  issueAssignment: (input: NewAssignmentInput) => Promise<Assignment>;
+  approveMinutes: (meetingId: string) => Promise<void>;
+  assignOutcomes: (meetingId: string, items: { outcomeId: string; ownerId: string; priority: Priority; dueISO: string }[]) => Promise<void>;
+  raiseRequest: (input: { kind: RequestItem["kind"]; title: string; detail: string }) => Promise<void>;
+  respondRequest: (id: string, input: RequestResponse) => Promise<void>;
+  registerLetter: (input: Pick<Letter, "direction" | "party" | "subject" | "referredTo" | "action" | "classification"> & { dueHours?: number }) => Promise<void>;
+  letterAction: (id: string, action: "handle" | "archive") => Promise<void>;
+  createUser: (input: NewUserInput) => Promise<void>;
+  setUserActive: (id: string, active: boolean) => Promise<void>;
+  saveEscalation: (levels: number[]) => Promise<void>;
   refresh: () => Promise<void>;
   toasts: Toast[];
   toast: (text: string, tone?: Toast["tone"]) => void;
@@ -185,6 +215,88 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, "تغيّرت حالة التفعيل — البيانات محفوظة ولم تُحذف");
   }, [guard, patchLocal]);
 
+  /* ───────── الإنشاء والإدارة اليومية ───────── */
+
+  const issueAssignment = useCallback(async (input: NewAssignmentInput) => {
+    let created!: Assignment;
+    await guard(async () => {
+      const { assignment } = await call("/api/assignments/", { method: "POST", body: JSON.stringify(input) });
+      created = assignment;
+      patchLocal((b) => ({ ...b, assignments: [assignment, ...b.assignments] }));
+    }, "صدر التكليف ووصل إشعار إلى المكلَّف");
+    return created;
+  }, [guard, patchLocal]);
+
+  const patchMeeting = useCallback(async (id: string, payload: unknown, okMsg: string) => {
+    await guard(async () => {
+      const { meeting, assignments } = await call(`/api/meetings/${id}/`, { method: "PATCH", body: JSON.stringify(payload) });
+      patchLocal((b) => ({
+        ...b,
+        meetings: b.meetings.map((m) => (m.id === id && meeting ? meeting : m)),
+        assignments: [...(assignments ?? []), ...b.assignments],
+      }));
+    }, okMsg);
+  }, [guard, patchLocal]);
+
+  const approveMinutes = useCallback((id: string) =>
+    patchMeeting(id, { action: "approve_minutes" }, "اعتُمد المحضر وأُبلغ المدعوون"), [patchMeeting]);
+
+  const assignOutcomes = useCallback((id: string, items: { outcomeId: string; ownerId: string; priority: Priority; dueISO: string }[]) =>
+    patchMeeting(id, { action: "assign_outcomes", items }, "تحوّلت المخرجات إلى تكليفات وأُشعر المكلَّفون"), [patchMeeting]);
+
+  const raiseRequest = useCallback(async (input: { kind: RequestItem["kind"]; title: string; detail: string }) => {
+    await guard(async () => {
+      const { request } = await call("/api/requests/", { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, requests: [request, ...b.requests] }));
+    }, "رُفع الطلب إلى الديوان");
+  }, [guard, patchLocal]);
+
+  const respondRequest = useCallback(async (id: string, input: RequestResponse) => {
+    await guard(async () => {
+      const { request, meeting } = await call(`/api/requests/${id}/`, { method: "PATCH", body: JSON.stringify(input) });
+      patchLocal((b) => ({
+        ...b,
+        requests: b.requests.map((r) => (r.id === id && request ? request : r)),
+        meetings: meeting ? [meeting, ...b.meetings] : b.meetings,
+      }));
+    }, input.action === "schedule" ? "حُدّد الموعد وأُضيف إلى الاجتماعات" : input.action === "propose" ? "أُرسل الوقت المقترح إلى صاحب الطلب" : input.action === "approve" ? "تمت الموافقة وأُبلغ صاحب الطلب" : "رُفض الطلب وأُبلغ صاحبه");
+  }, [guard, patchLocal]);
+
+  const registerLetter = useCallback(async (input: Pick<Letter, "direction" | "party" | "subject" | "referredTo" | "action" | "classification"> & { dueHours?: number }) => {
+    await guard(async () => {
+      const { letter } = await call("/api/letters/", { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, letters: [letter, ...b.letters] }));
+    }, "قُيّد الكتاب برقم تسلسلي");
+  }, [guard, patchLocal]);
+
+  const letterAction = useCallback(async (id: string, action: "handle" | "archive") => {
+    await guard(async () => {
+      const { letter } = await call(`/api/letters/${id}/`, { method: "PATCH", body: JSON.stringify({ action }) });
+      patchLocal((b) => ({ ...b, letters: b.letters.map((l) => (l.id === id && letter ? letter : l)) }));
+    }, action === "handle" ? "عُلّم الكتاب معالَجاً" : "أُرشف الكتاب");
+  }, [guard, patchLocal]);
+
+  const createUser = useCallback(async (input: NewUserInput) => {
+    await guard(async () => {
+      const { person } = await call("/api/users/", { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, people: [...b.people, person] }));
+    }, "أُنشئ الحساب — سلّم صاحبه اسم المستخدم وكلمة المرور");
+  }, [guard, patchLocal]);
+
+  const setUserActive = useCallback(async (id: string, active: boolean) => {
+    await guard(async () => {
+      await call(`/api/users/${id}/`, { method: "PATCH", body: JSON.stringify({ active }) });
+      patchLocal((b) => ({ ...b, people: b.people.map((p) => (p.id === id ? { ...p, active } as Person : p)) }));
+    }, active ? "فُعّل الحساب" : "عُطّل الحساب — لا يستطيع صاحبه الدخول");
+  }, [guard, patchLocal]);
+
+  const saveEscalation = useCallback(async (levels: number[]) => {
+    await guard(async () => {
+      await call("/api/settings/", { method: "PUT", body: JSON.stringify({ levels }) });
+      patchLocal((b) => ({ ...b, settings: { ...(b.settings ?? { escalationLevels: null }), escalationLevels: levels } }));
+    }, "حُفظ سُلّم التصعيد");
+  }, [guard, patchLocal]);
+
   const logout = useCallback(async () => {
     await call("/api/auth/logout/", { method: "POST" }).catch(() => {});
     router.replace("/login");
@@ -204,8 +316,17 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, refresh: load,
     toasts, toast, dense, setDense,
+    meetings: boot?.meetings ?? [],
+    letters: boot?.letters ?? [],
+    requests: boot?.requests ?? [],
+    people: boot?.people ?? [],
+    escalationLevels: boot?.settings?.escalationLevels ?? null,
+    issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
+    registerLetter, letterAction, createUser, setUserActive, saveEscalation,
   }), [boot, anon, error, advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
-    resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense]);
+    resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
+    issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
+    registerLetter, letterAction, createUser, setUserActive, saveEscalation]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

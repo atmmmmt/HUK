@@ -218,3 +218,31 @@ export const portalLabels: Record<Portal, { title: string; sub: string }> = {
   directorates: { title: "مديريات المحافظة", sub: "المديريات المركزية والمناطق" },
   admin: { title: "لوحة التحكم", sub: "إدارة الجهات والأدوار والإعدادات" },
 };
+
+/* ─────────────── صلاحيات الإنشاء والإدارة اليومية ─────────────── */
+
+/** إصدار تكليف جديد: المحافظ ونوابه والأمين العام ومدير المكتب */
+export function canIssueAssignment(person: Person): boolean {
+  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
+}
+
+/** إدارة الاجتماعات (اعتماد المحضر وإسناد المخرجات) */
+export function canManageMeetings(person: Person): boolean {
+  return ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(person.role);
+}
+
+/** الرد على طلبات المديريات؛ وطلبات حجز القاعات لمشرف القاعات أيضاً */
+export function canRespondRequest(person: Person, kind?: string): boolean {
+  if (["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role)) return true;
+  return kind === "حجز قاعة" && person.role === "halls";
+}
+
+/** رفع طلب إلى الديوان: كل من يعمل في جهة تابعة */
+export function canRaiseRequest(person: Person): boolean {
+  return ["director", "head", "area", "employee"].includes(person.role);
+}
+
+/** قيد الكتب ومعالجتها */
+export function canRegisterLetters(person: Person): boolean {
+  return ["registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
+}

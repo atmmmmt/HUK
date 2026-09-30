@@ -7,10 +7,11 @@ import {
 } from "lucide-react";
 import { audit, entities, entityOf, people, roles } from "@/lib/lookup";
 import { escalationRules } from "@/lib/constants";
-import { actionLabels, reachLabel } from "@/lib/access";
+import { actionLabels, canManageSystem, reachLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Action, Entity } from "@/lib/types";
 import { Ava, Bar, ClassChip, Empty, Kpi, Panel, PersonLine, Pills, Sheet } from "@/components/ui";
+import { NewUserSheet } from "@/components/forms";
 
 /* ═══════════════════════ الجهات ═══════════════════════ */
 
@@ -125,8 +126,15 @@ export function AdminEntities() {
 /* ═══════════════════════ المستخدمون ═══════════════════════ */
 
 export function AdminUsers() {
-  const { me } = useStore();
+  const { me, people, setUserActive } = useStore();
   const [filter, setFilter] = useState("الكل");
+  const [adding, setAdding] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const canManage = canManageSystem(me);
+  const toggle = async (id: string, active: boolean) => {
+    setBusy(id);
+    try { await setUserActive(id, active); } catch { /* المتجر يعرض السبب */ } finally { setBusy(null); }
+  };
   const kinds = ["الكل", ...Array.from(new Set(people.map((p) => p.role)))];
   const list = filter === "الكل" ? people : people.filter((p) => p.role === filter);
 
@@ -138,6 +146,12 @@ export function AdminUsers() {
         <Kpi label="إنابات سارية" value={people.filter((p) => p.deputyOf).length} icon={<ArrowLeft size={17} />} tone="warn" />
         <Kpi label="تصاريح سرّية" value={people.filter((p) => p.clearance === "سرّي").length} icon={<TriangleAlert size={17} />} />
       </div>
+
+      {canManage && (
+        <div className="row" style={{ justifyContent: "flex-end" }}>
+          <button className="btn gold" onClick={() => setAdding(true)}><Plus size={16} /> حساب جديد</button>
+        </div>
+      )}
 
       <Pills
         value={filter}
@@ -163,7 +177,18 @@ export function AdminUsers() {
                   <td><ClassChip c={p.clearance} /></td>
                   <td className="ltr tiny">{p.phone}</td>
                   <td>
-                    {p.id === me.id ? <span className="chip gold">أنت</span> : <span className="chip">{entityOf(p.entityId).active ? "مفعّل" : "جهته معطّلة"}</span>}
+                    {p.id === me.id ? <span className="chip gold">أنت</span>
+                      : !entityOf(p.entityId).active ? <span className="chip">جهته معطّلة</span>
+                        : canManage ? (
+                          <button
+                            className={`chip ${(p as { active?: boolean }).active === false ? "danger" : "ok"}`}
+                            disabled={busy === p.id}
+                            onClick={() => toggle(p.id, (p as { active?: boolean }).active === false)}
+                            title="اضغط للتبديل"
+                          >
+                            {(p as { active?: boolean }).active === false ? "معطّل — تفعيل" : "مفعّل — تعطيل"}
+                          </button>
+                        ) : <span className="chip">{(p as { active?: boolean }).active === false ? "معطّل" : "مفعّل"}</span>}
                   </td>
                 </tr>
               ))}
@@ -171,6 +196,8 @@ export function AdminUsers() {
           </table>
         </div>
       </Panel>
+
+      {adding && <NewUserSheet onClose={() => setAdding(false)} />}
     </div>
   );
 }
@@ -276,8 +303,11 @@ export function AdminRoles() {
 /* ═══════════════════════ قواعد التصعيد ═══════════════════════ */
 
 export function AdminEscalation() {
-  const { toast } = useStore();
-  const [rules, setRules] = useState(escalationRules);
+  const { me, escalationLevels, saveEscalation } = useStore();
+  const [saving, setSaving] = useState(false);
+  const canManage = canManageSystem(me);
+  // المستويات المحفوظة في القاعدة تتقدّم على القيم الافتراضية
+  const rules = escalationRules.map((r, i) => ({ ...r, level: (escalationLevels?.[i] ?? r.level) as 0 | 1 | 2 | 3 }));
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -306,9 +336,10 @@ export function AdminEscalation() {
                           key={lv}
                           className={`chip ${r.level === lv ? (lv >= 3 ? "danger" : lv === 2 ? "warn" : lv === 1 ? "info" : "") : ""}`}
                           style={{ opacity: r.level === lv ? 1 : .35, minWidth: 26, justifyContent: "center" }}
-                          onClick={() => {
-                            setRules((list) => list.map((x, k) => (k === i ? { ...x, level: lv as 0 | 1 | 2 | 3 } : x)));
-                            toast("حُدّث مستوى التصعيد");
+                          disabled={!canManage || saving || r.level === lv}
+                          onClick={async () => {
+                            setSaving(true);
+                            try { await saveEscalation(rules.map((x, k) => (k === i ? lv : x.level))); } catch { /* */ } finally { setSaving(false); }
                           }}
                         >
                           {lv}

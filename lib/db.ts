@@ -4,7 +4,7 @@ import type {
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
   Meeting, Note, Notification, Person, RequestItem, Role,
 } from "./types";
-import { people as seedPeople } from "./seed";
+import { people as seedPeople, requests as seedRequests } from "./seed";
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB ?? "governorate";
@@ -59,6 +59,11 @@ async function syncIdentity(d: Db) {
     }));
     const res = await d.collection("users").bulkWrite(ops, { ordered: false });
     if (res.modifiedCount) console.log(`[db] حُدّثت أسماء ${res.modifiedCount} حساباً`);
+    // طلبات العرض الجديدة في ملف البيانات تُضاف إن غابت، دون المساس بالموجود
+    await d.collection("requests").bulkWrite(
+      seedRequests.map((r) => ({ updateOne: { filter: { id: r.id }, update: { $setOnInsert: { ...r } }, upsert: true } })),
+      { ordered: false },
+    );
   } catch (err) {
     console.error("[db] تعذّرت مطابقة الأسماء:", err instanceof Error ? err.message : err);
   }

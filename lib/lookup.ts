@@ -40,6 +40,7 @@ export interface Bootstrap {
   notifications: Notification[];
   audit: AuditEntry[];
   requests: RequestItem[];
+  settings?: { escalationLevels: number[] | null };
 }
 
 export function setData(d: Bootstrap) {

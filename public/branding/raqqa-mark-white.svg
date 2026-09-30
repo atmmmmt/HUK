@@ -1,6 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="محافظة الرقة">
-  <rect width="512" height="512" rx="112" fill="#071528"/>
-  <!-- الشمس -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="76 64 360 392" role="img" aria-label="محافظة الرقة">
+    <!-- الشمس -->
   <circle cx="256" cy="176" r="104" fill="#D6AA3E"/>
   <!-- باب بغداد: جدار آجري بصف من العقود الصمّاء وبوابة مدببة -->
   <path d="M96 214h214v162H96z" fill="#fff"/>

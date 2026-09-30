@@ -92,7 +92,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
           <div className="rail-crest"><Building2 size={20} /></div>
           <div className="rail-title">
             <b>{portalLabels[portal].title}</b>
-            <span>محافظة حلب</span>
+            <span>محافظة الرقة</span>
           </div>
         </div>
 

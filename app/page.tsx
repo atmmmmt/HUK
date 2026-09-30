@@ -52,11 +52,11 @@ export default function Gate() {
   return (
     <DarkStage className="gate gate-citadel">
       <header className="gate-top gate-top-official">
-        <div className="official-brand" aria-label="محافظة حلب">
-          <img src="/branding/aleppo-mark-white.svg" alt="" className="official-brand-mark" />
+        <div className="official-brand" aria-label="محافظة الرقة">
+          <img src="/branding/raqqa-mark-white.svg" alt="" className="official-brand-mark" />
           <span className="official-brand-copy">
-            <b>محافظة حلب</b>
-            <small>Aleppo Governorate</small>
+            <b>محافظة الرقة</b>
+            <small>Raqqa Governorate</small>
           </span>
         </div>
       </header>

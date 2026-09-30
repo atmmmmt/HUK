@@ -53,8 +53,8 @@ const usernames = {
   p14: "legal.director", p15: "legal.advisor",
   p16: "civil.defense", p17: "protocol", p18: "registry", p19: "halls", p20: "sysadmin",
   p21: "finance.director",
-  p22: "area.talrifaat", p23: "area.afrin", p24: "area.albab",
-  p27: "hay.jamiliya", p28: "hay.aziziya", p29: "hay.khalidiya",
+  p22: "area.tabqa", p23: "area.telabyad", p24: "area.maadan",
+  p27: "hay.mashlab", p28: "hay.daraiya", p29: "hay.rumaila",
   p25: "assistant", p26: "secgen",
 };
 

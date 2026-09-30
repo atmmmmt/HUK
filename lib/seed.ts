@@ -94,15 +94,15 @@ export const entities: Entity[] = [
   { id: "e6", name: "مديرية الدفاع المدني", short: "الدفاع المدني", kind: "مديرية", managerId: "p16", units: ["الإطفاء", "الإنقاذ", "خطط الطوارئ"], staffCount: 198, active: true, compliance: 94, openTasks: 9, lateTasks: 0, accent: "teal" },
   { id: "e7", name: "مديرية المالية", short: "المالية", kind: "مديرية", managerId: "p21", units: ["الموازنة", "المحاسبة", "التدقيق"], staffCount: 76, active: true, compliance: 86, openTasks: 13, lateTasks: 1, accent: "plum" },
 
-  // مناطق محافظة حلب: حسابات لرفع الإحصائيات عند الطلب
-  { id: "a1", name: "منطقة تل رفعت", short: "تل رفعت", kind: "منطقة", managerId: "p22", units: ["مكتب المنطقة"], staffCount: 54, active: true, compliance: 81, openTasks: 6, lateTasks: 1, accent: "navy" },
-  { id: "a2", name: "منطقة عفرين", short: "عفرين", kind: "منطقة", managerId: "p23", units: ["مكتب المنطقة"], staffCount: 88, active: true, compliance: 89, openTasks: 8, lateTasks: 0, accent: "gold" },
-  { id: "a3", name: "منطقة الباب", short: "الباب", kind: "منطقة", managerId: "p24", units: ["مكتب المنطقة"], staffCount: 47, active: true, compliance: 77, openTasks: 5, lateTasks: 2, accent: "teal" },
+  // مناطق محافظة الرقة: حسابات لرفع الإحصائيات عند الطلب
+  { id: "a1", name: "منطقة الطبقة", short: "الطبقة", kind: "منطقة", managerId: "p22", units: ["مكتب المنطقة"], staffCount: 54, active: true, compliance: 81, openTasks: 6, lateTasks: 1, accent: "navy" },
+  { id: "a2", name: "منطقة تل أبيض", short: "تل أبيض", kind: "منطقة", managerId: "p23", units: ["مكتب المنطقة"], staffCount: 88, active: true, compliance: 89, openTasks: 8, lateTasks: 0, accent: "gold" },
+  { id: "a3", name: "منطقة معدان", short: "معدان", kind: "منطقة", managerId: "p24", units: ["مكتب المنطقة"], staffCount: 47, active: true, compliance: 77, openTasks: 5, lateTasks: 2, accent: "teal" },
 
-  // أحياء مدينة حلب
-  { id: "h1", name: "حي الجميلية", short: "الجميلية", kind: "حي", managerId: "p27", units: ["مكتب الحي"], staffCount: 18, active: true, compliance: 85, openTasks: 3, lateTasks: 0, accent: "plum" },
-  { id: "h2", name: "حي العزيزية", short: "العزيزية", kind: "حي", managerId: "p28", units: ["مكتب الحي"], staffCount: 21, active: true, compliance: 92, openTasks: 2, lateTasks: 0, accent: "navy" },
-  { id: "h3", name: "حي الخالدية", short: "الخالدية", kind: "حي", managerId: "p29", units: ["مكتب الحي"], staffCount: 16, active: true, compliance: 73, openTasks: 4, lateTasks: 1, accent: "gold" },
+  // أحياء مدينة الرقة
+  { id: "h1", name: "حي المشلب", short: "المشلب", kind: "حي", managerId: "p27", units: ["مكتب الحي"], staffCount: 18, active: true, compliance: 85, openTasks: 3, lateTasks: 0, accent: "plum" },
+  { id: "h2", name: "حي الدرعية", short: "الدرعية", kind: "حي", managerId: "p28", units: ["مكتب الحي"], staffCount: 21, active: true, compliance: 92, openTasks: 2, lateTasks: 0, accent: "navy" },
+  { id: "h3", name: "حي الرميلة", short: "الرميلة", kind: "حي", managerId: "p29", units: ["مكتب الحي"], staffCount: 16, active: true, compliance: 73, openTasks: 4, lateTasks: 1, accent: "gold" },
 ];
 
 export const entityOf = (id: string) => entities.find((e) => e.id === id)!;
@@ -110,7 +110,7 @@ export const entityOf = (id: string) => entities.find((e) => e.id === id)!;
 /* ───────────────────────── الأشخاص ───────────────────────── */
 
 export const people: Person[] = [
-  { id: "p1", name: "السيد المحافظ", title: "محافظ حلب", entityId: "e0", role: "governor", phone: "0930 000 001", ext: "100", office: "الطابق الرابع — مكتب المحافظ", duties: ["رسم السياسة التنفيذية للمحافظة", "اعتماد القرارات والتكليفات الكبرى", "ترؤس مجلس المحافظة وخلية الأزمة"], clearance: "سرّي", avgResponseHours: 3, initials: "م" },
+  { id: "p1", name: "السيد المحافظ", title: "محافظ الرقة", entityId: "e0", role: "governor", phone: "0930 000 001", ext: "100", office: "الطابق الرابع — مكتب المحافظ", duties: ["رسم السياسة التنفيذية للمحافظة", "اعتماد القرارات والتكليفات الكبرى", "ترؤس مجلس المحافظة وخلية الأزمة"], clearance: "سرّي", avgResponseHours: 3, initials: "م" },
   { id: "p2", name: "نائب المحافظ", title: "نائب المحافظ", entityId: "e0", role: "deputy", phone: "0930 000 002", ext: "101", office: "الطابق الرابع", duties: ["الإنابة عن المحافظ", "متابعة الملفات الخدمية", "رئاسة اللجنة التنفيذية"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ن" },
   { id: "p25", name: "معاون المحافظ", title: "معاون المحافظ", entityId: "e0", role: "assistant", phone: "0930 000 025", ext: "103", office: "الطابق الرابع", duties: ["الإنابة في الاعتماد والمتابعة", "الإشراف على الملفات المكلّف بها"], clearance: "سرّي", avgResponseHours: 6, initials: "ع" },
   { id: "p26", name: "الأمين العام", title: "الأمين العام للمحافظة", entityId: "e0", unit: "أمانة السر", role: "secgen", phone: "0930 000 026", ext: "104", office: "الطابق الثالث", duties: ["تنظيم سير العمل بين الديوان والمديريات", "متابعة تنفيذ القرارات وأرشفتها"], clearance: "سرّي", avgResponseHours: 4, initials: "أ" },
@@ -132,12 +132,12 @@ export const people: Person[] = [
   { id: "p18", name: "أمين سر المجلس", title: "أمين سر مجلس المحافظة", entityId: "e7", unit: "أمانة المجلس", role: "registry", phone: "0930 000 018", ext: "280", office: "مبنى المجلس", duties: ["قيد الوارد والصادر", "تحرير المحاضر وترقيم الكتب"], clearance: "عادي", avgResponseHours: 6, initials: "س" },
   { id: "p19", name: "مشرف القاعات", title: "مشرف القاعات والمرافق", entityId: "e0", unit: "السكرتارية", role: "halls", phone: "0930 000 019", ext: "115", office: "الطابق الأرضي", duties: ["جاهزية القاعات والتجهيزات", "تأكيد الحجوزات وحل التعارضات"], clearance: "عادي", avgResponseHours: 3, initials: "ق" },
   { id: "p21", name: "مدير المالية", title: "مدير المالية", entityId: "e7", role: "director", phone: "0930 000 021", ext: "290", office: "مبنى المديريات — الطابق الأول", duties: ["إعداد الموازنة ومتابعة تنفيذها", "اعتماد الصرف ضمن السقوف المقررة"], clearance: "سرّي", avgResponseHours: 7, initials: "م" },
-  { id: "p22", name: "مسؤول منطقة تل رفعت", title: "مسؤول منطقة تل رفعت", entityId: "a1", role: "area", phone: "0930 000 022", ext: "310", office: "مكتب منطقة تل رفعت", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة ما يخص المنطقة من تكليفات"], clearance: "عادي", avgResponseHours: 11, initials: "ت" },
-  { id: "p23", name: "مسؤول منطقة عفرين", title: "مسؤول منطقة عفرين", entityId: "a2", role: "area", phone: "0930 000 023", ext: "320", office: "مكتب منطقة عفرين", duties: ["رفع إحصائيات المنطقة الدورية", "التنسيق مع المديريات المركزية"], clearance: "عادي", avgResponseHours: 8, initials: "ع" },
-  { id: "p24", name: "مسؤول منطقة الباب", title: "مسؤول منطقة الباب", entityId: "a3", role: "area", phone: "0930 000 024", ext: "330", office: "مكتب منطقة الباب", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة الخدمات في المنطقة"], clearance: "عادي", avgResponseHours: 13, initials: "ب" },
-  { id: "p27", name: "مسؤول حي الجميلية", title: "مسؤول حي الجميلية", entityId: "h1", role: "area", phone: "0930 000 027", ext: "340", office: "مكتب حي الجميلية", duties: ["رفع إحصائيات الحي", "متابعة شكاوى الخدمات في الحي"], clearance: "عادي", avgResponseHours: 9, initials: "ج" },
-  { id: "p28", name: "مسؤول حي العزيزية", title: "مسؤول حي العزيزية", entityId: "h2", role: "area", phone: "0930 000 028", ext: "350", office: "مكتب حي العزيزية", duties: ["رفع إحصائيات الحي", "التنسيق مع مديرية الخدمات"], clearance: "عادي", avgResponseHours: 7, initials: "ع" },
-  { id: "p29", name: "مسؤول حي الخالدية", title: "مسؤول حي الخالدية", entityId: "h3", role: "area", phone: "0930 000 029", ext: "360", office: "مكتب حي الخالدية", duties: ["رفع إحصائيات الحي", "متابعة الخدمات في الحي"], clearance: "عادي", avgResponseHours: 14, initials: "خ" },
+  { id: "p22", name: "مسؤول منطقة الطبقة", title: "مسؤول منطقة الطبقة", entityId: "a1", role: "area", phone: "0930 000 022", ext: "310", office: "مكتب منطقة الطبقة", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة ما يخص المنطقة من تكليفات"], clearance: "عادي", avgResponseHours: 11, initials: "ت" },
+  { id: "p23", name: "مسؤول منطقة تل أبيض", title: "مسؤول منطقة تل أبيض", entityId: "a2", role: "area", phone: "0930 000 023", ext: "320", office: "مكتب منطقة تل أبيض", duties: ["رفع إحصائيات المنطقة الدورية", "التنسيق مع المديريات المركزية"], clearance: "عادي", avgResponseHours: 8, initials: "ع" },
+  { id: "p24", name: "مسؤول منطقة معدان", title: "مسؤول منطقة معدان", entityId: "a3", role: "area", phone: "0930 000 024", ext: "330", office: "مكتب منطقة معدان", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة الخدمات في المنطقة"], clearance: "عادي", avgResponseHours: 13, initials: "ب" },
+  { id: "p27", name: "مسؤول حي المشلب", title: "مسؤول حي المشلب", entityId: "h1", role: "area", phone: "0930 000 027", ext: "340", office: "مكتب حي المشلب", duties: ["رفع إحصائيات الحي", "متابعة شكاوى الخدمات في الحي"], clearance: "عادي", avgResponseHours: 9, initials: "ج" },
+  { id: "p28", name: "مسؤول حي الدرعية", title: "مسؤول حي الدرعية", entityId: "h2", role: "area", phone: "0930 000 028", ext: "350", office: "مكتب حي الدرعية", duties: ["رفع إحصائيات الحي", "التنسيق مع مديرية الخدمات"], clearance: "عادي", avgResponseHours: 7, initials: "ع" },
+  { id: "p29", name: "مسؤول حي الرميلة", title: "مسؤول حي الرميلة", entityId: "h3", role: "area", phone: "0930 000 029", ext: "360", office: "مكتب حي الرميلة", duties: ["رفع إحصائيات الحي", "متابعة الخدمات في الحي"], clearance: "عادي", avgResponseHours: 14, initials: "خ" },
   { id: "p20", name: "مدير النظام", title: "مدير النظام", entityId: "e0", role: "admin", phone: "0930 000 020", ext: "119", office: "غرفة النظم", duties: ["إدارة الجهات والأدوار والمستخدمين", "ضبط القوالب وقواعد التصعيد", "مراجعة سجل التدقيق"], clearance: "عادي", avgResponseHours: 2, initials: "ن" },
 ];
 
@@ -200,7 +200,7 @@ export const assignments: Assignment[] = [
     attachments: [{ name: "خطة العام الماضي.pdf", size: "2.1 م.ب" }], meetingId: "m1", classification: "عادي", escalation: 0,
   },
   {
-    id: "a6", ref: "3655478-2026", title: "معالجة انقطاع المياه في حي الأشرفية", source: "توجيه السيد المحافظ", entityId: "e4", issuerId: "p1", ownerId: "p12", partnerIds: ["p13"],
+    id: "a6", ref: "3655478-2026", title: "معالجة انقطاع المياه في حي الثكنة", source: "توجيه السيد المحافظ", entityId: "e4", issuerId: "p1", ownerId: "p12", partnerIds: ["p13"],
     priority: "عاجل جداً", due: "23 أيلول 2026", dueISO: "2026-09-23", closeCriteria: "تقرير ميداني + صور + تأكيد عودة الضخ", progress: 15, status: "مُسند",
     chain: { sent: "21 أيلول · 17:40", delivered: "21 أيلول · 17:41" },
     attachments: [], classification: "عادي", escalation: 1,
@@ -310,7 +310,7 @@ export const meetings: Meeting[] = [
     summary: "متابعة نسب الهدر وخطة معالجة الانقطاعات في شبكة المياه.",
     outcomes: [
       { id: "o9", text: "تحديث سجل الأصول الثابتة", assignmentRef: "3655482-2026", ownerId: "p13", closed: false },
-      { id: "o10", text: "معالجة انقطاع المياه في حي الأشرفية", assignmentRef: "3655478-2026", ownerId: "p12", closed: false },
+      { id: "o10", text: "معالجة انقطاع المياه في حي الثكنة", assignmentRef: "3655478-2026", ownerId: "p12", closed: false },
     ],
   },
 ];
@@ -330,7 +330,7 @@ export const letters: Letter[] = [
 /* ───────────────────────── القرارات بانتظار الاعتماد ───────────────────────── */
 
 export const decisions: Decision[] = [
-  { id: "d1", title: "المصادقة على التصميم الأساسي لحي النور", source: "مديرية التخطيط العمراني", entityId: "e2", age: "منذ يومين", priority: "عاجل", awaiting: "governor" },
+  { id: "d1", title: "المصادقة على المخطط التنظيمي للتوسع الشمالي", source: "مديرية التخطيط العمراني", entityId: "e2", age: "منذ يومين", priority: "عاجل", awaiting: "governor" },
   { id: "d2", title: "تخصيص موازنة طوارئ لمديرية الصحة", source: "مديرية الصحة", entityId: "e3", age: "منذ 4 ساعات", priority: "عاجل جداً", awaiting: "governor", amount: "180 مليون ل.س" },
   { id: "d3", title: "اعتماد برنامج الوفد الاستثماري", source: "إدارة المراسم", entityId: "e0", age: "منذ ساعة", priority: "هام", awaiting: "chief" },
   { id: "d4", title: "الموافقة على عقد صيانة شبكة الإنارة", source: "مديرية الخدمات الفنية", entityId: "e1", age: "منذ 6 ساعات", priority: "هام", awaiting: "deputy", amount: "95 مليون ل.س" },
@@ -375,7 +375,7 @@ export const requests: RequestItem[] = [
   { id: "r3", kind: "تمديد مهلة", title: "تمديد مهلة تقرير المخالفات العمرانية", entityId: "e2", byId: "p9", at: "أمس", status: "موافق", detail: "تمديد 5 أيام لاستكمال المسح الميداني" },
   { id: "r4", kind: "طلب اجتماع", title: "اجتماع مشترك مع الخدمات الفنية حول التقاطعات", entityId: "e2", byId: "p8", at: "أمس", status: "موافق", detail: "الأسبوع القادم" },
   { id: "r5", kind: "حجز قاعة", title: "حجز قاعة التدريب لدورة الرخص", entityId: "e2", byId: "p9", at: "منذ يومين", status: "موافق", detail: "بعد غد · 09:30–13:00" },
-  { id: "r7", kind: "موعد لدى المحافظ", title: "المصادقة على التصميم الأساسي لحي النور", entityId: "e2", byId: "p8", at: "منذ 5 ساعات", status: "بانتظار الرد", detail: "مدة مطلوبة: 20 دقيقة" },
+  { id: "r7", kind: "موعد لدى المحافظ", title: "المصادقة على المخطط التنظيمي للتوسع الشمالي", entityId: "e2", byId: "p8", at: "منذ 5 ساعات", status: "بانتظار الرد", detail: "مدة مطلوبة: 20 دقيقة" },
   { id: "r8", kind: "موعد لدى المحافظ", title: "جاهزية فرق الإنقاذ قبل الموسم", entityId: "e6", byId: "p16", at: "أمس", status: "بانتظار الرد", detail: "مدة مطلوبة: 15 دقيقة" },
   { id: "r6", kind: "تمديد مهلة", title: "تمديد مهلة تحديث سجل الأصول", entityId: "e4", byId: "p13", at: "منذ 4 أيام", status: "مرفوض", detail: "السبب: لم يُقدَّم مبرر كافٍ" },
 ];
@@ -384,7 +384,7 @@ export const requests: RequestItem[] = [
 
 export const notifications: Notification[] = [
   { id: "n1", kind: "تصعيد", title: "تكليف متأخر ثلاثة أيام", body: "«مراجعة العقود القانونية للمشاريع الخدمية» تجاوز موعده — صُعّد إلى مدير المكتب.", at: "منذ 12 دقيقة", read: false, channel: "تنبيه التطبيق", toId: "p1", link: { portal: "diwan", section: "assignments" }, urgent: true },
-  { id: "n2", kind: "تكليف", title: "تكليف جديد أُسند إليك", body: "«معالجة انقطاع المياه في حي الأشرفية» — عاجل جداً، يستحق خلال يومين.", at: "منذ 35 دقيقة", read: false, channel: "رسالة نصية", toId: "p12", link: { portal: "directorates", section: "inbox" }, urgent: true },
+  { id: "n2", kind: "تكليف", title: "تكليف جديد أُسند إليك", body: "«معالجة انقطاع المياه في حي الثكنة» — عاجل جداً، يستحق خلال يومين.", at: "منذ 35 دقيقة", read: false, channel: "رسالة نصية", toId: "p12", link: { portal: "directorates", section: "inbox" }, urgent: true },
   { id: "n3", kind: "اجتماع", title: "تذكير باجتماع بعد ساعة", body: "اجتماع خلية الأزمة الدوري — قاعة الاجتماعات الكبرى · 10:00 ص.", at: "منذ ساعة", read: false, channel: "تنبيه التطبيق", toId: "p1", link: { portal: "diwan", section: "meetings" } },
   { id: "n4", kind: "قاعة", title: "طلب حجز بانتظار موافقتك", body: "مؤسسة المياه تطلب حجز قاعة الاجتماعات الفرعية غداً 11:00.", at: "منذ ساعة", read: false, channel: "تنبيه التطبيق", toId: "p19", link: { portal: "diwan", section: "halls" } },
   { id: "n5", kind: "مراسلة", title: "كتاب وارد مُحال إليك", body: "«تعميم بشأن أتمتة المعاملات الإدارية» من وزارة الإدارة المحلية.", at: "منذ 3 ساعات", read: true, channel: "تنبيه التطبيق", toId: "p20", link: { portal: "diwan", section: "correspondence" } },

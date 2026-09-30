@@ -14,20 +14,20 @@ import "./guide.css";
 const cairo = Cairo({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "900"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "منظومة العمل التنفيذي | محافظة حلب",
-  description: "منظومة محافظة حلب لإدارة العمل التنفيذي والمهام والاجتماعات والتكليفات",
-  applicationName: "محافظة حلب",
+  title: "منظومة العمل التنفيذي | محافظة الرقة",
+  description: "منظومة محافظة الرقة لإدارة العمل التنفيذي والمهام والاجتماعات والتكليفات",
+  applicationName: "محافظة الرقة",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "محافظة حلب" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "محافظة الرقة" },
   formatDetection: { telephone: false },
   icons: {
     icon: [
       { url: "/icons/icon.svg", type: "image/svg+xml" },
-      { url: "/icons/icon-192.png?v=2", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png?v=2", sizes: "512x512", type: "image/png" },
+      { url: "/icons/icon-192.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png?v=3", sizes: "512x512", type: "image/png" },
     ],
     // آيفون لا يقرأ SVG للشاشة الرئيسية — صورة مربعة كاملة يدوّر زواياها بنفسه
-    apple: [{ url: "/icons/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png?v=3", sizes: "180x180", type: "image/png" }],
   },
 };
 

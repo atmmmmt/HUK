@@ -97,7 +97,7 @@ export default function PwaRegister() {
           </span>
 
           <span className="pwa-install-copy" style={{ flex: "1 1 220px", minWidth: 0, lineHeight: 1.45 }}>
-            <b style={{ display: "block", fontSize: 14 }}>ثبّت محافظة حلب</b>
+            <b style={{ display: "block", fontSize: 14 }}>ثبّت محافظة الرقة</b>
             <small style={{ display: "block", marginTop: 2, color: "#61728c", fontSize: 12 }}>
               وصول أسرع وتجربة تطبيق كاملة
             </small>

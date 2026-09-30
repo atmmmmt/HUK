@@ -64,7 +64,7 @@ function LoginForm() {
           className="auth-crest"
           style={{ width: 52, height: 52, marginBottom: 0, borderRadius: 13, flex: "none", padding: 5, overflow: "hidden" }}
         >
-          <img src="/icons/icon.svg" alt="محافظة حلب" style={{ width: "100%", height: "100%", display: "block", borderRadius: 9 }} />
+          <img src="/icons/icon.svg" alt="محافظة الرقة" style={{ width: "100%", height: "100%", display: "block", borderRadius: 9 }} />
         </div>
         {portal && (
           <Link
@@ -86,7 +86,7 @@ function LoginForm() {
             fontWeight: 700,
           }}
         >
-          {portal ? portalNames[portal] : "محافظة حلب"}
+          {portal ? portalNames[portal] : "محافظة الرقة"}
         </p>
         <h1 style={{ fontSize: 25, marginBottom: 8 }}>منظومة العمل التنفيذي</h1>
         <p className="muted" style={{ fontSize: 14, lineHeight: 1.85 }}>

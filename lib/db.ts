@@ -4,7 +4,10 @@ import type {
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
   Meeting, Note, Notification, Person, RequestItem, Role,
 } from "./types";
-import { people as seedPeople, requests as seedRequests } from "./seed";
+import * as seed from "./seed";
+
+const seedPeople = seed.people;
+const seedRequests = seed.requests;
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB ?? "governorate";
@@ -64,9 +67,71 @@ async function syncIdentity(d: Db) {
       seedRequests.map((r) => ({ updateOne: { filter: { id: r.id }, update: { $setOnInsert: { ...r } }, upsert: true } })),
       { ordered: false },
     );
+    await syncPlaceNames(d);
   } catch (err) {
     console.error("[db] تعذّرت مطابقة الأسماء:", err instanceof Error ? err.message : err);
   }
+}
+
+/* ───────── نقل المنظومة من حلب إلى الرقة ─────────
+   قاعدة قائمة عُبّئت ببيانات حلب: تُستبدل النصوص التي تحمل أسماء أماكنها فقط
+   بما في ملف البيانات، وتُحدَّث أسماء دخول حسابات المناطق. الحالات والتقدّم
+   وكلمات المرور وكل ما أنشأه المستخدمون لا يُمَسّ. */
+
+const OLD_PLACES = /حلب|تل رفعت|عفرين|منطقة الباب|^الباب$|الجميلية|العزيزية|الخالدية|الأشرفية|حي النور/;
+const RENAMED_USERS: Record<string, [string, string]> = {
+  p22: ["area.talrifaat", "area.tabqa"], p23: ["area.afrin", "area.telabyad"], p24: ["area.albab", "area.maadan"],
+  p27: ["hay.jamiliya", "hay.mashlab"], p28: ["hay.aziziya", "hay.daraiya"], p29: ["hay.khalidiya", "hay.rumaila"],
+};
+
+const isOld = (v: unknown) => typeof v === "string" ? OLD_PLACES.test(v) : Array.isArray(v) && v.some((x) => typeof x === "string" && OLD_PLACES.test(x));
+
+async function syncPlaceNames(d: Db) {
+  let fixed = 0;
+  const sets: [string, { id: string }[]][] = [
+    ["entities", seed.entities], ["users", seed.people], ["assignments", seed.assignments], ["meetings", seed.meetings],
+    ["letters", seed.letters], ["decisions", seed.decisions], ["requests", seed.requests], ["notifications", seed.notifications],
+    ["notes", seed.notes], ["bookings", seed.bookings], ["delegations", seed.delegations], ["files", seed.docFiles],
+  ];
+  for (const [name, docs] of sets) {
+    const col = d.collection(name);
+    for (const src of docs as unknown as Record<string, unknown>[]) {
+      const cur = await col.findOne({ id: src.id });
+      if (!cur) continue;
+      const $set: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(src)) {
+        if (k === "id" || k === "outcomes") continue;
+        if ((typeof v === "string" || Array.isArray(v)) && isOld(cur[k])) $set[k] = v;
+      }
+      // مخرجات الاجتماعات: يُبدَّل النص فقط، ويبقى الإسناد والحالة كما هما
+      if (name === "meetings" && Array.isArray(cur.outcomes)) {
+        const texts = new Map(((src.outcomes as { id: string; text: string }[]) ?? []).map((o) => [o.id, o.text]));
+        let touched = false;
+        const outcomes = (cur.outcomes as { id: string; text: string }[]).map((o) => {
+          const t = texts.get(o.id);
+          if (t && OLD_PLACES.test(o.text)) { touched = true; return { ...o, text: t }; }
+          return o;
+        });
+        if (touched) $set.outcomes = outcomes;
+      }
+      if (Object.keys($set).length) {
+        try { await col.updateOne({ id: src.id }, { $set }); fixed++; }
+        catch (err) { console.error(`[db] تعذّر نقل ${name}/${src.id}:`, err instanceof Error ? err.message : err); }
+      }
+    }
+  }
+  // أسماء دخول حسابات المناطق — فقط إن كانت ما تزال بالاسم القديم
+  const users = d.collection("users");
+  for (const [id, [from, to]] of Object.entries(RENAMED_USERS)) {
+    if (await users.findOne({ username: to })) continue;
+    try {
+      const r = await users.updateOne({ id, username: from }, { $set: { username: to } });
+      fixed += r.modifiedCount;
+    } catch (err) {
+      console.error(`[db] تعذّر تغيير اسم الدخول ${from}:`, err instanceof Error ? err.message : err);
+    }
+  }
+  if (fixed) console.log(`[db] نُقلت ${fixed} سجلات من أسماء حلب إلى الرقة`);
 }
 
 export const collections = {

@@ -7,7 +7,7 @@
   padding: 22px 28px 40px;
   background:
     linear-gradient(180deg, rgba(5, 24, 47, .86) 0%, rgba(7, 30, 57, .72) 38%, rgba(8, 31, 58, .86) 100%),
-    url("https://upload.wikimedia.org/wikipedia/commons/6/63/The_Citadel_of_Aleppo%2C_Syria%2C_panoramic.jpg") center 36% / cover no-repeat !important;
+    url("https://upload.wikimedia.org/wikipedia/commons/6/63/The_Citadel_of_Raqqa%2C_Syria%2C_panoramic.jpg") center 36% / cover no-repeat !important;
 }
 
 .gate-citadel::after {

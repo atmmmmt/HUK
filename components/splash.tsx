@@ -22,9 +22,9 @@ export default function Splash() {
   return (
     <div className={`splash ${phase === "out" ? "out" : ""}`} aria-hidden>
       <div className="splash-mark">
-        <img src="/branding/aleppo-mark-white.svg" alt="" width={84} height={84} />
+        <img src="/branding/raqqa-mark-white.svg" alt="" width={84} height={84} />
       </div>
-      <b>محافظة حلب</b>
+      <b>محافظة الرقة</b>
       <span>منظومة العمل التنفيذي</span>
       <i className="splash-line" />
     </div>

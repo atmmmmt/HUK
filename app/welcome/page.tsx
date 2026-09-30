@@ -10,7 +10,7 @@ import { DarkStage } from "@/components/motion";
 const steps = [
   {
     kicker: "مرحباً بك",
-    title: ["منظومة العمل التنفيذي", "لمحافظة حلب"],
+    title: ["منظومة العمل التنفيذي", "لمحافظة الرقة"],
     body: "مساحة واحدة تجمع المهام والاجتماعات والقاعات والمراسلات، فتعرف في كل لحظة ما أُنجز وما تأخّر ومن المسؤول.",
     points: [
       "لكل تكليف مالك وموعد ومعيار إغلاق واضح",
@@ -64,7 +64,7 @@ export default function Welcome() {
         <div className="brand">
           <span className="brand-mark"><Building2 size={22} /></span>
           <span>
-            <b>محافظة حلب</b>
+            <b>محافظة الرقة</b>
             <span>منظومة العمل التنفيذي</span>
           </span>
         </div>

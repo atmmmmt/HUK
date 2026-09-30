@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import PwaRegister from "@/components/pwa-register";
 import { StoreProvider } from "@/lib/store";
 import Toasts from "@/components/toasts";
+import Splash from "@/components/splash";
 import "./globals.css";
 import "./gate-polish.css";
 import "./no-background.css";
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
           <Toasts />
         </StoreProvider>
+        <Splash />
         <PwaRegister />
       </body>
     </html>

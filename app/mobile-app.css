@@ -28,7 +28,7 @@
     border-bottom-color: rgba(255, 255, 255, .08);
     box-shadow: 0 8px 24px rgba(10, 26, 48, .18);
   }
-  .topbar > .icon-btn:not(.bell):not(.top-logout), .topbar [data-desk] { display: none !important; }
+  .topbar > .icon-btn:not(.bell):not(.top-logout):not(.m-search-btn), .topbar [data-desk] { display: none !important; }
   .topbar .icon-btn { color: #d6e0ee; width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, .07); }
   .topbar .icon-btn:active { background: rgba(255, 255, 255, .16); transform: scale(.94); }
   .topbar > div:has(> .bell) { margin-inline-start: auto; }
@@ -319,7 +319,7 @@
     filter: drop-shadow(0 4px 8px rgba(201, 163, 78, .35));
   }
   .mt-ring-txt { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-  .mt-ring-txt b { font-size: 32px; font-weight: 900; line-height: 1; color: var(--navy-900); }
+  .mt-ring-txt b { font-size: 32px; font-weight: 900; line-height: 1; color: var(--ink); }
   .mt-ring-txt b small { font-size: 15px; font-weight: 700; }
   .mt-ring-txt span { font-size: 10.5px; color: var(--muted); font-weight: 600; margin-top: 4px; }
   .mt-stats { flex: 1; display: grid; gap: 6px; min-width: 0; }
@@ -328,7 +328,7 @@
     background: var(--bg); transition: transform .15s var(--e-soft);
   }
   .mt-stat:active { transform: scale(.96); }
-  .mt-stat b { font-size: 20px; font-weight: 900; color: var(--navy-900); min-width: 26px; }
+  .mt-stat b { font-size: 20px; font-weight: 900; color: var(--ink); min-width: 26px; }
   .mt-stat span { font-size: 12px; color: var(--muted); font-weight: 600; white-space: nowrap; }
   .mt-stat.danger { background: var(--danger-bg); }
   .mt-stat.danger b { color: var(--danger); }
@@ -377,7 +377,7 @@
     box-shadow: 0 2px 4px rgba(14, 24, 38, .05), 0 16px 40px rgba(14, 24, 38, .12);
     touch-action: pan-y; cursor: grab; overflow: hidden; user-select: none;
   }
-  .mt-card.ghost { background: #fff; opacity: .7; box-shadow: 0 6px 16px rgba(14, 24, 38, .08); transition: transform .35s var(--e-out); }
+  .mt-card.ghost { background: var(--card); opacity: .7; box-shadow: 0 6px 16px rgba(14, 24, 38, .08); transition: transform .35s var(--e-out); }
   .mt-card h3 { font-size: 16.5px; font-weight: 800; line-height: 1.55; }
   .mt-amount { margin-top: var(--s3); font-size: 18px; font-weight: 900; color: var(--gold-700); }
   .mt-stamp {
@@ -399,4 +399,137 @@
   .mt-act.ok { width: 70px; height: 70px; background: var(--ok); color: #fff; box-shadow: 0 10px 26px rgba(14, 122, 86, .35); }
   .mt-act.back { color: var(--danger); align-self: center; }
   .mt-deck-tip { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 11.5px; color: var(--faint); margin-top: var(--s3); }
+}
+
+/* ============================================================
+   البحث الشامل
+   ============================================================ */
+.m-search-btn, .msearch { display: none; }
+
+@media (max-width: 900px) {
+  .topbar .m-search-btn { display: grid !important; margin-inline-start: auto; }
+  .topbar > div:has(> .bell) { margin-inline-start: 0; }
+
+  .msearch {
+    display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 80;
+    background: var(--bg); animation: searchIn .32s var(--e-out) both;
+  }
+  .msearch-bar {
+    display: flex; align-items: center; gap: var(--s3);
+    padding: calc(env(safe-area-inset-top, 0) + 12px) var(--s4) 12px;
+    background: var(--navy-900);
+  }
+  .msearch-bar label {
+    flex: 1; display: flex; align-items: center; gap: var(--s2); height: 46px; padding: 0 14px;
+    border-radius: 14px; background: rgba(255, 255, 255, .1); color: #9fb2cc;
+  }
+  .msearch-bar input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: #fff; font-size: 16px; }
+  .msearch-bar input::placeholder { color: #7f95b4; }
+  .msearch-bar label button { color: #9fb2cc; display: grid; }
+  .msearch-cancel { color: var(--gold); font-weight: 700; font-size: 15px; }
+  .msearch-body { flex: 1; overflow-y: auto; padding: var(--s4) var(--s4) var(--s8); }
+  .msearch-hint b { display: block; font-size: 13px; color: var(--muted); margin-bottom: var(--s3); }
+  .msearch-chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+  .msearch-chips button { padding: 8px 14px; border-radius: 99px; background: var(--card); font-size: 13.5px; font-weight: 600; box-shadow: 0 1px 3px rgba(14, 24, 38, .08); }
+  .msearch-empty { text-align: center; color: var(--muted); padding: var(--s8) 0; }
+  .msearch-group { font-size: 12px; font-weight: 700; color: var(--faint); margin: var(--s4) 4px var(--s2); }
+  .msearch-list { background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 1px 2px rgba(14, 24, 38, .04), 0 6px 20px rgba(14, 24, 38, .06); }
+  .msearch-item { display: flex; align-items: center; gap: var(--s3); padding: 12px 14px; border-bottom: 1px solid var(--line-2); animation: itemIn .35s var(--e-out) both; }
+  .msearch-item:last-child { border-bottom: 0; }
+  .msearch-item:active { background: var(--navy-50); }
+  .msearch-item b { display: block; font-size: 14.5px; line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msearch-item small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .msearch-ico { width: 36px; height: 36px; flex: none; border-radius: 11px; display: grid; place-items: center; background: var(--navy-50); color: var(--navy-700); }
+}
+@keyframes searchIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+/* ============================================================
+   السحب على أسطر التكليفات لإجراء سريع
+   ============================================================ */
+@media (max-width: 900px) {
+  .card:has(tr.swipable), .card-body:has(tr.swipable) { overflow: hidden; }
+  table.tbl tbody tr.swipable {
+    position: relative; touch-action: pan-y; background: var(--card);
+    transform: translateX(var(--sx, 0)); transition: transform .32s var(--e-out);
+  }
+  table.tbl tbody tr.swipable.swiping { transition: none; }
+  table.tbl tbody tr.swipable { animation-fill-mode: backwards; }
+  /* لوح الإجراء يلتصق بحافة السطر اليمنى ويظهر كلما سُحب السطر يساراً */
+  table.tbl tbody tr.swipable::after {
+    content: attr(data-act); position: absolute; top: 0; bottom: 0; left: 100%; width: 170px;
+    display: flex; align-items: center; justify-content: flex-end; padding-left: 18px;
+    background: var(--navy-700); color: #fff; font-weight: 800; font-size: 13.5px; white-space: nowrap;
+    transition: background .2s;
+  }
+  table.tbl tbody tr.swipable.armed::after { background: var(--ok); }
+}
+
+/* ============================================================
+   شاشة التشغيل
+   ============================================================ */
+.splash {
+  position: fixed; inset: 0; z-index: 200; display: grid; place-content: center; justify-items: center; gap: 6px;
+  background: var(--navy-900); color: #fff; text-align: center;
+  transition: opacity .55s var(--e-soft), transform .55s var(--e-out);
+}
+.splash.out { opacity: 0; transform: scale(1.06); pointer-events: none; }
+.splash-mark {
+  width: 120px; height: 120px; border-radius: 34px; display: grid; place-items: center; margin-bottom: 18px;
+  background: rgba(255, 255, 255, .05); border: 1px solid rgba(201, 163, 78, .35);
+  box-shadow: 0 0 60px rgba(201, 163, 78, .25);
+  animation: splashMark .9s var(--e-back) both;
+}
+.splash b { font-size: 26px; font-weight: 900; animation: riseSm .6s var(--e-out) .25s both; }
+.splash span { font-size: 13.5px; color: #9fb2cc; animation: riseSm .6s var(--e-out) .35s both; }
+.splash-line { display: block; width: 120px; height: 3px; border-radius: 99px; margin-top: 22px; background: rgba(255, 255, 255, .08); overflow: hidden; position: relative; }
+.splash-line::after { content: ""; position: absolute; inset: 0; background: var(--gold); transform-origin: right; animation: splashLine 1.3s var(--e-out) .2s both; }
+@keyframes splashMark { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+@keyframes splashLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ============================================================
+   الوضع الليلي — يتبع إعداد الجوال
+   ============================================================ */
+@media (max-width: 900px) and (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #07111f;
+    --card: #0f1c30;
+    --ink: #eef3fa;
+    --ink-2: #c8d4e5;
+    --muted: #8ea2bf;
+    --faint: #62799a;
+    --line: #1f2f48;
+    --line-2: #172640;
+    --navy-50: #13233b;
+    --navy-100: #1a2d4b;
+    --navy-700: #9fbde6;
+    --gold-50: #231d10;
+    --gold-100: #2e2511;
+    --gold-200: #4a3c1c;
+    --gold-700: #e2c079;
+    --ok-bg: #0d2a22; --ok: #3fc497;
+    --warn-bg: #2b2210; --warn: #e3a93b;
+    --danger-bg: #331614; --danger: #f07166;
+    --info-bg: #13244a; --info: #7eaaf5;
+    --plum-bg: #251735; --plum: #c39cf0;
+    --teal-bg: #0e2a2d; --teal: #4fc5cd;
+  }
+  .card, .kpi, .mt-hero, .mt-q-ico, .mt-card, .msearch-list, .more-item, .mt-act:not(.ok) {
+    box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0, 0, 0, .35) !important;
+  }
+  .btn.primary { background: var(--gold); color: var(--navy-900); }
+  .btn.ghost { background: var(--card); }
+  .pill.on { background: var(--gold); border-color: var(--gold); color: var(--navy-900); }
+  .field > input, .field > select, .field > textarea { background: var(--bg); color: var(--ink); }
+  .more-item.on { background: var(--gold); color: var(--navy-900); }
+  .more-item.on svg { background: var(--navy-900); color: var(--gold); }
+  .more-item.danger svg { background: var(--card); }
+  .mt-q:first-child .mt-q-ico { background: var(--gold); color: var(--navy-900); }
+  .mt-now { box-shadow: 0 0 0 1px var(--line), 0 10px 28px rgba(0, 0, 0, .4); }
+  .ptr { background: var(--card); color: var(--ink); }
+  .lock-note { border-color: var(--gold-200); color: var(--gold-700); }
+  .skel { background-image: linear-gradient(90deg, var(--line-2) 8%, var(--line) 18%, var(--line-2) 28%); }
+  .toast { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), var(--sh-3); }
+  .page-head, .topbar { background: #050d19; }
+  html, body { background: #050d19; }
 }

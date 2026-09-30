@@ -16,6 +16,7 @@ import {
   Sheet, StatusChip, Tabs,
 } from "@/components/ui";
 import MobileToday from "@/components/mobile-home";
+import { useSwipeRow } from "@/components/swipe-row";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
 
@@ -494,18 +495,7 @@ export function Assignments() {
                 </thead>
                 <tbody>
                   {list.map((a) => (
-                    <tr key={a.id} className="clickable" onClick={() => setOpen(a.id)}>
-                      <td style={{ maxWidth: 330 }}>
-                        <div className="t-main">{a.title}</div>
-                        <div className="t-sub"><span className="t-ref">{a.ref}</span> · {a.source}</div>
-                      </td>
-                      <td className="tiny">{entityOf(a.entityId).short}</td>
-                      <td><PersonLine id={a.ownerId} /></td>
-                      <td><PriorityChip p={a.priority} /></td>
-                      <td className="tiny">{a.due}</td>
-                      <td style={{ minWidth: 130 }}><Bar value={a.progress} /></td>
-                      <td><StatusChip status={a.status} /></td>
-                    </tr>
+                    <AssignmentRow key={a.id} a={a} onOpen={() => setOpen(a.id)} />
                   ))}
                 </tbody>
               </table>
@@ -516,6 +506,37 @@ export function Assignments() {
 
       {current && <AssignmentSheet a={current} onClose={() => setOpen(null)} />}
     </div>
+  );
+}
+
+/** الإجراء التالي المسموح به على التكليف — نفس قواعد أزرار اللوح التفصيلي */
+function nextStep(a: Assignment, me: { id: string; role: string }): { to: Assignment["status"]; label: string } | null {
+  const isOwner = a.ownerId === me.id;
+  const isBoss = ["governor", "deputy", "chief"].includes(me.role);
+  if (isOwner && a.status === "مُسند") return { to: "مُستلَم", label: "إقرار الاستلام" };
+  if (isOwner && a.status === "مُستلَم") return { to: "قيد التنفيذ", label: "بدء التنفيذ" };
+  if (isOwner && a.status === "قيد التنفيذ") return { to: "قيد المراجعة", label: "تسليم للمراجعة" };
+  if (isBoss && a.status === "قيد المراجعة") return { to: "مُغلق", label: "اعتماد وإغلاق" };
+  return null;
+}
+
+function AssignmentRow({ a, onOpen }: { a: Assignment; onOpen: () => void }) {
+  const { me, advance } = useStore();
+  const step = nextStep(a, me);
+  const swipe = useSwipeRow(step ? () => { void advance(a.id, step.to).catch(() => {}); } : null);
+  return (
+    <tr className={`clickable ${step ? "swipable" : ""}`} data-act={step?.label} onClick={onOpen} {...swipe}>
+      <td style={{ maxWidth: 330 }}>
+        <div className="t-main">{a.title}</div>
+        <div className="t-sub"><span className="t-ref">{a.ref}</span> · {a.source}</div>
+      </td>
+      <td className="tiny">{entityOf(a.entityId).short}</td>
+      <td><PersonLine id={a.ownerId} /></td>
+      <td><PriorityChip p={a.priority} /></td>
+      <td className="tiny">{a.due}</td>
+      <td style={{ minWidth: 130 }}><Bar value={a.progress} /></td>
+      <td><StatusChip status={a.status} /></td>
+    </tr>
   );
 }
 

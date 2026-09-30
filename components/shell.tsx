@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlarmClock, Bell, Building2, CalendarDays, Check, CheckCheck, ChevronDown, DoorOpen,
   Flag, FolderOpen, GitFork, IdCard, Inbox, LayoutGrid, ListTodo, Lock, MailQuestion, Menu, Network,
@@ -17,6 +17,7 @@ import type { Portal } from "@/lib/types";
 import Section from "@/components/sections";
 import TabBar from "@/components/tabbar";
 import MobileFx from "@/components/mobile-fx";
+import MobileSearch from "@/components/mobile-search";
 
 const icons: Record<string, typeof LayoutGrid> = {
   LayoutGrid, CalendarDays, Users, Stamp, ListTodo, Inbox, DoorOpen, Flag, FolderOpen, IdCard, StickyNote,
@@ -31,6 +32,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   const [bell, setBell] = useState(false);
   const [more, setMore] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [finding, setFinding] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 56);
@@ -45,6 +47,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   const blocked = !allowed.includes(portal);
 
   useEffect(() => { setOpen(false); setMore(false); }, [section, portal]);
+  const closeSearch = useCallback(() => setFinding(false), []);
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof nav>();
@@ -195,6 +198,10 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
             <Rows3 size={19} />
           </button>
 
+          <button className="icon-btn m-search-btn" onClick={() => setFinding(true)} aria-label="بحث">
+            <Search size={19} />
+          </button>
+
           <div style={{ position: "relative" }}>
             <button className="icon-btn bell" onClick={() => setBell(!bell)} aria-label="الإشعارات">
               <Bell size={19} />
@@ -271,6 +278,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
         </main>
 
         <MobileFx onRefresh={refresh} />
+        <MobileSearch open={finding} onClose={closeSearch} />
         <TabBar portal={portal} section={section} moreOpen={more} setMoreOpen={setMore} />
       </div>
     </div>

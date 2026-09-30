@@ -39,7 +39,8 @@ export default function MobileFx({ onRefresh }: { onRefresh: () => Promise<void>
     const down = (e: PointerEvent) => {
       if (!mobile()) return;
       const el = (e.target as Element | null)?.closest<HTMLElement>(RIPPLE);
-      if (!el) return;
+      // أسطر السحب تحتاج أن يظهر لوح الإجراء خارج حدودها
+      if (!el || el.matches(".swipable")) return;
       const r = el.getBoundingClientRect();
       const size = Math.max(r.width, r.height) * 2.2;
       const dot = document.createElement("span");

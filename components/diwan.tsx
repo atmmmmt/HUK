@@ -15,6 +15,7 @@ import {
   AvaStack, Ava, Bar, Chain, ClassChip, Empty, Kpi, NoteBoard, Panel, PersonLine, Pills, PriorityChip,
   Sheet, StatusChip, Tabs,
 } from "@/components/ui";
+import MobileToday from "@/components/mobile-home";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
 
@@ -33,6 +34,7 @@ export function Overview() {
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
+      <MobileToday />
       <div className="grid g-5">
         <Kpi label="مواعيد اليوم" value={todaySchedule.length} meta="اجتماع واحد جارٍ الآن" icon={<CalendarDays size={17} />} tone="navy" />
         <Kpi label="التكليفات المفتوحة" value={open.length} meta={`${review.length} بانتظار الاعتماد`} icon={<ListTodo size={17} />} tone="gold" />

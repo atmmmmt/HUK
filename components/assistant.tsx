@@ -7,6 +7,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { decisions, entities, entityOf, hallOf, meetings, people, personOf } from "@/lib/lookup";
 import { canAdvance, seesAssignment } from "@/lib/access";
 import { CONFIRM_TOOLS } from "@/lib/assistant-tools";
+import { guideTopicText } from "@/lib/guide";
 import { useStore } from "@/lib/store";
 import type { AssignmentStatus, Note } from "@/lib/types";
 
@@ -98,6 +99,8 @@ export default function Assistant() {
     const visible = s.assignments.filter((a) => seesAssignment(me, a));
 
     switch (t.name) {
+      case "read_guide":
+        return guideTopicText(String(i.topic_id)) ?? "لا يوجد موضوع بهذا المعرّف";
       case "navigate": {
         const path = String(i.path || "/");
         if (!path.startsWith("/")) return "مسار غير صالح";

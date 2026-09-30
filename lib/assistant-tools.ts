@@ -18,6 +18,12 @@ const STATUSES = ["مُسند", "مُستلَم", "قيد التنفيذ", "قي
 
 export const assistantTools: Tool[] = [
   {
+    name: "read_guide",
+    description: "يقرأ خطوات موضوع من دليل الاستخدام بمعرّفه (مثل decisions أو halls). استخدمه للإجابة عن أسئلة «كيف أفعل…».",
+    input_schema: obj({ topic_id: { type: "string" } }),
+    strict: true,
+  },
+  {
     name: "navigate",
     description: "يفتح شاشة في المنظومة للمستخدم. استخدمه عندما يطلب المستخدم فتح قسم أو الذهاب إليه، أو بعد إجابة تحتاج أن يرى الشاشة. المسار بصيغة /portal/section/ مثل /diwan/halls/.",
     input_schema: obj({ path: { type: "string", description: "المسار، مثل /diwan/assignments/ أو /guide/" } }),

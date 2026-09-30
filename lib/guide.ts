@@ -323,3 +323,16 @@ export function guideAsText(): string {
     })
     .join("\n\n");
 }
+
+/** فهرس مختصر للدليل — للنماذج المجانية ذات الحدود الضيّقة؛ تقرأ التفاصيل بأداة read_guide */
+export function guideIndex(): string {
+  return guideTopics
+    .map((t) => `${t.id}: ${t.title}${t.where ? ` [/${t.where.portal}/${t.where.section}/]` : ""} — ${t.summary}`)
+    .join("\n");
+}
+
+export function guideTopicText(id: string): string | null {
+  const t = guideTopics.find((x) => x.id === id);
+  if (!t) return null;
+  return `${t.title}\n${t.summary}\n${t.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}${t.tips ? "\nنصائح:\n" + t.tips.map((s) => `- ${s}`).join("\n") : ""}`;
+}

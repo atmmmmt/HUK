@@ -22,9 +22,21 @@ MONGODB_URI="mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites
 MONGODB_DB="governorate"
 SESSION_SECRET="مفتاح-عشوائي-طويل-غيّره"
 SEED_PASSWORD="Aleppo@2026"
-# المساعد الذكي — مفتاح من console.anthropic.com (اختياري: بدونه يعمل كل شيء عدا المساعد)
-ANTHROPIC_API_KEY="sk-ant-..."
+# المساعد الذكي (اختياري — بدونه يعمل كل شيء عدا المساعد)
+# مجاني: مفتاح من console.groq.com يشغّل نموذج Llama مفتوح المصدر
+AI_API_KEY="gsk_..."
 ```
+
+**المساعد الذكي — خيارات المزوّد:**
+
+| الخيار | الإعداد | الكلفة |
+|---|---|---|
+| Groq (الافتراضي) | `AI_API_KEY` فقط | مجاني بحدود يومية، بلا بطاقة |
+| Ollama على جهازك | `AI_BASE_URL="http://localhost:11434/v1"` و`AI_MODEL="qwen2.5:14b"` | مجاني بلا حدود، يحتاج جهازاً قوياً |
+| أي خدمة متوافقة مع OpenAI (OpenRouter…) | `AI_BASE_URL` و`AI_API_KEY` و`AI_MODEL` | حسب الخدمة |
+| Claude | `ANTHROPIC_API_KEY` (ولا تضبط `AI_*`) | مدفوع، أدق فهماً |
+
+لتغيير النموذج على Groq: `AI_MODEL` (الافتراضي `llama-3.3-70b-versatile`).
 
 > **مهم:** لا تشارك هذا الملف ولا ترفعه إلى Git — هو مستثنى أصلاً في `.gitignore`.
 

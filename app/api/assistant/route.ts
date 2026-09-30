@@ -2,7 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { requireUser, UnauthorizedError } from "@/lib/session";
 import { assistantTools } from "@/lib/assistant-tools";
-import { guideAsText, roleGuides } from "@/lib/guide";
+import { guideAsText, guideIndex, roleGuides } from "@/lib/guide";
+import { compatChat, compatConfig } from "@/lib/ai-compat";
 import { navByPortal } from "@/lib/nav";
 import type { RoleKey } from "@/lib/types";
 
@@ -15,8 +16,7 @@ const sitemap = (Object.keys(navByPortal) as (keyof typeof navByPortal)[])
   .map((p) => navByPortal[p].map((n) => `/${p}/${n.key}/ — ${n.label}: ${n.sub}`).join("\n"))
   .join("\n");
 
-/** الجزء الثابت من التعليمات — يُخزَّن مؤقتاً لأنه لا يتغيّر بين الطلبات */
-const STABLE_SYSTEM = `أنت «المساعد الذكي» في منظومة العمل التنفيذي لمحافظة حلب.
+const RULES = `أنت «المساعد الذكي» في منظومة العمل التنفيذي لمحافظة حلب.
 مهمتك: أن يصل أي مستخدم إلى ما يريده دون أن يضيع. تفهم طلبه بأي لهجة عربية، وتبحث، وتفتح الشاشة المناسبة، وتنفّذ الإجراء عنه.
 
 قواعد العمل:
@@ -30,10 +30,19 @@ const STABLE_SYSTEM = `أنت «المساعد الذكي» في منظومة ا
 
 خريطة الشاشات:
 ${sitemap}
-/guide/ — دليل الاستخدام
+/guide/ — دليل الاستخدام`;
+
+/** الجزء الثابت من التعليمات — يُخزَّن مؤقتاً لأنه لا يتغيّر بين الطلبات */
+const STABLE_SYSTEM = `${RULES}
 
 دليل الاستخدام الكامل:
 ${guideAsText()}`;
+
+/** نسخة مختصرة للنماذج المجانية: فهرس الدليل فقط، والتفاصيل بأداة read_guide */
+const COMPACT_SYSTEM = `${RULES}
+
+فهرس دليل الاستخدام (اقرأ خطوات أي موضوع بأداة read_guide بمعرّفه):
+${guideIndex()}`;
 
 let client: Anthropic | null = null;
 
@@ -46,8 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "تعذّر التحقق من الجلسة" }, { status: 503 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json({ error: "المساعد الذكي غير مفعّل بعد — يلزم ضبط مفتاح ANTHROPIC_API_KEY على الخادم." }, { status: 503 });
+  const compat = compatConfig();
+  if (!compat && !process.env.ANTHROPIC_API_KEY) {
+    return NextResponse.json({ error: "المساعد الذكي غير مفعّل بعد — يلزم ضبط AI_API_KEY (مجاني من Groq) على الخادم." }, { status: 503 });
   }
 
   let body: { messages?: Anthropic.Beta.BetaMessageParam[]; page?: string };
@@ -65,6 +75,19 @@ export async function POST(request: Request) {
   const context = `المستخدم الحالي: ${me.name} — ${me.title} (الدور: ${role?.title ?? me.role}، المعرّف ${me.id}).
 الشاشة المفتوحة الآن: ${String(body.page ?? "/").slice(0, 120)}
 التاريخ: ${new Date().toLocaleDateString("ar-SY", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`;
+
+  // مزوّد مفتوح المصدر (Groq / Ollama / OpenRouter…) إن كان مضبوطاً، وإلا Claude
+  if (compat) {
+    try {
+      return NextResponse.json(await compatChat(compat, `${COMPACT_SYSTEM}\n\n${context}`, messages, assistantTools));
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      console.error("[assistant:compat]", err instanceof Error ? err.message : err);
+      if (status === 429) return NextResponse.json({ error: "وصلت حدّ الاستخدام المجاني مؤقتاً — حاول بعد دقيقة." }, { status: 429 });
+      if (status === 401 || status === 403) return NextResponse.json({ error: "مفتاح المساعد غير صالح — راجع مدير النظام." }, { status: 503 });
+      return NextResponse.json({ error: "تعذّر الوصول إلى المساعد — حاول لاحقاً." }, { status: 502 });
+    }
+  }
 
   client ??= new Anthropic();
 

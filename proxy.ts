@@ -23,6 +23,7 @@ export async function proxy(request: NextRequest) {
     PUBLIC.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/icons") ||
+    pathname.startsWith("/branding") ||
     pathname === "/manifest.webmanifest" ||
     pathname === "/sw.js"
   ) {

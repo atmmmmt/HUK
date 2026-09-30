@@ -90,8 +90,10 @@ export default function Gate() {
               >
                 {locked && <Lock size={17} className="pc-lock" />}
                 <div className="pc-icon-showcase"><Icon size={30} /></div>
-                <h2>{c.title}</h2>
-                <p className="pc-sub">{c.sub}</p>
+                <div className="pc-titles">
+                  <h2>{c.title}</h2>
+                  <p className="pc-sub">{c.sub}</p>
+                </div>
                 <div className="pc-divider" />
                 <div className="pc-list pc-list-showcase">
                   {c.points.map((p) => (
@@ -105,6 +107,10 @@ export default function Gate() {
             );
           })}
         </div>
+
+        <p className="gate-secure">
+          <Lock size={13} /> بوابة رسمية آمنة · كل دخول يُسجَّل في سجل التدقيق
+        </p>
       </section>
     </DarkStage>
   );

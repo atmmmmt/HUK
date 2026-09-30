@@ -533,3 +533,118 @@
   .page-head, .topbar { background: #050d19; }
   html, body { background: #050d19; }
 }
+
+/* ============================================================
+   بوابة الدخول على الجوال — شاشة ترحيب تطبيق رسمي
+   ============================================================ */
+.gate-secure { display: none; }
+
+@media (max-width: 720px) {
+  .gate-citadel {
+    padding: calc(env(safe-area-inset-top, 0) + 14px) 16px calc(env(safe-area-inset-bottom, 0) + 24px) !important;
+    min-height: 100dvh; display: flex; flex-direction: column;
+  }
+  .gate-citadel::after {
+    content: "" !important; display: block !important; position: absolute; pointer-events: none;
+    width: 420px; height: 420px; border-radius: 50%; top: -180px; left: 50%; margin-left: -210px;
+    background: radial-gradient(circle, rgba(201, 163, 78, .22), transparent 65%) !important;
+  }
+
+  /* الترويسة: الشعار يميناً والعلم صغيراً يساراً في السطر نفسه */
+  .gate-top-official { position: relative; z-index: 3; padding: 4px 2px !important; }
+  .gate-flag {
+    position: absolute !important; top: calc(env(safe-area-inset-top, 0) + 20px) !important;
+    inset-inline-start: auto !important; inset-inline-end: 18px !important;
+    width: 46px !important; height: 44px !important; z-index: 3;
+  }
+  .gate-flag .flag-pole { display: none; }
+  .gate-flag .flag-cloth {
+    position: absolute; inset: 0 !important; width: 46px !important; height: 32px !important;
+    border-radius: 5px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, .35);
+    transform: none !important; animation: none !important;
+  }
+  .gate-flag .flag-white { font-size: 6px !important; gap: 3px !important; }
+
+  .gate-body-citadel {
+    min-height: 0 !important; flex: 1 !important; justify-content: flex-start !important;
+    padding: 34px 0 0 !important; position: relative; z-index: 2;
+  }
+
+  /* العنوان */
+  .gate-head-hero { text-align: center; margin-bottom: 26px !important; animation: rise .7s var(--e-out) both; }
+  .gate-head-hero .eyebrow {
+    display: inline-block; font-size: 12.5px !important; font-weight: 700;
+    padding: 5px 14px; border-radius: 99px; margin-bottom: 14px !important;
+    background: rgba(201, 163, 78, .12); border: 1px solid rgba(201, 163, 78, .3); color: var(--gold);
+  }
+  .gate-head-hero h1 {
+    font-size: clamp(30px, 8.6vw, 36px) !important; font-weight: 900; line-height: 1.3 !important;
+    white-space: normal; letter-spacing: -.01em; margin-bottom: 10px !important;
+  }
+  .gate-head-hero > p:last-child { font-size: 14px !important; line-height: 1.7 !important; color: #9fb2cc; max-width: 300px; margin-inline: auto; }
+
+  /* بطاقات البوابتين: عمود واحد، بطاقة أفقية فاخرة لكل بوابة */
+  .gate-grid-showcase { display: grid !important; grid-template-columns: 1fr !important; gap: 14px !important; }
+  .portal-card-showcase {
+    position: relative; min-height: 0 !important; padding: 18px !important;
+    display: grid !important; grid-template-columns: 56px 1fr; column-gap: 14px; row-gap: 14px;
+    align-items: center; text-align: right !important;
+    border-radius: 24px !important; overflow: hidden;
+    background: rgba(255, 255, 255, .055) !important; border: 1px solid rgba(255, 255, 255, .1) !important;
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .28) !important; color: #fff;
+    animation: itemIn .6s var(--e-out) both;
+    transition: transform .2s var(--e-back) !important;
+  }
+  .portal-card-showcase:nth-child(2) { animation-delay: .1s; }
+  .portal-card-showcase:active { transform: scale(.975) !important; }
+  .portal-card-showcase::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .pc-icon-showcase {
+    grid-column: 1; grid-row: 1; margin: 0 !important;
+    width: 56px !important; height: 56px !important; border-radius: 18px !important;
+    background: linear-gradient(145deg, var(--gold), var(--gold-600)) !important; color: var(--navy-900) !important;
+    display: grid; place-items: center; box-shadow: 0 8px 20px rgba(201, 163, 78, .35);
+  }
+  .pc-icon-showcase svg { width: 26px; height: 26px; }
+  .pc-titles { grid-column: 2; grid-row: 1; min-width: 0; }
+  .portal-card-showcase h2 { font-size: 19px !important; font-weight: 800; color: #fff !important; margin: 0 !important; line-height: 1.4; }
+  .portal-card-showcase .pc-sub { font-size: 12.5px !important; min-height: 0 !important; color: #9fb2cc !important; margin: 2px 0 0 !important; line-height: 1.5; }
+  .portal-card-showcase .pc-divider { display: none; }
+  .pc-list-showcase {
+    grid-column: 1 / -1; display: flex !important; flex-wrap: wrap; gap: 6px !important; margin: 0 !important;
+  }
+  .pc-list-showcase span {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 12px !important; font-weight: 600;
+    padding: 5px 10px; border-radius: 99px; background: rgba(255, 255, 255, .07); color: #d6e0ee !important;
+  }
+  .pc-list-showcase span svg { width: 12px; height: 12px; color: var(--gold); }
+  .pc-go-showcase {
+    grid-column: 1 / -1; width: 100%; min-height: 52px !important; border-radius: 16px !important;
+    display: flex !important; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15.5px !important; font-weight: 800; margin: 0 !important;
+    background: var(--gold) !important; color: var(--navy-900) !important;
+    box-shadow: 0 10px 24px rgba(201, 163, 78, .3);
+  }
+  .pc-go-showcase svg { transition: transform .25s var(--e-out); }
+  .portal-card-showcase:active .pc-go-showcase svg { transform: translateX(-4px); }
+  .portal-card-showcase.locked { opacity: .55; }
+  .portal-card-showcase.locked .pc-go-showcase { background: rgba(255, 255, 255, .1) !important; color: #9fb2cc !important; box-shadow: none; }
+  .portal-card-showcase .pc-lock { position: absolute; top: 16px; inset-inline-end: 16px; color: #9fb2cc; }
+
+  .gate-secure {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 22px; font-size: 11.5px; color: #62799a; text-align: center;
+  }
+}
+@media (max-width: 720px) {
+  .portal-card-showcase .pc-titles, .portal-card-showcase .pc-titles * { text-align: right !important; }
+  .portal-card-showcase .pc-list-showcase { flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; }
+  .portal-card-showcase .pc-list-showcase span { width: auto !important; flex: none !important; justify-content: flex-start !important; border: 0 !important; min-height: 0 !important; }
+  .gate-head-hero > p:last-child { max-width: 280px !important; }
+}
+@media (max-width: 720px) {
+  .gate-head-hero > p:last-child, .portal-card-showcase h2, .portal-card-showcase .pc-sub, .pc-list-showcase span { white-space: normal !important; }
+}

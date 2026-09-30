@@ -16,6 +16,7 @@ import { useStore } from "@/lib/store";
 import type { Portal } from "@/lib/types";
 import Section from "@/components/sections";
 import TabBar from "@/components/tabbar";
+import MobileFx from "@/components/mobile-fx";
 
 const icons: Record<string, typeof LayoutGrid> = {
   LayoutGrid, CalendarDays, Users, Stamp, ListTodo, Inbox, DoorOpen, Flag, FolderOpen, IdCard, StickyNote,
@@ -269,6 +270,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
           )}
         </main>
 
+        <MobileFx onRefresh={refresh} />
         <TabBar portal={portal} section={section} moreOpen={more} setMoreOpen={setMore} />
       </div>
     </div>

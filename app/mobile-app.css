@@ -226,3 +226,68 @@
   .grid.stagger { gap: var(--s4) !important; }
   .btn { white-space: nowrap; }
 }
+
+/* ============================================================
+   الجولة الثالثة: تفاعلات حيّة
+   ============================================================ */
+.ptr { display: none; }
+
+@media (max-width: 900px) {
+  /* سحب للتحديث */
+  .ptr {
+    display: grid; place-items: center; position: fixed; z-index: 70; left: 50%;
+    top: calc(env(safe-area-inset-top, 0) + 64px);
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #fff; color: var(--navy-700); box-shadow: 0 8px 24px rgba(10, 26, 48, .22);
+    pointer-events: none; transition: opacity .2s;
+  }
+  .ptr.armed { background: var(--gold); color: var(--navy-900); }
+  .ptr.busy svg { animation: spin .8s linear infinite; }
+
+  /* تموّج اللمس */
+  .fx-host { overflow: hidden; isolation: isolate; }
+  .fx-ripple {
+    position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+    background: currentColor; opacity: .12; transform: scale(0);
+    animation: ripple .6s var(--e-out) forwards;
+  }
+  .tab .fx-ripple { background: #fff; }
+
+  /* البطل يتقلّص ويتلاشى مع التمرير */
+  .page-head .page-actions { opacity: calc(1 - var(--hero-k, 0) * 1.6); }
+  .page-head > div:first-child {
+    transform: translateY(calc(var(--hero-k, 0) * 18px)) scale(calc(1 - var(--hero-k, 0) * .06));
+    transform-origin: right top;
+    opacity: calc(1 - var(--hero-k, 0) * .9);
+    will-change: transform, opacity;
+  }
+  .page-head::after { transform: translateY(calc(var(--hero-k, 0) * 60px)); }
+
+  /* مقبض اللوح التفصيلي */
+  .sheet .m-grab { position: absolute; top: 0; left: 50%; margin-left: -20px; z-index: 3; }
+  .sheet-head { padding-top: var(--s6); }
+  .more-sheet, .pop-panel, .sheet { will-change: transform; touch-action: pan-y; }
+
+  /* أيام الأسبوع: شريط يُسحب */
+  .week-strip {
+    display: flex !important; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    margin-inline: calc(-1 * var(--s4)); padding: 2px var(--s4) 6px;
+  }
+  .week-strip > * { flex: 0 0 30%; min-width: 104px; scroll-snap-align: start; }
+
+  /* دخول متتابع للعناصر عند فتح أي شاشة */
+  .canvas .card, .canvas .kpi, table.tbl tbody tr { animation: itemIn .5s var(--e-out) both; }
+  table.tbl tbody tr:nth-child(2), .grid > .card:nth-child(2) { animation-delay: .04s; }
+  table.tbl tbody tr:nth-child(3), .grid > .card:nth-child(3) { animation-delay: .08s; }
+  table.tbl tbody tr:nth-child(4), .grid > .card:nth-child(4) { animation-delay: .12s; }
+  table.tbl tbody tr:nth-child(5), .grid > .card:nth-child(5) { animation-delay: .16s; }
+  table.tbl tbody tr:nth-child(n+6), .grid > .card:nth-child(n+6) { animation-delay: .2s; }
+
+  /* المؤشر الذهبي في الشريط السفلي ينبض عند التفعيل */
+  .tab.on .tab-ico { animation: tabPop .45s var(--e-back); }
+
+}
+
+@keyframes ripple { to { transform: scale(1); opacity: 0; } }
+@keyframes itemIn { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes tabPop { 0% { transform: scale(.7); } 60% { transform: scale(1.12); } 100% { transform: translateY(-1px); } }

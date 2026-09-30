@@ -162,6 +162,7 @@ export function Sheet({
     <div className="sheet-open">
       <div className="scrim" onClick={onClose} />
       <aside className="sheet" role="dialog" aria-modal="true" aria-label={title}>
+        <span className="m-grab" aria-hidden />
         <div className="sheet-head">
           <div style={{ minWidth: 0 }}>
             <h3>{title}</h3>

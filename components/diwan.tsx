@@ -176,7 +176,7 @@ export function Calendar() {
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <Panel title="الأسبوع الجاري" icon={<CalendarDays size={17} />} hint="عدد المواعيد في كل يوم">
-        <div className="grid" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
+        <div className="grid week-strip" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
           {days.map((d, i) => (
             <div key={d} className={`card hover pad ${i === 1 ? "" : ""}`} style={{ padding: 14, borderColor: i === 1 ? "var(--gold)" : undefined, background: i === 1 ? "var(--gold-soft)" : undefined }}>
               <div className="mini-label">{d}</div>

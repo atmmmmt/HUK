@@ -31,7 +31,8 @@ AI_API_KEY="gsk_..."
 
 | الخيار | الإعداد | الكلفة |
 |---|---|---|
-| Groq (الافتراضي) | `AI_API_KEY` فقط | مجاني بحدود يومية، بلا بطاقة |
+| OpenRouter (الأسهل) | `AI_API_KEY` فقط بمفتاح يبدأ بـ `sk-or-` | نماذج مجانية بحدود يومية |
+| Groq | `AI_API_KEY` فقط بمفتاح يبدأ بـ `gsk_` | مجاني بحدود يومية، بلا بطاقة |
 | Ollama على جهازك | `AI_BASE_URL="http://localhost:11434/v1"` و`AI_MODEL="qwen2.5:14b"` | مجاني بلا حدود، يحتاج جهازاً قوياً |
 | أي خدمة متوافقة مع OpenAI (OpenRouter…) | `AI_BASE_URL` و`AI_API_KEY` و`AI_MODEL` | حسب الخدمة |
 | Claude | `ANTHROPIC_API_KEY` (ولا تضبط `AI_*`) | مدفوع، أدق فهماً |

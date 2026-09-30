@@ -25,14 +25,22 @@ export interface CompatConfig {
   model: string;
 }
 
-/** Groq افتراضياً: مجاني، ونموذج Llama مفتوح المصدر يدعم الأدوات */
+/**
+ * يكفي ضبط AI_API_KEY: نعرف المزوّد من بادئة المفتاح ونختار نموذجاً مجانياً مفتوح المصدر.
+ * sk-or- ← OpenRouter · gsk_ ← Groq. ويمكن تجاوز أي منهما بـ AI_BASE_URL و AI_MODEL.
+ */
 export function compatConfig(): CompatConfig | null {
-  const baseUrl = process.env.AI_BASE_URL?.trim() || (process.env.AI_API_KEY ? "https://api.groq.com/openai/v1" : "");
+  const apiKey = process.env.AI_API_KEY?.trim() || undefined;
+  const openrouter = apiKey?.startsWith("sk-or-");
+  const baseUrl =
+    process.env.AI_BASE_URL?.trim() ||
+    (openrouter ? "https://openrouter.ai/api/v1" : apiKey ? "https://api.groq.com/openai/v1" : "");
   if (!baseUrl) return null;
+  const defaultModel = openrouter ? "meta-llama/llama-3.3-70b-instruct:free" : "llama-3.3-70b-versatile";
   return {
     baseUrl: baseUrl.replace(/\/$/, ""),
-    apiKey: process.env.AI_API_KEY?.trim() || undefined,
-    model: process.env.AI_MODEL?.trim() || "llama-3.3-70b-versatile",
+    apiKey,
+    model: process.env.AI_MODEL?.trim() || defaultModel,
   };
 }
 

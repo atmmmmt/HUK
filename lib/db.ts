@@ -4,6 +4,7 @@ import type {
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
   Meeting, Note, Notification, Person, RequestItem, Role,
 } from "./types";
+import { people as seedPeople } from "./seed";
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB ?? "governorate";
@@ -23,7 +24,7 @@ export interface UserDoc extends Person {
 }
 
 // الاتصال يُعاد استخدامه بين عمليات إعادة التحميل في بيئة التطوير
-const globalForMongo = globalThis as unknown as { _mongoClient?: Promise<MongoClient> };
+const globalForMongo = globalThis as unknown as { _mongoClient?: Promise<MongoClient>; _namesSynced?: Promise<void> };
 
 function clientPromise(): Promise<MongoClient> {
   if (!globalForMongo._mongoClient) {
@@ -37,7 +38,30 @@ function clientPromise(): Promise<MongoClient> {
 
 export async function db(): Promise<Db> {
   const c = await clientPromise();
-  return c.db(dbName);
+  const d = c.db(dbName);
+  globalForMongo._namesSynced ??= syncIdentity(d);
+  await globalForMongo._namesSynced;
+  return d;
+}
+
+/**
+ * يطابق أسماء الحسابات وصفاتها مع ملف البيانات مرة عند كل تشغيل للخادم،
+ * فيصل أي تعديل على الأسماء إلى قاعدة قائمة دون إعادة تعبئتها.
+ * لا يمسّ كلمات المرور ولا أي بيانات أخرى.
+ */
+async function syncIdentity(d: Db) {
+  try {
+    const ops = seedPeople.map((p) => ({
+      updateOne: {
+        filter: { id: p.id, $or: [{ name: { $ne: p.name } }, { title: { $ne: p.title } }, { initials: { $ne: p.initials } }] },
+        update: { $set: { name: p.name, title: p.title, initials: p.initials } },
+      },
+    }));
+    const res = await d.collection("users").bulkWrite(ops, { ordered: false });
+    if (res.modifiedCount) console.log(`[db] حُدّثت أسماء ${res.modifiedCount} حساباً`);
+  } catch (err) {
+    console.error("[db] تعذّرت مطابقة الأسماء:", err instanceof Error ? err.message : err);
+  }
 }
 
 export const collections = {

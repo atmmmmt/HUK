@@ -140,7 +140,7 @@ function Art({ kind }: { kind: "portals" | "split" | "chain" }) {
           </span>
           <b style={{ display: "block", fontSize: 13.5, margin: "10px 0 6px" }}>دراسة شبكة الطرق الشمالية</b>
           <div className="bar"><i style={{ width: "45%" }} /></div>
-          <span style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8, display: "block" }}>م. أحمد مصطفى · يستحق 30 أيلول</span>
+          <span style={{ fontSize: 11.5, color: "var(--muted)", marginTop: 8, display: "block" }}>مدير الخدمات الفنية · يستحق 30 أيلول</span>
         </div>
 
         <div className="art-card b pop" style={{ animationDelay: ".3s" }}>

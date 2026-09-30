@@ -111,9 +111,14 @@ try {
   let created = 0;
   for (const person of seed.people) {
     const username = usernames[person.id] ?? person.id;
+    const { name, title, initials, ...rest } = person;
     const res = await users.updateOne(
       { id: person.id },
-      { $setOnInsert: { ...person, username, passwordHash: hash, active: true } },
+      {
+        // الاسم والصفة يتبعان ملف البيانات دائماً، وكلمة المرور والحالة لا تُمَسّ
+        $set: { name, title, initials },
+        $setOnInsert: { ...rest, username, passwordHash: hash, active: true },
+      },
       { upsert: true },
     );
     if (res.upsertedCount) created++;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlarmClock, Bell, Building2, CalendarDays, Check, CheckCheck, ChevronDown, DoorOpen,
+  AlarmClock, Bell, BookOpen, Building2, CalendarDays, Check, CheckCheck, ChevronDown, DoorOpen,
   Flag, FolderOpen, GitFork, IdCard, Inbox, LayoutGrid, ListTodo, Lock, MailQuestion, Menu, Network,
   PanelRightClose, PanelRightOpen, Rows3, ScrollText, Search, Send, ShieldCheck, SlidersHorizontal,
   LogOut, Sparkles, Stamp, StickyNote, TrendingUp, Users,
@@ -140,6 +140,10 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
         </nav>
 
         <div className="rail-foot">
+          <Link href="/guide/" className="nav-item" style={{ marginBottom: 2 }} title={mini ? "دليل الاستخدام" : undefined}>
+            <BookOpen size={18} />
+            <span className="nav-text">دليل الاستخدام</span>
+          </Link>
           <Link href="/welcome/" className="nav-item" style={{ marginBottom: 6 }} title={mini ? "جولة تعريفية" : undefined}>
             <Sparkles size={18} />
             <span className="nav-text">جولة تعريفية</span>

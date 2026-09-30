@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  AlarmClock, Building2, CalendarDays, DoorOpen, Flag, FolderOpen, GitFork, IdCard, Inbox,
+  AlarmClock, BookOpen, Building2, CalendarDays, DoorOpen, Flag, FolderOpen, GitFork, IdCard, Inbox,
   LayoutGrid, ListTodo, LogOut, MailQuestion, MoreHorizontal, Network, ScrollText, Send,
   ShieldCheck, SlidersHorizontal, Sparkles, Stamp, StickyNote, TrendingUp, Users, X,
 } from "lucide-react";
@@ -122,6 +122,9 @@ export default function TabBar({
 
               <div className="more-label">الحساب</div>
               <div className="more-grid">
+                <Link href="/guide/" className="more-item" onClick={() => setMoreOpen(false)}>
+                  <BookOpen size={20} /><span>دليل الاستخدام</span>
+                </Link>
                 <Link href="/welcome/" className="more-item" onClick={() => setMoreOpen(false)}>
                   <Sparkles size={20} /><span>جولة تعريفية</span>
                 </Link>

@@ -22,6 +22,8 @@ MONGODB_URI="mongodb+srv://USER:PASSWORD@cluster0.xxxxx.mongodb.net/?retryWrites
 MONGODB_DB="governorate"
 SESSION_SECRET="مفتاح-عشوائي-طويل-غيّره"
 SEED_PASSWORD="Aleppo@2026"
+# المساعد الذكي — مفتاح من console.anthropic.com (اختياري: بدونه يعمل كل شيء عدا المساعد)
+ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 > **مهم:** لا تشارك هذا الملف ولا ترفعه إلى Git — هو مستثنى أصلاً في `.gitignore`.

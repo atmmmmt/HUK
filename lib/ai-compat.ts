@@ -75,30 +75,46 @@ function toChat(system: string, messages: Msg[]): ChatMessage[] {
 }
 
 export async function compatChat(cfg: CompatConfig, system: string, messages: Msg[], tools: Tool[]) {
-  const res = await fetch(`${cfg.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}),
-    },
-    body: JSON.stringify({
-      model: cfg.model,
-      temperature: 0.2,
-      max_tokens: 1500,
-      messages: toChat(system, messages),
-      tools: tools.map((t) => ({
-        type: "function",
-        function: { name: t.name, description: t.description, parameters: t.input_schema },
-      })),
-      tool_choice: "auto",
-    }),
-    signal: AbortSignal.timeout(60_000),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${cfg.baseUrl}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(cfg.apiKey ? { Authorization: `Bearer ${cfg.apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        model: cfg.model,
+        temperature: 0.2,
+        max_tokens: 1500,
+        messages: toChat(system, messages),
+        tools: tools.map((t) => ({
+          type: "function",
+          function: { name: t.name, description: t.description, parameters: t.input_schema },
+        })),
+        tool_choice: "auto",
+      }),
+      signal: AbortSignal.timeout(60_000),
+    });
+  } catch (e) {
+    // لم يصل الطلب أصلاً: حجب شبكة، اسم خادم خاطئ، أو انتهاء المهلة
+    const cause = (e as { cause?: { code?: string } }).cause?.code ?? (e instanceof Error ? e.name : "");
+    const err = new Error(`تعذّر اتصال الخادم بـ ${new URL(cfg.baseUrl).host}${cause ? ` (${cause})` : ""}`) as Error & { status: number; detail: string };
+    err.status = 0;
+    err.detail = err.message;
+    throw err;
+  }
 
   if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    const err = new Error(`compat ${res.status}: ${detail.slice(0, 300)}`) as Error & { status: number };
+    const raw = await res.text().catch(() => "");
+    let detail = raw;
+    try {
+      const j = JSON.parse(raw);
+      detail = j?.error?.metadata?.raw || j?.error?.message || j?.message || raw;
+    } catch { /* نص عادي */ }
+    const err = new Error(`compat ${res.status}: ${String(detail).slice(0, 300)}`) as Error & { status: number; detail: string };
     err.status = res.status;
+    err.detail = `${res.status} — ${String(detail).slice(0, 220)}`;
     throw err;
   }
 

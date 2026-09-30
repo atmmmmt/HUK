@@ -85,7 +85,9 @@ export async function POST(request: Request) {
       console.error("[assistant:compat]", err instanceof Error ? err.message : err);
       if (status === 429) return NextResponse.json({ error: "وصلت حدّ الاستخدام المجاني مؤقتاً — حاول بعد دقيقة." }, { status: 429 });
       if (status === 401 || status === 403) return NextResponse.json({ error: "مفتاح المساعد غير صالح — راجع مدير النظام." }, { status: 503 });
-      return NextResponse.json({ error: "تعذّر الوصول إلى المساعد — حاول لاحقاً." }, { status: 502 });
+      // نعرض سبب المزوّد كما هو (لا يحوي المفتاح) حتى يمكن تشخيص المشكلة
+      const detail = (err as { detail?: string }).detail;
+      return NextResponse.json({ error: `تعذّر الوصول إلى المساعد${detail ? ` — السبب: ${detail}` : ""}` }, { status: 502 });
     }
   }
 

@@ -657,3 +657,9 @@
   .pop-panel { max-height: 85dvh; display: flex; flex-direction: column; }
   .pop-list { flex: 1; max-height: none; overflow-y: auto; overscroll-behavior: contain; padding-bottom: var(--s3); }
 }
+@media (max-width: 640px) {
+  .scope-pick { min-width: 0; }
+  .scope-pick .field { flex: 1 1 0; min-width: 0; }
+  .scope-pick select { min-width: 0 !important; width: 100%; }
+  .scope-pick .chip { flex: none; }
+}

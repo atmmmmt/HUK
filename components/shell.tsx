@@ -17,6 +17,7 @@ import type { Portal } from "@/lib/types";
 import Section from "@/components/sections";
 import TabBar from "@/components/tabbar";
 import MobileFx from "@/components/mobile-fx";
+import NavGestures from "@/components/nav-gestures";
 import ThemeToggle from "@/components/theme-toggle";
 import MobileSearch from "@/components/mobile-search";
 
@@ -289,6 +290,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
         </main>
 
         <MobileFx onRefresh={refresh} />
+        <NavGestures home={`/${portal}/${nav[0]?.key ?? ""}/`} />
         <MobileSearch open={finding} onClose={closeSearch} />
         <TabBar portal={portal} section={section} moreOpen={more} setMoreOpen={setMore} />
       </div>

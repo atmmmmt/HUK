@@ -691,7 +691,7 @@ html[data-theme="dark"], html[data-theme="dark"] body { background: #050d19; }
   body:has(.more-sheet) .btn-add, body:has(.ai-wrap) .btn-add { opacity: 0; pointer-events: none; }
   /* مساحة كافية أسفل الصفحة حتى لا يغطي الزر آخر عنصر */
   /* أي حركة تُبقي transform على الأسلاف تجعل الزر الثابت يتبعها لا الشاشة */
-  .canvas:has(.btn-add), .canvas :has(> .btn-add), .canvas :has(.btn-add) { animation: none !important; transform: none !important; filter: none !important; }
+  .canvas:has(.btn-add), .canvas :has(> .btn-add), .canvas :has(.btn-add) { animation-fill-mode: backwards !important; filter: none !important; }
   .canvas:has(.btn-add) { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0)) !important; }
 }
 
@@ -700,3 +700,15 @@ html[data-theme="dark"], html[data-theme="dark"] body { background: #050d19; }
   html, body, * { scrollbar-width: none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; background: transparent; }
 }
+
+/* ===================== الرجوع والانتقال بين الصفحات ===================== */
+@media (max-width: 900px) {
+  /* في الواجهة العربية: التقدّم يدخل من اليسار والرجوع من اليمين */
+  .canvas.nav-fwd { animation: navFwd .38s cubic-bezier(.22,1,.36,1) backwards !important; }
+  .canvas.nav-back { animation: navBack .38s cubic-bezier(.22,1,.36,1) backwards !important; }
+  .nav-shade { position: fixed; inset: 0; z-index: 40; background: #000; pointer-events: none; opacity: .22; }
+  html, body { overscroll-behavior-x: none; }
+}
+@keyframes navFwd { from { opacity: .4; transform: translateX(-28%); } to { opacity: 1; transform: none; } }
+@keyframes navBack { from { opacity: .4; transform: translateX(28%); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .canvas.nav-fwd, .canvas.nav-back { animation: none !important; } }

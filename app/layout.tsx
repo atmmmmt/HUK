@@ -5,11 +5,13 @@ import { StoreProvider } from "@/lib/store";
 import Toasts from "@/components/toasts";
 import Splash from "@/components/splash";
 import Assistant from "@/components/assistant";
+import { themeBootScript } from "@/lib/theme";
 import "./globals.css";
 import "./gate-polish.css";
 import "./no-background.css";
 import "./mobile-app.css";
 import "./guide.css";
+import "./welcome.css";
 
 const cairo = Cairo({ subsets: ["arabic"], weight: ["400", "500", "600", "700", "900"], display: "swap" });
 
@@ -40,7 +42,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ar" dir="rtl" data-scroll-behavior="smooth">
+    <html lang="ar" dir="rtl" data-scroll-behavior="smooth" data-theme="light" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className={cairo.className}>
         <StoreProvider>
           {children}

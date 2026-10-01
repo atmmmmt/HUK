@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { setData, type Bootstrap } from "./lookup";
 import type {
   Assignment, AssignmentStatus, Booking, Classification, Letter, Meeting, Note, Notification, Person, Priority,
-  RequestItem, RoleKey,
+  DocFile, RequestItem, RoleKey, UploadedDoc,
 } from "./types";
 
 export interface NewAssignmentInput {
@@ -59,6 +59,9 @@ interface Store {
   createUser: (input: NewUserInput) => Promise<void>;
   setUserActive: (id: string, active: boolean) => Promise<void>;
   saveEscalation: (levels: number[]) => Promise<void>;
+  documents: UploadedDoc[];
+  files: (DocFile & { locked?: boolean })[];
+  uploadDocument: (file: File, target: { folderId?: string; assignmentId?: string }, classification?: Classification) => Promise<void>;
   refresh: () => Promise<void>;
   toasts: Toast[];
   toast: (text: string, tone?: Toast["tone"]) => void;
@@ -297,6 +300,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, "حُفظ سُلّم التصعيد");
   }, [guard, patchLocal]);
 
+  const uploadDocument = useCallback(async (file: File, target: { folderId?: string; assignmentId?: string }, classification?: Classification) => {
+    await guard(async () => {
+      const fd = new FormData();
+      fd.append("file", file);
+      if (target.folderId) fd.append("folderId", target.folderId);
+      if (target.assignmentId) fd.append("assignmentId", target.assignmentId);
+      if (classification) fd.append("classification", classification);
+      // بلا ترويسة Content-Type حتى يضبط المتصفح حدود multipart بنفسه
+      const res = await fetch("/api/documents/", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? "تعذّر رفع الملف");
+      const { document, attachment } = data;
+      patchLocal((b) => ({
+        ...b,
+        documents: [document, ...(b.documents ?? [])],
+        files: b.files.map((f) => (f.id === target.folderId ? { ...f, items: f.items + 1, updated: "الآن" } : f)),
+        assignments: attachment ? b.assignments.map((a) => (a.id === target.assignmentId ? { ...a, attachments: [...a.attachments, attachment] } : a)) : b.assignments,
+      }));
+    }, "رُفع المستند");
+  }, [guard, patchLocal]);
+
   const logout = useCallback(async () => {
     await call("/api/auth/logout/", { method: "POST" }).catch(() => {});
     router.replace("/login");
@@ -323,10 +347,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     escalationLevels: boot?.settings?.escalationLevels ?? null,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
     registerLetter, letterAction, createUser, setUserActive, saveEscalation,
+    documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument,
   }), [boot, anon, error, advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, saveEscalation]);
+    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

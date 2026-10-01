@@ -57,7 +57,7 @@ export function AdminEntities() {
           <Kpi label="الجهات" value={list.length} icon={<Building2 size={17} />} />
           <Kpi label="المفعّلة" value={list.filter((e) => e.active).length} icon={<CheckCircle2 size={17} />} tone="ok" />
         </div>
-        <button className="btn gold" onClick={() => setAdding(true)}><Plus size={17} /> إضافة جهة جديدة</button>
+        <button className="btn gold btn-add" onClick={() => setAdding(true)}><Plus size={17} /> إضافة جهة جديدة</button>
       </div>
 
       <Panel title="الجهات والمؤسسات المسجّلة" icon={<Building2 size={17} />} flush>
@@ -149,7 +149,7 @@ export function AdminUsers() {
 
       {canManage && (
         <div className="row" style={{ justifyContent: "flex-end" }}>
-          <button className="btn gold" onClick={() => setAdding(true)}><Plus size={16} /> حساب جديد</button>
+          <button className="btn gold btn-add" onClick={() => setAdding(true)}><Plus size={16} /> حساب جديد</button>
         </div>
       )}
 

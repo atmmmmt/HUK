@@ -53,9 +53,7 @@
 .guide-go { display: inline-flex; align-items: center; gap: 6px; margin-top: 14px; padding: 10px 16px; border-radius: 12px; background: var(--navy-900); color: #fff; font-weight: 700; font-size: 13.5px; }
 .guide-empty { color: var(--muted); padding: 20px 4px; }
 .guide-foot { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 26px; font-size: 13px; color: var(--muted); text-align: center; }
-@media (prefers-color-scheme: dark) and (max-width: 900px) {
-  .guide-go { background: var(--gold); color: var(--navy-900); }
-}
+html[data-theme="dark"] .guide-go { background: var(--gold); color: var(--navy-900); }
 
 /* ============================ المساعد الذكي ============================ */
 .ai-fab {
@@ -124,3 +122,19 @@
   .ai-panel { inset: auto 0 0 0; width: auto; height: 92dvh; border-radius: 28px 28px 0 0; animation: sheetUp .42s var(--e-out) both; }
   .ai-head { padding-top: 16px; }
 }
+
+/* ============================ مبدّل المظهر ============================ */
+.theme-toggle { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--line-2); }
+.theme-toggle button { display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 10px; font-size: 13.5px; font-weight: 700; color: var(--muted); transition: background .2s, color .2s; }
+.theme-toggle button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(14, 24, 38, .12); }
+.theme-toggle.compact { background: rgba(255, 255, 255, .06); }
+.theme-toggle.compact button { height: 32px; color: #8ba2c0; }
+.theme-toggle.compact button.on { background: rgba(255, 255, 255, .12); color: #fff; box-shadow: none; }
+
+/* ============================ المستندات ============================ */
+.doc-list { display: grid; gap: 8px; }
+.doc-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line-2); }
+.doc-row b { display: block; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.doc-row small { display: block; font-size: 11.5px; color: var(--muted); }
+.doc-ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--navy-50); color: var(--navy-700); flex: none; }
+.spin { animation: spin .8s linear infinite; }

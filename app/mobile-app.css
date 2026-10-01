@@ -499,8 +499,10 @@
 /* ============================================================
    الوضع الليلي — يتبع إعداد الجوال
    ============================================================ */
-@media (max-width: 900px) and (prefers-color-scheme: dark) {
-  :root {
+/* ============================================================
+   الوضع الداكن — يختاره المستخدم (فاتح / داكن / تلقائي)
+   ============================================================ */
+html[data-theme="dark"] {
     color-scheme: dark;
     --bg: #07111f;
     --card: #0f1c30;
@@ -524,25 +526,25 @@
     --plum-bg: #251735; --plum: #c39cf0;
     --teal-bg: #0e2a2d; --teal: #4fc5cd;
   }
-  .card, .kpi, .mt-hero, .mt-q-ico, .mt-card, .msearch-list, .more-item, .mt-act:not(.ok) {
+html[data-theme="dark"] .card, html[data-theme="dark"] .kpi, html[data-theme="dark"] .mt-hero, html[data-theme="dark"] .mt-q-ico, html[data-theme="dark"] .mt-card, html[data-theme="dark"] .msearch-list, html[data-theme="dark"] .more-item, html[data-theme="dark"] .mt-act:not(.ok) {
     box-shadow: 0 0 0 1px var(--line), 0 10px 30px rgba(0, 0, 0, .35) !important;
   }
-  .btn.primary { background: var(--gold); color: var(--navy-900); }
-  .btn.ghost { background: var(--card); }
-  .pill.on { background: var(--gold); border-color: var(--gold); color: var(--navy-900); }
-  .field > input, .field > select, .field > textarea { background: var(--bg); color: var(--ink); }
-  .more-item.on { background: var(--gold); color: var(--navy-900); }
-  .more-item.on svg { background: var(--navy-900); color: var(--gold); }
-  .more-item.danger svg { background: var(--card); }
-  .mt-q:first-child .mt-q-ico { background: var(--gold); color: var(--navy-900); }
-  .mt-now { box-shadow: 0 0 0 1px var(--line), 0 10px 28px rgba(0, 0, 0, .4); }
-  .ptr { background: var(--card); color: var(--ink); }
-  .lock-note { border-color: var(--gold-200); color: var(--gold-700); }
-  .skel { background-image: linear-gradient(90deg, var(--line-2) 8%, var(--line) 18%, var(--line-2) 28%); }
-  .toast { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), var(--sh-3); }
-  .page-head, .topbar { background: #050d19; }
-  html, body { background: #050d19; }
-}
+html[data-theme="dark"] .btn.primary { background: var(--gold); color: var(--navy-900); }
+html[data-theme="dark"] .btn.ghost { background: var(--card); }
+html[data-theme="dark"] .pill.on { background: var(--gold); border-color: var(--gold); color: var(--navy-900); }
+html[data-theme="dark"] .field > input, html[data-theme="dark"] .field > select, html[data-theme="dark"] .field > textarea { background: var(--bg); color: var(--ink); }
+html[data-theme="dark"] .more-item.on { background: var(--gold); color: var(--navy-900); }
+html[data-theme="dark"] .more-item.on svg { background: var(--navy-900); color: var(--gold); }
+html[data-theme="dark"] .more-item.danger svg { background: var(--card); }
+html[data-theme="dark"] .mt-q:first-child .mt-q-ico { background: var(--gold); color: var(--navy-900); }
+html[data-theme="dark"] .mt-now { box-shadow: 0 0 0 1px var(--line), 0 10px 28px rgba(0, 0, 0, .4); }
+html[data-theme="dark"] .ptr { background: var(--card); color: var(--ink); }
+html[data-theme="dark"] .lock-note { border-color: var(--gold-200); color: var(--gold-700); }
+html[data-theme="dark"] .skel { background-image: linear-gradient(90deg, var(--line-2) 8%, var(--line) 18%, var(--line-2) 28%); }
+html[data-theme="dark"] .toast { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), var(--sh-3); }
+html[data-theme="dark"] .page-head, html[data-theme="dark"] .topbar { background: #050d19; }
+html[data-theme="dark"], html[data-theme="dark"] body { background: #050d19; }
+
 
 /* ============================================================
    بوابة الدخول على الجوال — شاشة ترحيب تطبيق رسمي
@@ -672,4 +674,29 @@
   .scope-pick .field { flex: 1 1 0; min-width: 0; }
   .scope-pick select { min-width: 0 !important; width: 100%; }
   .scope-pick .chip { flex: none; }
+}
+
+/* ============================================================
+   زر الإضافة الرئيسي: عائم وظاهر دائماً على الجوال
+   ============================================================ */
+@media (max-width: 900px) {
+  .btn.btn-add {
+    position: fixed; z-index: 56; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom, 0));
+    height: 54px; padding: 0 20px; border-radius: 18px; font-size: 15px; font-weight: 800;
+    box-shadow: 0 12px 28px rgba(201, 163, 78, .45), 0 0 0 4px rgba(201, 163, 78, .14);
+    animation: fabIn .5s var(--e-back) .2s both;
+  }
+  .btn.btn-add svg { width: 20px; height: 20px; }
+  body:has(.sheet) .btn-add, body:has(.pop-panel) .btn-add, body:has(.msearch) .btn-add,
+  body:has(.more-sheet) .btn-add, body:has(.ai-wrap) .btn-add { opacity: 0; pointer-events: none; }
+  /* مساحة كافية أسفل الصفحة حتى لا يغطي الزر آخر عنصر */
+  /* أي حركة تُبقي transform على الأسلاف تجعل الزر الثابت يتبعها لا الشاشة */
+  .canvas:has(.btn-add), .canvas :has(> .btn-add), .canvas :has(.btn-add) { animation: none !important; transform: none !important; filter: none !important; }
+  .canvas:has(.btn-add) { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0)) !important; }
+}
+
+/* شريط تمرير المتصفح: مخفي تماماً على الجوال (يظهر يساراً في الواجهة العربية) */
+@media (max-width: 900px) {
+  html, body, * { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; background: transparent; }
 }

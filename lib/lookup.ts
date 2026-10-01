@@ -1,6 +1,6 @@
 "use client";
 
-import type {
+import type { UploadedDoc,
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
   Meeting, Note, Notification, Person, RequestItem, Role,
 } from "./types";
@@ -41,6 +41,7 @@ export interface Bootstrap {
   audit: AuditEntry[];
   requests: RequestItem[];
   settings?: { escalationLevels: number[] | null };
+  documents?: UploadedDoc[];
 }
 
 export function setData(d: Bootstrap) {

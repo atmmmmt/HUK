@@ -353,7 +353,7 @@ export function EntityRequests() {
 
       <div className="row between wrap" style={{ gap: 12 }}>
         <Pills value={kind} onChange={setKind} items={kinds.map((k) => ({ key: k, label: k, n: k === "الكل" ? mine.length : mine.filter((r) => r.kind === k).length }))} />
-        {canRaise && <button className="btn gold" onClick={() => setAdding(true)}><MailQuestion size={16} /> طلب جديد</button>}
+        {canRaise && <button className="btn gold btn-add" onClick={() => setAdding(true)}><MailQuestion size={16} /> طلب جديد</button>}
       </div>
 
       {list.length === 0 ? <Empty text="لا طلبات من هذه الجهة" /> : (

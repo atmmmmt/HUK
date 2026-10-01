@@ -4,10 +4,12 @@ import { useMemo, useState } from "react";
 import {
   BadgeCheck, CalendarClock, CheckCircle2, Clock3, DoorOpen, Flag, FolderOpen, IdCard, Layers,
   ListChecks, Lock, MapPin, MessageSquare, Phone, ShieldCheck, StickyNote, TriangleAlert, Users, XCircle,
+  UploadCloud,
 } from "lucide-react";
 import { delegations, docFiles, entityOf, halls, people, personOf, roleOf } from "@/lib/lookup";
 import { actionLabels, bookingRank, bookingRankLabel, clearanceRank, reachLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
+import { DocList, UploadButton } from "@/components/upload";
 import type { Action, Hall, Person } from "@/lib/types";
 import {
   Ava, Bar, ClassChip, Empty, Kpi, NoteBoard, Panel, PersonLine, Pills, Sheet, StatusChip, Tabs,
@@ -249,12 +251,15 @@ export function Delegations() {
 /* ═══════════════════════ الملفات ═══════════════════════ */
 
 export function Files() {
-  const { me } = useStore();
+  const { me, documents, files: live } = useStore();
   const [kind, setKind] = useState("الكل");
-  const kinds = ["الكل", ...Array.from(new Set(docFiles.map((f) => f.kind)))];
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
+  const kinds = ["الكل", ...Array.from(new Set(live.map((f) => f.kind)))];
   const myRank = clearanceRank(me.clearance);
-
-  const list = docFiles.filter((f) => kind === "الكل" || f.kind === kind);
+  const list = live.filter((f) => kind === "الكل" || f.kind === kind);
+  const open = live.find((f) => f.id === openId) ?? null;
+  const writable = live.filter((f) => clearanceRank(f.classification) <= myRank);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -266,13 +271,16 @@ export function Files() {
         </span>
       </div>
 
-      <Pills value={kind} onChange={setKind} items={kinds.map((k) => ({ key: k, label: k }))} />
+      <div className="row between wrap" style={{ gap: 12 }}>
+        <Pills value={kind} onChange={setKind} items={kinds.map((k) => ({ key: k, label: k }))} />
+        <button className="btn gold btn-add" onClick={() => setPicking(true)}><UploadCloud size={16} /> رفع مستند</button>
+      </div>
 
       <div className="grid g-3">
         {list.map((f) => {
           const locked = clearanceRank(f.classification) > myRank;
           return (
-            <div key={f.id} className="card pad hover" style={{ opacity: locked ? .72 : 1 }}>
+            <button key={f.id} className="card pad hover" style={{ opacity: locked ? .72 : 1, textAlign: "right" }} onClick={() => !locked && setOpenId(f.id)} disabled={locked}>
               <div className="row between wrap" style={{ gap: 8, marginBottom: 10 }}>
                 <span className="chip navy"><FolderOpen size={13} /> {f.kind}</span>
                 <ClassChip c={f.classification} />
@@ -290,10 +298,37 @@ export function Files() {
                   <span className="chip">{entityOf(f.entityId).short}</span>
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {open && (
+        <Sheet
+          title={open.name}
+          sub={`${open.ref} · ${open.kind} · ${entityOf(open.entityId).short}`}
+          onClose={() => setOpenId(null)}
+          footer={<UploadButton target={{ folderId: open.id }} classification={open.classification} label="رفع مستند إلى هذا المجلد" />}
+        >
+          <DocList docs={documents.filter((d) => d.folderId === open.id)} empty="لا مستندات مرفوعة في هذا المجلد بعد — ارفع أول مستند من الزر في الأسفل." />
+        </Sheet>
+      )}
+
+      {picking && (
+        <Sheet title="رفع مستند" sub="اختر المجلد الذي يُحفظ فيه المستند" onClose={() => setPicking(false)}>
+          <div className="grid" style={{ gap: 8 }}>
+            {writable.map((f) => (
+              <button key={f.id} className="card pad hover" style={{ padding: 13, textAlign: "right" }} onClick={() => { setPicking(false); setOpenId(f.id); }}>
+                <div className="row between">
+                  <b style={{ fontSize: 14 }}><FolderOpen size={14} style={{ verticalAlign: -2 }} /> {f.name}</b>
+                  <ClassChip c={f.classification} />
+                </div>
+                <span className="tiny muted">{f.kind} · {f.items} مستنداً</span>
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }

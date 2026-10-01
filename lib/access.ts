@@ -85,12 +85,12 @@ export function seesAssignment(person: Person, a: Assignment, ctx: Ctx = {}): bo
       return a.entityId === person.entityId;
     case "head": {
       if (a.entityId !== person.entityId) return false;
-      if (a.ownerId === person.id || a.partnerIds.includes(person.id)) return true;
+      if (a.ownerId === person.id || (a.partnerIds ?? []).includes(person.id)) return true;
       const owner = ctx.people?.find((p) => p.id === a.ownerId);
       return !!owner && !!person.unit && owner.unit === person.unit;
     }
     case "employee":
-      return a.ownerId === person.id || a.partnerIds.includes(person.id);
+      return a.ownerId === person.id || (a.partnerIds ?? []).includes(person.id);
     default:
       return a.entityId === person.entityId;
   }

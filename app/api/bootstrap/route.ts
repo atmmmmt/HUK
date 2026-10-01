@@ -71,6 +71,10 @@ export async function GET() {
 
     const isAdmin = me.role === "admin" || me.role === "governor";
     const esc = await (await db()).collection("settings").findOne({ id: "escalation" });
+    // المستندات: ما يسمح به التصريح، ومرفقات التكليفات المرئية فقط
+    const visibleIds = new Set(assignments.map((a) => a.id));
+    const documents = cleanAll(await (await db()).collection("documents").find({}, { projection: { fileId: 0 } }).toArray())
+      .filter((d) => clearanceRank(String(d.classification)) <= myRank && (!d.assignmentId || visibleIds.has(String(d.assignmentId))));
 
     return {
       me: cleanAll([me])[0],
@@ -94,6 +98,7 @@ export async function GET() {
       notifications: cleanAll(notifications).filter((n) => n.toId === me.id),
       audit: isAdmin ? cleanAll(audit) : [],
       requests: cleanAll(requests),
+      documents,
       settings: { escalationLevels: Array.isArray(esc?.levels) ? (esc.levels as number[]) : null },
     };
   });

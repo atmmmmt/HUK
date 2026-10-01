@@ -17,6 +17,7 @@ import type { Portal } from "@/lib/types";
 import Section from "@/components/sections";
 import TabBar from "@/components/tabbar";
 import MobileFx from "@/components/mobile-fx";
+import ThemeToggle from "@/components/theme-toggle";
 import MobileSearch from "@/components/mobile-search";
 
 const icons: Record<string, typeof LayoutGrid> = {
@@ -140,6 +141,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
         </nav>
 
         <div className="rail-foot">
+          {!mini && <div style={{ marginBottom: 8 }}><ThemeToggle compact /></div>}
           <Link href="/guide/" className="nav-item" style={{ marginBottom: 2 }} title={mini ? "دليل الاستخدام" : undefined}>
             <BookOpen size={18} />
             <span className="nav-text">دليل الاستخدام</span>

@@ -18,6 +18,7 @@ import {
 import MobileToday from "@/components/mobile-home";
 import { useSwipeRow } from "@/components/swipe-row";
 import { AssignOutcomes, NewAssignmentSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
+import { DocList, UploadButton } from "@/components/upload";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
 
@@ -545,7 +546,7 @@ export function Assignments() {
           }))}
         />
         {canIssueAssignment(me) && (
-          <button className="btn gold" onClick={() => setIssuing(true)}><ListTodo size={16} /> تكليف جديد</button>
+          <button className="btn gold btn-add" onClick={() => setIssuing(true)}><ListTodo size={16} /> تكليف جديد</button>
         )}
       </div>
 
@@ -613,7 +614,8 @@ function AssignmentRow({ a, onOpen }: { a: Assignment; onOpen: () => void }) {
 }
 
 export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => void }) {
-  const { me, advance, setProgress } = useStore();
+  const { me, advance, setProgress, documents } = useStore();
+  const canAttach = [a.ownerId, a.issuerId, ...a.partnerIds].includes(me.id) || canIssueAssignment(me);
   const stepIndex = lifecycle.findIndex((l) => l.key === a.status);
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(a.progress);
@@ -675,7 +677,7 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
           <div className="grid" style={{ gap: 10 }}>
             <div className="row between"><span className="tiny muted">الجهة المكلَّفة</span><b style={{ fontSize: 13.5 }}>{entityOf(a.entityId).name}</b></div>
             <div className="row between"><span className="tiny muted">المكلَّف الرئيسي</span><PersonLine id={a.ownerId} /></div>
-            {a.partnerIds.length > 0 && (
+            {(a.partnerIds?.length ?? 0) > 0 && (
               <div className="row between"><span className="tiny muted">المشاركون</span><AvaStack ids={a.partnerIds} /></div>
             )}
             <div className="row between"><span className="tiny muted">أصدر التكليف</span><PersonLine id={a.issuerId} /></div>
@@ -710,18 +712,19 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
           <Chain chain={a.chain} />
         </Panel>
 
-        {a.attachments.length > 0 && (
-          <Panel title="المرفقات" icon={<Paperclip size={17} />}>
-            <div className="grid" style={{ gap: 8 }}>
-              {a.attachments.map((f) => (
-                <div key={f.name} className="row between card pad" style={{ padding: 11 }}>
-                  <span className="row" style={{ gap: 9 }}><Paperclip size={15} /> <b style={{ fontSize: 13 }}>{f.name}</b></span>
-                  <span className="tiny muted">{f.size}</span>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        )}
+        <Panel title="المرفقات" icon={<Paperclip size={17} />} hint={`${a.attachments.length}`}>
+          <div className="grid" style={{ gap: 10 }}>
+            {/* المرفقات القديمة بلا ملف فعلي تظهر اسماً فقط، والمرفوعة قابلة للعرض والتنزيل */}
+            {a.attachments.filter((f) => !f.docId).map((f) => (
+              <div key={f.name} className="row between card pad" style={{ padding: 11 }}>
+                <span className="row" style={{ gap: 9 }}><Paperclip size={15} /> <b style={{ fontSize: 13 }}>{f.name}</b></span>
+                <span className="tiny muted">{f.size}</span>
+              </div>
+            ))}
+            <DocList docs={documents.filter((d) => d.assignmentId === a.id)} empty={a.attachments.length ? "" : "لا مرفقات بعد"} />
+            {canAttach && <UploadButton target={{ assignmentId: a.id }} label="إرفاق ملف" className="btn ghost" />}
+          </div>
+        </Panel>
 
         <Panel title="الملاحظات" icon={<MessageSquare size={17} />}>
           <NoteBoard target={a.id} targetLabel={`تكليف ${a.ref}`} />
@@ -764,7 +767,7 @@ export function Correspondence() {
           { key: "مؤرشف", label: "المؤرشف", n: letters.filter((l) => l.direction === "مؤرشف").length },
         ]}
       />
-        {canEdit && <button className="btn gold" onClick={() => setAdding(true)}><Inbox size={16} /> قيد كتاب</button>}
+        {canEdit && <button className="btn gold btn-add" onClick={() => setAdding(true)}><Inbox size={16} /> قيد كتاب</button>}
       </div>
 
       <section className="card">

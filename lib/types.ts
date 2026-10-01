@@ -137,7 +137,7 @@ export interface Assignment {
   progress: number;
   status: AssignmentStatus;
   chain: DeliveryChain;
-  attachments: { name: string; size: string }[];
+  attachments: { name: string; size: string; docId?: string }[];
   meetingId?: string;
   classification: Classification;
   escalation: 0 | 1 | 2 | 3;
@@ -269,4 +269,17 @@ export interface RequestItem {
   at: string;
   status: "بانتظار الرد" | "موافق" | "مرفوض";
   detail: string;
+}
+
+/** مستند مرفوع (البيانات الوصفية فقط — المحتوى يُنزَّل عند الطلب) */
+export interface UploadedDoc {
+  id: string;
+  name: string;
+  size: number;
+  mime: string;
+  folderId?: string;
+  assignmentId?: string;
+  uploadedBy: string;
+  at: string;
+  classification: Classification;
 }

@@ -1,0 +1,39 @@
+/* ============================ المقدمة: خفيفة ونظيفة ============================ */
+.onb {
+  min-height: 100dvh; display: flex; flex-direction: column;
+  background: var(--card); color: var(--ink);
+  padding: calc(env(safe-area-inset-top, 0) + 12px) 24px calc(env(safe-area-inset-bottom, 0) + 20px);
+  max-width: 520px; margin: 0 auto;
+}
+.onb-top { display: flex; align-items: center; justify-content: space-between; min-height: 48px; }
+.onb-brand { display: flex; align-items: center; gap: 10px; }
+.onb-brand img { border-radius: 10px; }
+.onb-brand b { font-size: 15px; font-weight: 800; color: var(--ink); }
+.onb-skip { font-size: 14px; font-weight: 600; color: var(--muted); padding: 8px 12px; border-radius: 99px; }
+.onb-skip:active { background: var(--line-2); }
+
+.onb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; padding: 24px 0; animation: onbIn .45s var(--e-out) both; }
+.onb-art {
+  width: 112px; height: 112px; margin: 0 auto 32px; border-radius: 34px; display: grid; place-items: center;
+  background: var(--gold-50); color: var(--gold-700); border: 1px solid var(--gold-200);
+}
+.onb-body h1 { font-size: 28px; font-weight: 900; line-height: 1.35; margin-bottom: 12px; color: var(--ink); }
+.onb-body p { font-size: 15.5px; line-height: 1.9; color: var(--muted); max-width: 360px; margin: 0 auto; }
+.onb-body ul { display: grid; gap: 10px; margin: 28px auto 0; text-align: right; width: fit-content; max-width: 100%; }
+.onb-body li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.7; color: var(--ink-2); }
+.onb-body li svg { flex: none; margin-top: 4px; color: var(--ok); }
+
+.onb-foot { display: grid; gap: 20px; }
+.onb-dots { display: flex; justify-content: center; gap: 8px; }
+.onb-dots button { width: 8px; height: 8px; border-radius: 99px; background: var(--line); transition: width .3s var(--e-out), background .3s; }
+.onb-dots button.on { width: 26px; background: var(--navy-900); }
+.onb-next {
+  display: flex; align-items: center; justify-content: center; gap: 8px; height: 54px; border-radius: 16px;
+  background: var(--navy-900); color: #fff; font-size: 16px; font-weight: 800;
+  transition: transform .15s var(--e-soft);
+}
+.onb-next:active { transform: scale(.97); }
+
+@keyframes onbIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+
+html[data-theme="dark"] .onb-next, html[data-theme="dark"] .onb-dots button.on { background: var(--gold); color: var(--navy-900); }

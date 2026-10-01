@@ -10,6 +10,7 @@ import {
 import { navByPortal } from "@/lib/nav";
 import { portalLabels, portalsFor } from "@/lib/access";
 import { useStore } from "@/lib/store";
+import ThemeToggle from "@/components/theme-toggle";
 import type { Portal } from "@/lib/types";
 
 const icons: Record<string, typeof LayoutGrid> = {
@@ -119,6 +120,9 @@ export default function TabBar({
                   );
                 })}
               </div>
+
+              <div className="more-label">المظهر</div>
+              <ThemeToggle />
 
               <div className="more-label">الحساب</div>
               <div className="more-grid">

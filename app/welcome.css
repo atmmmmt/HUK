@@ -37,3 +37,8 @@
 @keyframes onbIn { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
 
 html[data-theme="dark"] .onb-next, html[data-theme="dark"] .onb-dots button.on { background: var(--gold); color: var(--navy-900); }
+
+/* لا شريط داكن أسفل الشاشة: الصفحة كلها بلون المقدمة حتى منطقة مؤشر الرجوع */
+html:has(.onb), html:has(.onb) body { background: var(--card) !important; min-height: 100%; }
+.onb { min-height: 100vh; min-height: 100lvh; }
+@media (min-width: 521px) { html:has(.onb) body { background: var(--card) !important; } }

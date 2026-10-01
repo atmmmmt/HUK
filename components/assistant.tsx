@@ -63,7 +63,7 @@ export default function Assistant() {
     return () => { window.clearTimeout(t); window.removeEventListener("keydown", esc); };
   }, [open]);
 
-  if (!store.ready || pathname?.startsWith("/login")) return null;
+  if (!store.ready || pathname?.startsWith("/login") || pathname?.startsWith("/welcome")) return null;
 
   const push = (it: Item) => setItems((xs) => [...xs, it]);
 

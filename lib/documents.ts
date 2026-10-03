@@ -12,6 +12,7 @@ export interface DocumentMeta {
   mime: string;
   folderId?: string;
   assignmentId?: string;
+  decisionId?: string;
   uploadedBy: string;
   at: string;
   classification: Classification;

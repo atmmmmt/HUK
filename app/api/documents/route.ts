@@ -1,10 +1,10 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { handle, ipOf } from "@/lib/api";
-import { canIssueAssignment, canRegisterLetters, clearanceRank, seesAssignment } from "@/lib/access";
+import { canApproveDecision, canIssueAssignment, canRegisterLetters, canSubmitDecision, clearanceRank, seesAssignment } from "@/lib/access";
 import { ALLOWED, MAX_UPLOAD, documentsCol, storeFile, type DocumentMeta } from "@/lib/documents";
 import { stampNow } from "@/lib/ops";
-import type { Assignment, Classification } from "@/lib/types";
+import type { Assignment, Classification, Decision } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,12 +25,21 @@ export async function POST(request: Request) {
 
     const folderId = String(form.get("folderId") ?? "") || undefined;
     const assignmentId = String(form.get("assignmentId") ?? "") || undefined;
-    if (!folderId && !assignmentId) throw new Error("حدّد المجلد أو التكليف");
+    const decisionId = String(form.get("decisionId") ?? "") || undefined;
+    if (!folderId && !assignmentId && !decisionId) throw new Error("حدّد المجلد أو التكليف أو المعاملة");
     let classification: Classification = form.get("classification") === "سرّي" ? "سرّي" : "عادي";
     if (clearanceRank(classification) > clearanceRank(me.clearance)) throw new ForbiddenError("لا ترفع مستنداً بدرجة أعلى من تصريحك");
 
     let assignment: Assignment | null = null;
-    if (assignmentId) {
+    let decision: Decision | null = null;
+    if (decisionId) {
+      decision = (await (await collections.decisions()).findOne({ id: decisionId })) as Decision | null;
+      if (!decision) throw new Error("المعاملة غير موجودة");
+      if (clearanceRank(decision.classification ?? "عادي") > clearanceRank(me.clearance)) throw new ForbiddenError("المعاملة محجوبة عن درجة تصريحك");
+      const mine = decision.submittedBy === me.id || (me.role === "director" && decision.entityId === me.entityId);
+      if (!mine && !canApproveDecision(me) && !(canSubmitDecision(me) && me.role !== "director")) throw new ForbiddenError("الإرفاق لرافع المعاملة وللديوان");
+      if (decision.classification === "سرّي") classification = "سرّي";
+    } else if (assignmentId) {
       assignment = (await (await collections.assignments()).findOne({ id: assignmentId })) as Assignment | null;
       if (!assignment) throw new Error("التكليف غير موجود");
       const people = await (await collections.users()).find({}, { projection: { passwordHash: 0 } }).toArray();
@@ -56,6 +65,7 @@ export async function POST(request: Request) {
       mime: file.type || "application/octet-stream",
       ...(folderId ? { folderId } : {}),
       ...(assignmentId ? { assignmentId } : {}),
+      ...(decisionId ? { decisionId } : {}),
       uploadedBy: me.id,
       at: stampNow(),
       classification,
@@ -71,10 +81,10 @@ export async function POST(request: Request) {
           channel: "تنبيه التطبيق", toId: pid, link: { portal: "diwan", section: "assignments" },
         });
       }
-    } else {
+    } else if (folderId) {
       await (await collections.files()).updateOne({ id: folderId }, { $inc: { items: 1 }, $set: { updated: "الآن" } });
     }
-    await writeAudit(me.id, assignment ? "أرفق مستنداً بتكليف" : "رفع مستنداً إلى الأرشيف", doc.name, ipOf(request));
+    await writeAudit(me.id, decision ? "أرفق مستنداً بمعاملة" : assignment ? "أرفق مستنداً بتكليف" : "رفع مستنداً إلى الأرشيف", doc.name, ipOf(request));
     return { ok: true, document: doc, attachment: assignment ? { name: doc.name, size, docId: doc.id } : null };
   });
 }

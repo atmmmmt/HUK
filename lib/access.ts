@@ -242,6 +242,11 @@ export function canRaiseRequest(person: Person): boolean {
   return ["director", "head", "area", "employee"].includes(person.role);
 }
 
+/** رفع معاملة إلى صندوق التوقيع: مدراء الجهات والديوان */
+export function canSubmitDecision(person: Person): boolean {
+  return ["director", "registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
+}
+
 /** قيد الكتب ومعالجتها */
 export function canRegisterLetters(person: Person): boolean {
   return ["registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);

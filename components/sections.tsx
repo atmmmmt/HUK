@@ -1,6 +1,6 @@
 "use client";
 
-import { Assignments, Calendar, Correspondence, Decisions, Meetings, Overview } from "@/components/diwan";
+import { Assignments, Calendar, Correspondence, Decisions, EntityDecisions, Meetings, Overview } from "@/components/diwan";
 import { Delegations, Files, Halls, Notes, People } from "@/components/resources";
 import {
   Entities, EntityInbox, EntityPerformance, EntityReplies, EntityRequests, EntityStructure, EntityTasks,
@@ -28,6 +28,7 @@ const views: Record<Portal, Record<string, () => React.JSX.Element>> = {
     tasks: EntityTasks,
     replies: EntityReplies,
     requests: EntityRequests,
+    decisions: EntityDecisions,
     structure: EntityStructure,
     performance: EntityPerformance,
   },

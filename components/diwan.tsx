@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlarmClock, ArrowLeft, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
+  AlarmClock, ArrowLeft, Plus, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
   FileCheck2, Gavel, Inbox, ListTodo, MapPin, MessageSquare, Paperclip, Repeat2, Stamp, TriangleAlert,
   Users, Video,
 } from "lucide-react";
 import { decisions, entities, entityOf, hallOf, letters, meetings } from "@/lib/lookup";
 import { lifecycle, todaySchedule } from "@/lib/constants";
-import { canAdvance, canApproveDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
+import { canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Assignment, Meeting, Person } from "@/lib/types";
 import {
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui";
 import MobileToday from "@/components/mobile-home";
 import { useSwipeRow } from "@/components/swipe-row";
-import { AssignOutcomes, NewAssignmentSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
+import { AssignOutcomes, NewAssignmentSheet, NewDecisionSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
 import { DocList, UploadButton } from "@/components/upload";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
@@ -429,11 +429,21 @@ export function Meetings() {
 
 /* ═══════════════════════ القرارات ═══════════════════════ */
 
-export function Decisions() {
-  const { me, resolveDecision, requests, respondRequest } = useStore();
+/** المعاملات من جهة المديرية: ما رفعته الجهة فقط */
+export function EntityDecisions() {
+  return <Decisions own />;
+}
+
+export function Decisions({ own = false }: { own?: boolean } = {}) {
+  const { me, resolveDecision, requests, respondRequest, documents } = useStore();
   const [busy, setBusy] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const canApprove = canApproveDecision(me);
-  const pendingReqs = requests.filter((r) => r.kind !== "موعد لدى المحافظ" && r.status === "بانتظار الرد" && canRespondRequest(me, r.kind));
+  const canSubmit = canSubmitDecision(me);
+  const canAttachTo = (d: (typeof decisions)[number]) =>
+    canApprove || d.submittedBy === me.id || (me.role === "director" ? d.entityId === me.entityId : canSubmit);
+  const list = own ? decisions.filter((d) => d.entityId === me.entityId || d.submittedBy === me.id) : decisions;
+  const pendingReqs = own ? [] : requests.filter((r) => r.kind !== "موعد لدى المحافظ" && r.status === "بانتظار الرد" && canRespondRequest(me, r.kind));
 
   async function decide(id: string, action: "approve" | "return") {
     setBusy(id);
@@ -448,7 +458,14 @@ export function Decisions() {
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
-      {!canApprove && (
+      {canSubmit && (
+        <div className="row" style={{ justifyContent: "flex-end" }}>
+          <button className="btn gold btn-add" onClick={() => setCreating(true)}><Plus size={16} /> معاملة جديدة</button>
+        </div>
+      )}
+      {creating && <NewDecisionSheet onClose={() => setCreating(false)} />}
+
+      {!canApprove && !own && (
         <div className="lock-note">
           <TriangleAlert size={17} />
           <span>صفتك «{me.title}» لا تملك صلاحية الاعتماد. تظهر لك المعاملات للاطلاع فقط.</span>
@@ -456,7 +473,8 @@ export function Decisions() {
       )}
 
       <div className="grid g-2">
-        {decisions.map((d) => {
+        {own && !list.length && <Empty text="لا معاملات مرفوعة بانتظار التوقيع" hint="اضغط «معاملة جديدة» لرفع معاملة مع مرفقاتها" />}
+        {list.map((d) => {
           const isDone = busy === d.id;
           return (
             <div key={d.id} className="card hover pad" style={{ opacity: isDone ? .6 : 1 }}>
@@ -467,6 +485,18 @@ export function Decisions() {
               <h3 style={{ fontSize: 16, marginBottom: 6 }}>{d.title}</h3>
               <p className="tiny muted" style={{ marginBottom: 6 }}>{d.source} · {entityOf(d.entityId).short}</p>
               {d.amount && <p className="chip navy" style={{ marginBottom: 10 }}>{d.amount}</p>}
+              {d.note && <p className="small" style={{ margin: "0 0 10px", lineHeight: 1.8 }}>{d.note}</p>}
+              {(() => {
+                const docs = documents.filter((x) => x.decisionId === d.id);
+                const canAtt = canAttachTo(d);
+                if (!docs.length && !canAtt) return null;
+                return (
+                  <div className="dec-att">
+                    <DocList docs={docs} empty="" />
+                    {canAtt && <UploadButton target={{ decisionId: d.id }} label="إرفاق ملف" className="btn ghost sm" />}
+                  </div>
+                );
+              })()}
               <div className="row between wrap" style={{ gap: 8, marginTop: 12 }}>
                 <span className="tiny muted"><Clock3 size={13} style={{ verticalAlign: -2 }} /> {d.age}</span>
                 {isDone ? (
@@ -480,7 +510,7 @@ export function Decisions() {
                       <BadgeCheck size={15} /> اعتماد
                     </button>
                   </div>
-                ) : <span className="chip">اطلاع فقط</span>}
+                ) : <span className="chip">{own ? "بانتظار التوقيع" : "اطلاع فقط"}</span>}
               </div>
             </div>
           );

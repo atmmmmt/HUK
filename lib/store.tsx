@@ -61,13 +61,16 @@ interface Store {
   saveEscalation: (levels: number[]) => Promise<void>;
   documents: UploadedDoc[];
   files: (DocFile & { locked?: boolean })[];
-  uploadDocument: (file: File, target: { folderId?: string; assignmentId?: string }, classification?: Classification) => Promise<void>;
+  uploadDocument: (file: File, target: { folderId?: string; assignmentId?: string; decisionId?: string }, classification?: Classification) => Promise<void>;
+  submitDecision: (input: DecisionInput, files: File[]) => Promise<void>;
   refresh: () => Promise<void>;
   toasts: Toast[];
   toast: (text: string, tone?: Toast["tone"]) => void;
   dense: boolean;
   setDense: (v: boolean) => void;
 }
+
+export type DecisionInput = { title: string; note?: string; amount?: string; priority: Priority; awaiting: "governor" | "deputy" | "assistant"; entityId?: string; classification: Classification };
 
 const Ctx = createContext<Store | null>(null);
 const DENSE_KEY = "gov.dense";
@@ -300,12 +303,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, "حُفظ سُلّم التصعيد");
   }, [guard, patchLocal]);
 
-  const uploadDocument = useCallback(async (file: File, target: { folderId?: string; assignmentId?: string }, classification?: Classification) => {
+  const uploadDocument = useCallback(async (file: File, target: { folderId?: string; assignmentId?: string; decisionId?: string }, classification?: Classification) => {
     await guard(async () => {
       const fd = new FormData();
       fd.append("file", file);
       if (target.folderId) fd.append("folderId", target.folderId);
       if (target.assignmentId) fd.append("assignmentId", target.assignmentId);
+      if (target.decisionId) fd.append("decisionId", target.decisionId);
       if (classification) fd.append("classification", classification);
       // بلا ترويسة Content-Type حتى يضبط المتصفح حدود multipart بنفسه
       const res = await fetch("/api/documents/", { method: "POST", body: fd });
@@ -320,6 +324,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }));
     }, "رُفع المستند");
   }, [guard, patchLocal]);
+
+  const submitDecision = useCallback(async (input: DecisionInput, files: File[]) => {
+    await guard(async () => {
+      const { decision } = await call("/api/decisions/", { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, decisions: [decision, ...b.decisions] }));
+      // المرفقات بعد إنشاء المعاملة؛ فشل ملف لا يُسقط المعاملة
+      const failed: string[] = [];
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("decisionId", decision.id);
+        const res = await fetch("/api/documents/", { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) { failed.push(file.name); continue; }
+        patchLocal((b) => ({ ...b, documents: [data.document, ...(b.documents ?? [])] }));
+      }
+      if (failed.length) toast(`لم يُرفق: ${failed.join("، ")}`, "warn");
+    }, files.length ? "رُفعت المعاملة مع مرفقاتها إلى صندوق التوقيع" : "رُفعت المعاملة إلى صندوق التوقيع");
+  }, [guard, patchLocal, toast]);
 
   const logout = useCallback(async () => {
     await call("/api/auth/logout/", { method: "POST" }).catch(() => {});
@@ -347,11 +370,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     escalationLevels: boot?.settings?.escalationLevels ?? null,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
     registerLetter, letterAction, createUser, setUserActive, saveEscalation,
-    documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument,
+    documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision,
   }), [boot, anon, error, advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument]);
+    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument, submitDecision]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

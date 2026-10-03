@@ -15,7 +15,7 @@ const sizeLabel = (n: number) => (n < 1048576 ? `${Math.max(1, Math.round(n / 10
 export function UploadButton({
   target, classification, label = "رفع مستند", className = "btn gold",
 }: {
-  target: { folderId?: string; assignmentId?: string }; classification?: Classification; label?: string; className?: string;
+  target: { folderId?: string; assignmentId?: string; decisionId?: string }; classification?: Classification; label?: string; className?: string;
 }) {
   const { uploadDocument, toast } = useStore();
   const input = useRef<HTMLInputElement>(null);

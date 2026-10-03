@@ -691,7 +691,15 @@ html[data-theme="dark"], html[data-theme="dark"] body { background: #050d19; }
   body:has(.more-sheet) .btn-add, body:has(.ai-wrap) .btn-add { opacity: 0; pointer-events: none; }
   /* مساحة كافية أسفل الصفحة حتى لا يغطي الزر آخر عنصر */
   /* أي حركة تُبقي transform على الأسلاف تجعل الزر الثابت يتبعها لا الشاشة */
-  .canvas:has(.btn-add), .canvas :has(> .btn-add), .canvas :has(.btn-add) { animation-fill-mode: backwards !important; filter: none !important; }
+  /* أي حركة على أسلاف الزر تجعله يتحرك مع الصفحة ثم يقفز لمكانه — فلا حركة على أسلافه أبداً،
+     وتتحرك بقية الأقسام وحدها */
+  .canvas:has(.btn-add), .canvas.nav-fwd:has(.btn-add), .canvas.nav-back:has(.btn-add),
+  .canvas :has(.btn-add) { animation: none !important; transform: none !important; filter: none !important; will-change: auto !important; }
+  .canvas.nav-fwd:has(.btn-add) > :not(:has(.btn-add)) { animation: navFwd .38s cubic-bezier(.22,1,.36,1) backwards; }
+  .canvas.nav-back:has(.btn-add) > :not(:has(.btn-add)) { animation: navBack .38s cubic-bezier(.22,1,.36,1) backwards; }
+  .canvas:has(.btn-add) > :not(:has(.btn-add)) { animation: pageIn .45s var(--e-out) backwards; }
+  /* الضغط يصغّره قليلاً فقط — بلا إزاحة */
+  .btn.btn-add:active:not(:disabled) { transform: scale(.95); }
   .canvas:has(.btn-add) { padding-bottom: calc(170px + env(safe-area-inset-bottom, 0)) !important; }
 }
 
@@ -726,3 +734,6 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   input, textarea, [contenteditable], .selectable, .ai-msg, .ai-msg * { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
   img, svg { -webkit-user-drag: none; }
 }
+
+/* أثناء سحب الرجوع يختفي زر الإضافة الثابت حتى لا ينفصل عن الصفحة */
+body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }

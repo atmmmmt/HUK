@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Inbox, MailQuestion, Plus, Send, UserPlus } from "lucide-react";
+import { CalendarClock, FileText, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
 import { entities, entityOf, roles } from "@/lib/lookup";
 import { useStore } from "@/lib/store";
 import type { Classification, Letter, MeetingOutcome, Priority, RequestItem, RoleKey } from "@/lib/types";
@@ -420,5 +420,115 @@ export function AssignOutcomes({ meetingId, outcomes, onDone }: { meetingId: str
       ))}
       <button className="btn gold" onClick={submit} disabled={busy}><Plus size={16} /> {busy ? "جارٍ الإسناد…" : "إسناد المخرجات كتكليفات"}</button>
     </div>
+  );
+}
+
+/* ───────── معاملة جديدة إلى صندوق التوقيع (مع مرفقات) ───────── */
+
+const DOC_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.heic,.doc,.docx,.xls,.xlsx,.pptx,.txt";
+const kb = (n: number) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} ك.ب` : `${(n / 1048576).toFixed(1)} م.ب`);
+
+export function NewDecisionSheet({ onClose }: { onClose: () => void }) {
+  const { me, submitDecision, toast } = useStore();
+  const { busy, run } = useSubmit();
+  const [title, setTitle] = useState("");
+  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState("");
+  const [priority, setPriority] = useState<Priority>("هام");
+  const [awaiting, setAwaiting] = useState<"governor" | "deputy" | "assistant">("governor");
+  const [entityId, setEntityId] = useState(me.entityId);
+  const [classification, setClass] = useState<Classification>("عادي");
+  const [files, setFiles] = useState<File[]>([]);
+  const isDirector = me.role === "director";
+
+  function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const chosen = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    const big = chosen.filter((f) => f.size > 8 * 1024 * 1024);
+    if (big.length) toast(`أكبر من 8 ميغابايت: ${big.map((f) => f.name).join("، ")}`, "warn");
+    setFiles((prev) => [...prev, ...chosen.filter((f) => f.size <= 8 * 1024 * 1024)].slice(0, 10));
+  }
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!title.trim()) return toast("عنوان المعاملة مطلوب", "warn");
+    void run(() => submitDecision({ title, note, amount, priority, awaiting, entityId: isDirector ? undefined : entityId, classification }, files), onClose);
+  };
+
+  return (
+    <Sheet
+      title="معاملة جديدة للتوقيع"
+      sub="تصل إلى صندوق التوقيع مع مرفقاتها ويُشعَر صاحب الاعتماد"
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn gold" onClick={() => submit()} disabled={busy}><Stamp size={16} /> {busy ? (files.length ? "جارٍ الرفع…" : "جارٍ الإرسال…") : "رفع للتوقيع"}</button>
+          <button className="btn ghost" onClick={onClose}>إلغاء</button>
+        </>
+      }
+    >
+      <form onSubmit={submit}>
+        <div className="field">
+          <label htmlFor="dc-title">عنوان المعاملة</label>
+          <input id="dc-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: الموافقة على عقد صيانة شبكة المياه" />
+        </div>
+        <div className="field">
+          <label htmlFor="dc-note">ملخّص أو ملاحظة</label>
+          <textarea id="dc-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} placeholder="ما المطلوب اعتماده ولماذا" />
+        </div>
+
+        <div className="field">
+          <label>المرفقات</label>
+          <div className="att-pick">
+            {files.map((f, i) => (
+              <div key={f.name + i} className="att-file">
+                <FileText size={16} />
+                <span><b>{f.name}</b><small>{kb(f.size)}</small></span>
+                <button type="button" className="icon-btn" aria-label={`إزالة ${f.name}`} onClick={() => setFiles(files.filter((_, k) => k !== i))}><X size={15} /></button>
+              </div>
+            ))}
+            <label className="att-add">
+              <input type="file" multiple accept={DOC_ACCEPT} hidden onChange={pick} />
+              <Paperclip size={16} /> {files.length ? "إرفاق ملف آخر" : "إرفاق ملف (كتاب، عقد، مخطط…)"}
+            </label>
+            <small className="tiny muted">PDF، صور، Word، Excel — حتى 8 ميغابايت للملف و10 ملفات</small>
+          </div>
+        </div>
+
+        <div className="field">
+          <label htmlFor="dc-to">يُرفع إلى</label>
+          <select id="dc-to" value={awaiting} onChange={(e) => setAwaiting(e.target.value as typeof awaiting)}>
+            <option value="governor">السيد المحافظ</option>
+            <option value="deputy">نائب المحافظ</option>
+            <option value="assistant">معاون المحافظ</option>
+          </select>
+        </div>
+        {!isDirector && (
+          <div className="field">
+            <label htmlFor="dc-ent">الجهة صاحبة المعاملة</label>
+            <select id="dc-ent" value={entityId} onChange={(e) => setEntityId(e.target.value)}>
+              {entities.map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}
+            </select>
+          </div>
+        )}
+        <div className="field">
+          <label htmlFor="dc-pr">الأولوية</label>
+          <select id="dc-pr" value={priority} onChange={(e) => setPriority(e.target.value as Priority)}>
+            {(["عادي", "هام", "عاجل", "عاجل جداً"] as Priority[]).map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="dc-amt">القيمة المالية (إن وُجدت)</label>
+          <input id="dc-amt" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="مثال: 95 مليون ل.س" />
+        </div>
+        <div className="field">
+          <label htmlFor="dc-cl">درجة السرّية</label>
+          <select id="dc-cl" value={classification} onChange={(e) => setClass(e.target.value as Classification)}>
+            <option value="عادي">عادي</option>
+            {me.clearance === "سرّي" && <option value="سرّي">سرّي</option>}
+          </select>
+        </div>
+      </form>
+    </Sheet>
   );
 }

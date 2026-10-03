@@ -91,7 +91,7 @@ export async function GET() {
         apologized: m.apologized ?? [], agenda: m.agenda ?? [],
       })),
       letters: visibleLetters,
-      decisions: cleanAll(decisions),
+      decisions: cleanAll(decisions).filter((d) => clearanceRank(String(d.classification ?? "عادي")) <= myRank),
       delegations: cleanAll(delegations),
       files,
       notes: cleanAll(notes).filter((n) => n.scope !== "خاصة" || n.authorId === me.id),

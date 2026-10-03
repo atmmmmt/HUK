@@ -201,6 +201,9 @@ export interface Decision {
   priority: Priority;
   awaiting: RoleKey;
   amount?: string;
+  submittedBy?: string;
+  note?: string;
+  classification?: Classification;
 }
 
 export interface Delegation {
@@ -279,6 +282,7 @@ export interface UploadedDoc {
   mime: string;
   folderId?: string;
   assignmentId?: string;
+  decisionId?: string;
   uploadedBy: string;
   at: string;
   classification: Classification;

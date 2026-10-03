@@ -17,7 +17,7 @@ import {
 } from "@/components/ui";
 import MobileToday from "@/components/mobile-home";
 import { useSwipeRow } from "@/components/swipe-row";
-import { AssignOutcomes, NewAssignmentSheet, NewDecisionSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
+import { AssignOutcomes, NewAssignmentSheet, NewDecisionSheet, NewMeetingSheet, NewLetterSheet, SlotSheet } from "@/components/forms";
 import { DocList, UploadButton } from "@/components/upload";
 
 /* ═══════════════════════ لوحة اليوم ═══════════════════════ */
@@ -259,9 +259,19 @@ export function Calendar() {
 
 /* ═══════════════════════ الاجتماعات ═══════════════════════ */
 
+/** «اليوم» و«غداً» للاجتماعات المجدولة بتاريخ */
+function dayLabel(m: Meeting) {
+  const iso = (m as Meeting & { dateISO?: string }).dateISO;
+  if (!iso) return m.day;
+  const d = new Date(iso + "T00:00:00"); const t = new Date(); t.setHours(0, 0, 0, 0);
+  const diff = Math.round((d.getTime() - t.getTime()) / 86400000);
+  return diff === 0 ? "اليوم" : diff === 1 ? "غداً" : m.day;
+}
+
 export function Meetings() {
-  const { me, meetings: live, approveMinutes } = useStore();
+  const { me, meetings: live, approveMinutes, rsvpMeeting } = useStore();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [busy, setBusy] = useState(false);
   const open = live.find((m) => m.id === openId) ?? null;
@@ -283,6 +293,9 @@ export function Meetings() {
             { key: "done", label: "منعقدة", n: meetings.filter((m) => m.status === "منعقد").length },
           ]}
         />
+        {canManageMeetings(me) && (
+          <button className="btn gold btn-add" onClick={() => setCreating(true)}><Plus size={16} /> اجتماع جديد</button>
+        )}
         <span className="lock-note" style={{ padding: "8px 13px" }}>
           <TriangleAlert size={15} />
           لا يُغلق الاجتماع إدارياً ما دام فيه مخرج واحد غير مُسند أو غير مُغلق
@@ -302,7 +315,7 @@ export function Meetings() {
               <p className="tiny muted" style={{ marginBottom: 12 }}>{m.summary}</p>
 
               <div className="row wrap" style={{ gap: 14, marginBottom: 12 }}>
-                <span className="row tiny muted" style={{ gap: 6 }}><CalendarDays size={14} /> {m.day} · {m.time}</span>
+                <span className="row tiny muted" style={{ gap: 6 }}><CalendarDays size={14} /> {dayLabel(m)} · {m.time}</span>
                 <span className="row tiny muted" style={{ gap: 6 }}>
                   {m.online ? <Video size={14} /> : <MapPin size={14} />}
                   {m.online ? "اتصال مرئي" : hallOf(m.hallId ?? "")?.name ?? "قاعة"}
@@ -320,13 +333,24 @@ export function Meetings() {
         })}
       </div>
 
+      {creating && <NewMeetingSheet onClose={() => setCreating(false)} />}
+
       {open && (
         <Sheet
           title={open.title}
-          sub={`${open.kind} · ${open.day} · ${open.time}`}
+          sub={`${open.kind} · ${dayLabel(open)} · ${open.time}`}
           onClose={() => setOpen(null)}
           footer={
-            canManage ? (
+            open.inviteeIds.includes(me.id) && open.chairId !== me.id && open.status !== "منعقد" ? (
+              <div className="rsvp">
+                <button className="btn gold" disabled={busy || open.confirmed.includes(me.id)} onClick={async () => { setBusy(true); try { await rsvpMeeting(open.id, "confirm"); } catch { /* */ } finally { setBusy(false); } }}>
+                  <CheckCircle2 size={16} /> {open.confirmed.includes(me.id) ? "حضورك مؤكّد" : "تأكيد الحضور"}
+                </button>
+                <button className="btn ghost" disabled={busy || open.apologized.includes(me.id)} onClick={async () => { setBusy(true); try { await rsvpMeeting(open.id, "apologize"); } catch { /* */ } finally { setBusy(false); } }}>
+                  {open.apologized.includes(me.id) ? "اعتذرت" : "اعتذار"}
+                </button>
+              </div>
+            ) : canManage ? (
               <>
                 {!open.minutesApproved && (open.status === "منعقد" || open.status === "جارٍ الآن") && (
                   <button

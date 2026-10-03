@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 type Input =
   | { action: "approve_minutes" }
-  | { action: "assign_outcomes"; items: { outcomeId: string; ownerId: string; priority: Priority; dueISO: string }[] };
+  | { action: "assign_outcomes"; items: { outcomeId: string; ownerId: string; priority: Priority; dueISO: string }[] }
+  | { action: "rsvp"; answer: "confirm" | "apologize" };
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
@@ -22,11 +23,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const m = (await col.findOne({ id })) as Meeting | null;
     if (!m) throw new Error("الاجتماع غير موجود");
     const involved = m.chairId === me.id || m.secretaryId === me.id;
-    if (!canManageMeetings(me) && !involved) throw new ForbiddenError("إدارة هذا الاجتماع خارج صلاحيتك");
+    const invited = (m.inviteeIds ?? []).includes(me.id);
+    if (input.action === "rsvp") {
+      if (!invited) throw new ForbiddenError("لست مدعوّاً إلى هذا الاجتماع");
+    } else if (!canManageMeetings(me) && !involved) throw new ForbiddenError("إدارة هذا الاجتماع خارج صلاحيتك");
 
     const created: Assignment[] = [];
 
-    if (input.action === "approve_minutes") {
+    if (input.action === "rsvp") {
+      if (m.status === "منعقد") throw new Error("انعقد الاجتماع");
+      const yes = input.answer === "confirm";
+      const confirmed = (m.confirmed ?? []).filter((x) => x !== me.id);
+      const apologized = (m.apologized ?? []).filter((x) => x !== me.id);
+      (yes ? confirmed : apologized).push(me.id);
+      await col.updateOne({ id }, { $set: { confirmed, apologized } });
+      await writeAudit(me.id, yes ? "أكّد حضور اجتماع" : "اعتذر عن اجتماع", m.title, ipOf(request));
+      if (m.chairId !== me.id) {
+        await pushNotification({
+          kind: "اجتماع", title: yes ? "تأكيد حضور" : "اعتذار عن الحضور",
+          body: `${me.title} ${yes ? "أكّد حضور" : "اعتذر عن"} «${m.title}»`,
+          channel: "تنبيه التطبيق", toId: m.chairId, link: { portal: "diwan", section: "meetings" }, urgent: !yes,
+        });
+      }
+    } else if (input.action === "approve_minutes") {
       if (m.minutesApproved) throw new Error("المحضر معتمد مسبقاً");
       if (m.status !== "منعقد" && m.status !== "جارٍ الآن") throw new Error("لا يُعتمد محضر اجتماع لم ينعقد بعد");
       await col.updateOne({ id }, { $set: { minutesApproved: true } });

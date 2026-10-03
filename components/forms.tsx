@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, FileText, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
-import { entities, entityOf, roles } from "@/lib/lookup";
+import { CalendarClock, Check, FileText, Search, Users, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
+import { entities, entityOf, halls, people, roles } from "@/lib/lookup";
 import { useStore } from "@/lib/store";
 import type { Classification, Letter, MeetingOutcome, Priority, RequestItem, RoleKey } from "@/lib/types";
 import { Sheet } from "@/components/ui";
@@ -527,6 +527,123 @@ export function NewDecisionSheet({ onClose }: { onClose: () => void }) {
             <option value="عادي">عادي</option>
             {me.clearance === "سرّي" && <option value="سرّي">سرّي</option>}
           </select>
+        </div>
+      </form>
+    </Sheet>
+  );
+}
+
+/* ───────── اجتماع جديد ودعوة المشاركين ───────── */
+
+const localISO = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+export function NewMeetingSheet({ onClose, preset = [] }: { onClose: () => void; preset?: string[] }) {
+  const { me, scheduleMeeting, toast } = useStore();
+  const { busy, run } = useSubmit();
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const [title, setTitle] = useState("");
+  const [kind, setKind] = useState("اجتماع عمل");
+  const [dateISO, setDate] = useState(localISO(tomorrow));
+  const [time, setTime] = useState("10:00");
+  const [place, setPlace] = useState<string>(halls[0]?.id ?? "online");
+  const [invited, setInvited] = useState<string[]>(preset.filter((x) => x !== me.id));
+  const [q, setQ] = useState("");
+  const [agenda, setAgenda] = useState("");
+  const [summary, setSummary] = useState("");
+
+  const others = people.filter((p) => p.id !== me.id && (p as { active?: boolean }).active !== false);
+  const quick = (["deputy", "assistant", "secgen", "chief"] as RoleKey[])
+    .map((r) => others.find((p) => p.role === r)).filter(Boolean) as typeof others;
+  const shown = q.trim()
+    ? others.filter((p) => `${p.title} ${p.name} ${entityOf(p.entityId).name}`.includes(q.trim()))
+    : others.filter((p) => invited.includes(p.id) || ["deputy", "assistant", "secgen", "chief", "director"].includes(p.role));
+  const toggle = (id: string) => setInvited((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
+
+  const submit = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!title.trim()) return toast("عنوان الاجتماع مطلوب", "warn");
+    if (!invited.length) return toast("اختر مدعوّاً واحداً على الأقل", "warn");
+    void run(() => scheduleMeeting({
+      title, kind, dateISO, time, online: place === "online", hallId: place === "online" ? undefined : place,
+      inviteeIds: invited, agenda: agenda.split("\n").map((x) => x.trim()).filter(Boolean), summary,
+    }), onClose);
+  };
+
+  return (
+    <Sheet
+      title="اجتماع جديد"
+      sub="تصل الدعوة فوراً إلى المدعوين بإشعار، ويؤكّدون الحضور أو يعتذرون"
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn gold" onClick={() => submit()} disabled={busy}><Send size={16} /> {busy ? "جارٍ الإرسال…" : `إرسال الدعوة${invited.length ? ` (${invited.length})` : ""}`}</button>
+          <button className="btn ghost" onClick={onClose}>إلغاء</button>
+        </>
+      }
+    >
+      <form onSubmit={submit}>
+        <div className="field">
+          <label htmlFor="mt-title">عنوان الاجتماع</label>
+          <input id="mt-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: متابعة مشاريع الخدمات الفنية" />
+        </div>
+
+        <div className="field">
+          <label>المدعوون</label>
+          {quick.length > 0 && (
+            <div className="mt-quick">
+              {quick.map((p) => (
+                <button type="button" key={p.id} className={`mt-chip ${invited.includes(p.id) ? "on" : ""}`} onClick={() => toggle(p.id)}>
+                  {invited.includes(p.id) && <Check size={14} />} {p.title}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-search">
+            <Search size={16} />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث عن منصب أو جهة…" />
+          </div>
+          <div className="mt-people">
+            {shown.slice(0, 40).map((p) => (
+              <label key={p.id} className={`mt-person ${invited.includes(p.id) ? "on" : ""}`}>
+                <input type="checkbox" checked={invited.includes(p.id)} onChange={() => toggle(p.id)} />
+                <span><b>{p.title}</b><small>{entityOf(p.entityId).short}</small></span>
+              </label>
+            ))}
+            {!shown.length && <small className="tiny muted">لا نتائج</small>}
+          </div>
+          <small className="tiny muted"><Users size={12} style={{ verticalAlign: -2 }} /> {invited.length ? `${invited.length} مدعو` : "لم تختر أحداً بعد"}</small>
+        </div>
+
+        <div className="mt-row">
+          <div className="field">
+            <label htmlFor="mt-date">التاريخ</label>
+            <input id="mt-date" type="date" min={localISO(new Date())} value={dateISO} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="mt-time">الساعة</label>
+            <input id="mt-time" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+          </div>
+        </div>
+        <div className="field">
+          <label htmlFor="mt-place">المكان</label>
+          <select id="mt-place" value={place} onChange={(e) => setPlace(e.target.value)}>
+            {halls.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+            <option value="online">اتصال مرئي</option>
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="mt-kind">نوع الاجتماع</label>
+          <select id="mt-kind" value={kind} onChange={(e) => setKind(e.target.value)}>
+            {["اجتماع عمل", "اللجنة التنفيذية", "خلية الأزمة", "متابعة مشاريع", "تنسيقي"].map((k) => <option key={k} value={k}>{k}</option>)}
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="mt-agenda">جدول الأعمال (بند في كل سطر)</label>
+          <textarea id="mt-agenda" rows={3} value={agenda} onChange={(e) => setAgenda(e.target.value)} placeholder={"مراجعة نسب الإنجاز\nالعقبات والحلول"} />
+        </div>
+        <div className="field">
+          <label htmlFor="mt-sum">ملاحظة للمدعوين (اختياري)</label>
+          <input id="mt-sum" value={summary} onChange={(e) => setSummary(e.target.value)} />
         </div>
       </form>
     </Sheet>

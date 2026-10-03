@@ -63,6 +63,8 @@ interface Store {
   files: (DocFile & { locked?: boolean })[];
   uploadDocument: (file: File, target: { folderId?: string; assignmentId?: string; decisionId?: string }, classification?: Classification) => Promise<void>;
   submitDecision: (input: DecisionInput, files: File[]) => Promise<void>;
+  scheduleMeeting: (input: MeetingInput) => Promise<void>;
+  rsvpMeeting: (id: string, answer: "confirm" | "apologize") => Promise<void>;
   refresh: () => Promise<void>;
   toasts: Toast[];
   toast: (text: string, tone?: Toast["tone"]) => void;
@@ -71,6 +73,8 @@ interface Store {
 }
 
 export type DecisionInput = { title: string; note?: string; amount?: string; priority: Priority; awaiting: "governor" | "deputy" | "assistant"; entityId?: string; classification: Classification };
+
+export type MeetingInput = { title: string; kind: string; dateISO: string; time: string; hallId?: string; online: boolean; inviteeIds: string[]; agenda: string[]; summary?: string };
 
 const Ctx = createContext<Store | null>(null);
 const DENSE_KEY = "gov.dense";
@@ -250,6 +254,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const assignOutcomes = useCallback((id: string, items: { outcomeId: string; ownerId: string; priority: Priority; dueISO: string }[]) =>
     patchMeeting(id, { action: "assign_outcomes", items }, "تحوّلت المخرجات إلى تكليفات وأُشعر المكلَّفون"), [patchMeeting]);
 
+  const rsvpMeeting = useCallback((id: string, answer: "confirm" | "apologize") =>
+    patchMeeting(id, { action: "rsvp", answer }, answer === "confirm" ? "أكّدت حضورك وأُبلغ رئيس الجلسة" : "سُجّل اعتذارك وأُبلغ رئيس الجلسة"), [patchMeeting]);
+
+  const scheduleMeeting = useCallback(async (input: MeetingInput) => {
+    await guard(async () => {
+      const { meeting } = await call("/api/meetings/", { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, meetings: [meeting, ...b.meetings] }));
+    }, "جُدول الاجتماع ووصلت الدعوة إلى المدعوين");
+  }, [guard, patchLocal]);
+
   const raiseRequest = useCallback(async (input: { kind: RequestItem["kind"]; title: string; detail: string }) => {
     await guard(async () => {
       const { request } = await call("/api/requests/", { method: "POST", body: JSON.stringify(input) });
@@ -370,11 +384,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     escalationLevels: boot?.settings?.escalationLevels ?? null,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
     registerLetter, letterAction, createUser, setUserActive, saveEscalation,
-    documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision,
+    documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting,
   }), [boot, anon, error, advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument, submitDecision]);
+    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

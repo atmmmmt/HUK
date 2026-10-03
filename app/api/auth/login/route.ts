@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     await createSession(user);
     await users.updateOne(
       { id: user.id },
-      { $set: { lastLogin: new Date().toLocaleString("ar-SY", { dateStyle: "short", timeStyle: "short" }) } },
+      { $set: { lastLogin: new Date().toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" }) } },
     );
     await writeAudit(user.id, "سجّل الدخول", user.username, ipOf(request));
 

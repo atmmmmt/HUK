@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       targetLabel: input.targetLabel,
       authorId: me.id,
       text,
-      at: new Date().toLocaleString("ar-SY", { dateStyle: "short", timeStyle: "short" }),
+      at: new Date().toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" }),
       scope,
       mentions: input.mentions,
     };
@@ -33,11 +33,32 @@ export async function POST(request: Request) {
     await col.insertOne(note);
     await writeAudit(me.id, "أضاف ملاحظة", input.targetLabel, ipOf(request));
 
+    // ملاحظة على تكليف تصل إلى أطرافه (إلا الخاصة)
+    const notified = new Set<string>([me.id, ...(input.mentions ?? [])]);
+    if (scope !== "خاصة") {
+      const a = await (await collections.assignments()).findOne({ id: input.target });
+      if (a) {
+        for (const pid of [a.ownerId, a.issuerId, ...(a.partnerIds ?? [])]) {
+          if (!pid || notified.has(pid)) continue;
+          notified.add(pid);
+          await pushNotification({
+            kind: "تكليف",
+            title: scope === "توجيه المحافظ" ? "توجيه من السيد المحافظ" : "ملاحظة جديدة على تكليف",
+            body: `${me.title} على «${a.title}»: ${text.slice(0, 90)}`,
+            channel: "تنبيه التطبيق",
+            toId: pid,
+            link: { portal: pid === a.ownerId ? "directorates" : "diwan", section: pid === a.ownerId ? "inbox" : "assignments" },
+            urgent: scope === "توجيه المحافظ",
+          });
+        }
+      }
+    }
+
     for (const id of input.mentions ?? []) {
       await pushNotification({
         kind: "تكليف",
         title: "أُشير إليك في ملاحظة",
-        body: `${me.name} على «${input.targetLabel}»: ${text.slice(0, 90)}`,
+        body: `${me.title} على «${input.targetLabel}»: ${text.slice(0, 90)}`,
         channel: "تنبيه التطبيق",
         toId: id,
       });

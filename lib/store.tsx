@@ -35,6 +35,7 @@ interface Store {
   unread: number;
   decisionIds: string[];
   advance: (id: string, status: AssignmentStatus) => Promise<void>;
+  markSeen: (id: string) => Promise<void>;
   setProgress: (id: string, progress: number) => Promise<void>;
   setBookingStatus: (id: string, status: Booking["status"]) => Promise<void>;
   addNote: (n: { target: string; targetLabel: string; text: string; scope: Note["scope"]; mentions?: string[] }) => Promise<void>;
@@ -129,6 +130,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try { setDenseState(localStorage.getItem(DENSE_KEY) === "1"); } catch { /* محجوب */ }
   }, []);
 
+  /* مزامنة حيّة: ما يكتبه الآخرون (ملاحظات، قراءة، إشعارات) يصل دون إعادة فتح التطبيق —
+     كل 20 ثانية والتطبيق ظاهر، وفوراً عند العودة إليه */
+  const signedIn = !!boot;
+  useEffect(() => {
+    if (!signedIn) return;
+    let busy = false;
+    const sync = async () => {
+      if (busy || document.visibilityState !== "visible") return;
+      busy = true;
+      try {
+        const res = await fetch("/api/bootstrap", { headers: { "Content-Type": "application/json" } });
+        if (res.ok) { const data = (await res.json()) as Bootstrap; setData(data); setBoot(data); }
+      } catch { /* بلا شبكة: نحاول لاحقاً */ } finally { busy = false; }
+    };
+    const t = window.setInterval(sync, 20000);
+    const onShow = () => { if (document.visibilityState === "visible") void sync(); };
+    document.addEventListener("visibilitychange", onShow);
+    window.addEventListener("online", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.clearInterval(t);
+      document.removeEventListener("visibilitychange", onShow);
+      window.removeEventListener("online", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, [signedIn]);
+
   const setDense = useCallback((v: boolean) => {
     setDenseState(v);
     try { localStorage.setItem(DENSE_KEY, v ? "1" : "0"); } catch { /* محجوب */ }
@@ -168,6 +196,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       patchLocal((b) => ({ ...b, assignments: b.assignments.map((a) => (a.id === id ? assignment : a)) }));
     }, `تم نقل التكليف إلى «${status}» وسُجّل في سجل التدقيق`);
   }, [guard, patchLocal]);
+
+  const markSeen = useCallback(async (id: string) => {
+    try {
+      const { assignment } = await call(`/api/assignments/${id}/`, { method: "PATCH", body: JSON.stringify({ seen: true }) });
+      if (assignment) patchLocal((b) => ({ ...b, assignments: b.assignments.map((a) => (a.id === id ? assignment : a)) }));
+    } catch { /* غير حرج */ }
+  }, [patchLocal]);
 
   const setProgress = useCallback(async (id: string, progress: number) => {
     await guard(async () => {
@@ -374,7 +409,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     notifications: boot?.notifications ?? [],
     unread: (boot?.notifications ?? []).filter((n) => !n.read).length,
     decisionIds: (boot?.decisions ?? []).map((d) => d.id),
-    advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
+    advance, markSeen, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, refresh: load,
     toasts, toast, dense, setDense,
     meetings: boot?.meetings ?? [],
@@ -385,7 +420,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
     registerLetter, letterAction, createUser, setUserActive, saveEscalation,
     documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting,
-  }), [boot, anon, error, advance, setProgress, setBookingStatus, addNote, markRead, markAllRead,
+  }), [boot, anon, error, advance, markSeen, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
     registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);

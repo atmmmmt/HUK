@@ -169,7 +169,7 @@ export async function writeAudit(actorId: string, action: string, target: string
   const now = new Date();
   await col.insertOne({
     id: "x" + now.getTime() + Math.floor(Math.random() * 1000),
-    at: now.toLocaleString("ar-SY", { dateStyle: "short", timeStyle: "short" }),
+    at: now.toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" }),
     actorId, action, target, ip,
   } as AuditEntry);
 }

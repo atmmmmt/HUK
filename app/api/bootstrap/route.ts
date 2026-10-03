@@ -55,7 +55,9 @@ export async function GET() {
     const myRank = clearanceRank(me.clearance);
 
     // التكليفات: نطاق الدور + درجة التصريح
+    // الحقول المصفوفية لا تصل ناقصة أبداً (سجلات قديمة أو مرحَّلة)
     const assignments = cleanAll(rawAssignments as unknown as Assignment[])
+      .map((a) => ({ ...a, partnerIds: a.partnerIds ?? [], attachments: a.attachments ?? [], chain: a.chain ?? {} }))
       .filter((a) => seesAssignment(me, a, { entities: entities, people }));
 
     // الملفات: تُحجب فوق درجة التصريح

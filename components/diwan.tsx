@@ -668,8 +668,12 @@ function AssignmentRow({ a, onOpen }: { a: Assignment; onOpen: () => void }) {
 }
 
 export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => void }) {
-  const { me, advance, setProgress, documents } = useStore();
-  const canAttach = [a.ownerId, a.issuerId, ...a.partnerIds].includes(me.id) || canIssueAssignment(me);
+  const { me, advance, setProgress, documents, markSeen } = useStore();
+  // فتح المكلَّف للتكليف يسجّل «قُرئ» في سلسلة التسليم ليراها المُصدِر
+  useEffect(() => {
+    if (a.ownerId === me.id && !a.chain.read) void markSeen(a.id);
+  }, [a.id, a.ownerId, a.chain.read, me.id, markSeen]);
+  const canAttach = [a.ownerId, a.issuerId, ...(a.partnerIds ?? [])].includes(me.id) || canIssueAssignment(me);
   const stepIndex = lifecycle.findIndex((l) => l.key === a.status);
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState(a.progress);
@@ -732,7 +736,7 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
             <div className="row between"><span className="tiny muted">الجهة المكلَّفة</span><b style={{ fontSize: 13.5 }}>{entityOf(a.entityId).name}</b></div>
             <div className="row between"><span className="tiny muted">المكلَّف الرئيسي</span><PersonLine id={a.ownerId} /></div>
             {(a.partnerIds?.length ?? 0) > 0 && (
-              <div className="row between"><span className="tiny muted">المشاركون</span><AvaStack ids={a.partnerIds} /></div>
+              <div className="row between"><span className="tiny muted">المشاركون</span><AvaStack ids={a.partnerIds ?? []} /></div>
             )}
             <div className="row between"><span className="tiny muted">أصدر التكليف</span><PersonLine id={a.issuerId} /></div>
             <div className="row between"><span className="tiny muted">الموعد النهائي</span><b style={{ fontSize: 13.5 }}>{a.due}</b></div>

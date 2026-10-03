@@ -8,13 +8,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const stampNow = () =>
-  new Date().toLocaleString("ar-SY", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
+  new Date().toLocaleString("ar-SY-u-nu-latn", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   return handle(async () => {
     const me = await requireUser();
     const { id } = await params;
-    const patch = await body<{ status?: AssignmentStatus; progress?: number }>(request);
+    const patch = await body<{ status?: AssignmentStatus; progress?: number; seen?: boolean }>(request);
 
     const col = await collections.assignments();
     const current = await col.findOne({ id });
@@ -26,6 +26,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const update: Record<string, unknown> = {};
+
+    // «قُرئ»: يُسجَّل أول مرة يفتح فيها المكلَّف التكليف — بلا تدقيق ولا إشعار
+    if (patch.seen) {
+      if (current.ownerId !== me.id || current.chain?.read) return { ok: true, assignment: { ...clean(current), partnerIds: current.partnerIds ?? [], attachments: current.attachments ?? [] } };
+      await col.updateOne({ id }, { $set: { "chain.read": stampNow() } });
+      const after = await col.findOne({ id });
+      return { ok: true, assignment: after ? { ...clean(after), partnerIds: after.partnerIds ?? [], attachments: after.attachments ?? [] } : null };
+    }
 
     // تحديث نسبة الإنجاز — للمكلَّف وحده
     if (typeof patch.progress === "number") {
@@ -41,6 +49,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       update.status = patch.status;
       const at = stampNow();
       if (patch.status === "مُستلَم") update["chain.acknowledged"] = at;
+      // لا إقرار بلا قراءة
+      if (!current.chain?.read && current.ownerId === me.id) update["chain.read"] = at;
       if (patch.status === "قيد التنفيذ") update["chain.started"] = at;
       if (patch.status === "قيد المراجعة") {
         update["chain.submitted"] = at;
@@ -84,6 +94,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       });
     }
 
-    return { ok: true, assignment: after ? clean(after) : null };
+    return { ok: true, assignment: after ? { ...clean(after), partnerIds: after.partnerIds ?? [], attachments: after.attachments ?? [] } : null };
   });
 }

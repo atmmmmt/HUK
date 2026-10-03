@@ -3,7 +3,7 @@ import { collections, pushNotification } from "./db";
 import type { Assignment, Classification, Priority } from "./types";
 
 export const stampNow = () =>
-  new Date().toLocaleString("ar-SY", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
+  new Date().toLocaleString("ar-SY-u-nu-latn", { day: "2-digit", month: "long", hour: "2-digit", minute: "2-digit" });
 
 /** «30 أيلول 2026» بالأرقام اللاتينية كما في بقية المنظومة */
 export const arDate = (iso: string) =>

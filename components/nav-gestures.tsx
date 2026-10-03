@@ -10,7 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
  * • انتقال منزلق بين الصفحات يعرف اتجاهه (تقدّم أو رجوع)
  */
 
-const OVERLAYS = ".sheet-open, .more-sheet, .pop-panel, .msearch, .ai-wrap";
+const OVERLAYS = ".docview, .sheet-open, .more-sheet, .pop-panel, .msearch, .ai-wrap";
 const CLOSERS = ".scrim, .pop-scrim, .ai-scrim, .more-scrim, .msearch-cancel, [aria-label='إغلاق']";
 const EDGE = 28;
 
@@ -31,7 +31,7 @@ function closeTop(): boolean {
   const top = all[all.length - 1];
   if (!top) return false;
   const prev = top.previousElementSibling as HTMLElement | null;
-  const btn = top.querySelector<HTMLElement>(":scope > .scrim, :scope > .ai-scrim, .msearch-cancel")
+  const btn = top.querySelector<HTMLElement>(":scope > .scrim, :scope > .ai-scrim, .msearch-cancel, .dv-close")
     ?? (prev?.matches(".scrim, .pop-scrim") ? prev : null)
     ?? top.querySelector<HTMLElement>(CLOSERS);
   btn?.click();
@@ -108,12 +108,16 @@ export default function NavGestures({ home }: { home: string }) {
   useEffect(() => {
     let x0 = -1, y0 = 0, dx = 0, side = 0, active = false;
     let el: HTMLElement | null = null;
+    let viewer = false;
     let shade: HTMLElement | null = null;
 
     const start = (e: TouchEvent) => {
       x0 = -1;
-      if (!isMobile() || !standalone() || document.querySelector(OVERLAYS)) return;
-      if (depth === 0 && location.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")) return;
+      if (!isMobile() || !standalone()) return;
+      const ovs = document.querySelectorAll(OVERLAYS);
+      viewer = ovs.length > 0 && ovs[ovs.length - 1].matches(".docview");
+      if (ovs.length && !viewer) return;
+      if (!viewer && depth === 0 && location.pathname.replace(/\/$/, "") === home.replace(/\/$/, "")) return;
       const x = e.touches[0].clientX, w = window.innerWidth;
       if (x > w - EDGE) side = -1;        // من الحافة اليمنى (بداية السطر العربي) نحو اليسار
       else if (x < EDGE) side = 1;        // ومن اليسرى نحو اليمين أيضاً
@@ -128,7 +132,7 @@ export default function NavGestures({ home }: { home: string }) {
         if (dy > 14 && dy > d) { x0 = -1; return; }
         if (d < 10) return;
         active = true;
-        el = document.querySelector<HTMLElement>(".canvas");
+        el = document.querySelector<HTMLElement>(viewer ? ".docview" : ".canvas");
         if (!el) { x0 = -1; return; }
         el.classList.remove("nav-fwd", "nav-back");
         el.style.transition = "none";
@@ -159,6 +163,7 @@ export default function NavGestures({ home }: { home: string }) {
         buzz(12);
         target.style.transform = `translateX(${w * side}px)`;
         window.setTimeout(() => {
+          if (viewer) { document.querySelector<HTMLElement>(".docview .dv-close")?.click(); sh?.remove(); return; }
           markBack();
           if (depth > 0) history.back();
           else router.push(home);

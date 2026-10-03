@@ -42,6 +42,17 @@ export default function NavGestures({ home }: { home: string }) {
   const pathname = usePathname();
   const router = useRouter();
 
+  /* لا تكبير بالقرص على آيفون (يتجاهل إعداد الصفحة أحياناً) */
+  useEffect(() => {
+    const stop = (e: Event) => e.preventDefault();
+    document.addEventListener("gesturestart", stop, { passive: false });
+    document.addEventListener("gesturechange", stop, { passive: false });
+    return () => {
+      document.removeEventListener("gesturestart", stop);
+      document.removeEventListener("gesturechange", stop);
+    };
+  }, []);
+
   /* اتجاه الانتقال وعدّاد العمق */
   useEffect(() => {
     if (!lastPath) { lastPath = pathname; return; }

@@ -1,5 +1,6 @@
 import "server-only";
 import { collections, pushNotification } from "./db";
+import { portalsFor } from "./access";
 import type { Assignment, Classification, Priority } from "./types";
 
 export const stampNow = () =>
@@ -69,13 +70,14 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
   };
 
   await (await collections.assignments()).insertOne({ ...a });
+  const recipientPortal = portalsFor(owner).includes("directorates") ? "directorates" : "diwan";
   await pushNotification({
     kind: "تكليف",
     title: "تكليف جديد أُسند إليك",
     body: `«${a.title}» — ${a.priority}، يستحق ${a.due}.`,
     channel: "تنبيه التطبيق",
     toId: owner.id,
-    link: { portal: "directorates", section: "inbox", itemId: a.id },
+    link: { portal: recipientPortal, section: recipientPortal === "directorates" ? "inbox" : "assignments", itemId: a.id },
     urgent: a.priority === "عاجل جداً",
   });
   return a;

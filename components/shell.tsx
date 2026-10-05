@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AlarmClock, Bell, BookOpen, Building2, CalendarDays, Check, CheckCheck, ChevronDown, DoorOpen,
   Flag, FolderOpen, GitFork, IdCard, Inbox, LayoutGrid, ListTodo, Lock, MailQuestion, Menu, Network,
@@ -86,7 +87,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   }
 
   return (
-    <div className={`shell ${dense ? "dense" : ""} ${scrolled ? "scrolled" : ""}`}>
+    <div className={`shell role-${me.role} ${dense ? "dense" : ""} ${scrolled ? "scrolled" : ""}`}>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
 
       <aside className={`rail ${mini ? "mini" : ""} ${open ? "open" : ""}`}>
@@ -122,19 +123,17 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
 
           <div className="rail-group-label">التنقّل</div>
           {(["diwan", "directorates", "admin"] as Portal[])
-            .filter((p) => p !== portal)
+            .filter((p) => p !== portal && allowed.includes(p))
             .map((p) => {
-              const locked = !allowed.includes(p);
               const Icon = p === "diwan" ? Building2 : p === "directorates" ? Network : SlidersHorizontal;
               return (
                 <button
                   key={p}
                   className="nav-item"
-                  style={locked ? { opacity: .45 } : undefined}
-                  onClick={() => !locked && router.push(`/${p}/${p === "diwan" ? "overview" : "entities"}/`)}
+                  onClick={() => router.push(`/${p}/${p === "diwan" ? "overview" : "entities"}/`)}
                   title={mini ? portalLabels[p].title : undefined}
                 >
-                  {locked ? <Lock size={18} /> : <Icon size={18} />}
+                  <Icon size={18} />
                   <span className="nav-text">{portalLabels[p].title}</span>
                 </button>
               );
@@ -215,29 +214,40 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
           </button>
 
           <div style={{ position: "relative" }}>
-            <button className="icon-btn bell" onClick={() => setBell(!bell)} aria-label="الإشعارات">
+            <button className="icon-btn bell" onClick={() => {
+              const next = !bell;
+              setBell(next);
+              if (next) void enableDeviceNotifications();
+            }} aria-label="الإشعارات">
               <Bell size={19} />
               {unread > 0 && <span className="bell-dot">{unread}</span>}
             </button>
-            {bell && (
+            {bell && typeof document !== "undefined" && createPortal(
               <>
                 <div className="pop-scrim" onClick={() => setBell(false)} />
-                <div className="pop-panel">
+                <div className="pop-panel" role="dialog" aria-modal="true" aria-label="الإشعارات">
                   <span className="m-grab" aria-hidden />
                   <div className="pop-head">
-                    <b style={{ fontSize: 14 }}>الإشعارات</b>
+                    <div>
+                      <b style={{ fontSize: 16 }}>الإشعارات</b>
+                      <span className="tiny muted" style={{ display: "block", marginTop: 2 }}>{unread ? `${unread} غير مقروء` : "كل شيء مقروء"}</span>
+                    </div>
                     <button className="btn quiet sm" onClick={markAllRead}>
                       <CheckCheck size={14} /> تعليم الكل مقروءاً
                     </button>
                   </div>
                   <div className="pop-list">
+                    {list.length === 0 && <div className="notif-empty"><Bell size={28} /><b>لا توجد إشعارات حالياً</b><span>ستظهر هنا التكليفات والملاحظات والتحديثات الجديدة.</span></div>}
                     {list.map((n) => (
                       <button
                         key={n.id}
                         className={`notif ${n.read ? "" : "unread"} ${n.urgent ? "urgent" : ""}`}
                         onClick={() => {
-                          markRead(n.id);
-                          if (n.link) router.push(`/${n.link.portal}/${n.link.section}/`);
+                          void markRead(n.id);
+                          if (n.link) {
+                            const query = n.link.itemId ? `?open=${encodeURIComponent(n.link.itemId)}` : "";
+                            router.push(`/${n.link.portal}/${n.link.section}/${query}`);
+                          }
                           setBell(false);
                         }}
                       >
@@ -251,7 +261,8 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
                     ))}
                   </div>
                 </div>
-              </>
+              </>,
+              document.body,
             )}
           </div>
 
@@ -296,6 +307,12 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
       </div>
     </div>
   );
+}
+
+async function enableDeviceNotifications() {
+  if (typeof window === "undefined" || !("Notification" in window)) return;
+  if (Notification.permission !== "default") return;
+  try { await Notification.requestPermission(); } catch { /* المتصفح لا يسمح */ }
 }
 
 function greeting() {

@@ -27,14 +27,15 @@ export function Halls() {
 
   const ofDay = bookings.filter((b) => b.day === day);
   const pending = bookings.filter((b) => b.status === "بانتظار الموافقة");
+  const jump = (id: string) => window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <div className="grid g-4">
-        <Kpi label="القاعات المسجّلة" value={halls.length} icon={<DoorOpen size={17} />} />
-        <Kpi label="حجوزات اليوم" value={bookings.filter((b) => b.day === "اليوم" && b.status === "مؤكد").length} icon={<CalendarClock size={17} />} tone="gold" />
-        <Kpi label="بانتظار الموافقة" value={pending.length} icon={<Clock3 size={17} />} tone="warn" />
-        <Kpi label="متوسط الإشغال" value={Math.round(halls.reduce((s, h) => s + h.occupancy, 0) / halls.length)} meta="٪ من ساعات الدوام" icon={<Layers size={17} />} tone="ok" />
+        <Kpi onClick={() => jump("halls-list")} label="القاعات المسجّلة" value={halls.length} icon={<DoorOpen size={17} />} />
+        <Kpi onClick={() => { setDay("اليوم"); jump("halls-calendar"); }} label="حجوزات اليوم" value={bookings.filter((b) => b.day === "اليوم" && b.status === "مؤكد").length} icon={<CalendarClock size={17} />} tone="gold" />
+        <Kpi onClick={() => { if (pending[0]?.day) setDay(pending[0].day); jump("halls-calendar"); }} label="بانتظار الموافقة" value={pending.length} icon={<Clock3 size={17} />} tone="warn" />
+        <Kpi onClick={() => jump("halls-list")} label="متوسط الإشغال" value={Math.round(halls.reduce((s, h) => s + h.occupancy, 0) / halls.length)} meta="٪ من ساعات الدوام" icon={<Layers size={17} />} tone="ok" />
       </div>
 
       <div className="lock-note">
@@ -62,6 +63,7 @@ export function Halls() {
 
       <Pills value={day} onChange={setDay} items={dayOrder.map((d) => ({ key: d, label: d, n: bookings.filter((b) => b.day === d).length }))} />
 
+      <div id="halls-calendar">
       <Panel title={`تقويم القاعات — ${day}`} icon={<CalendarClock size={17} />} hint="كل القاعات في شريط واحد" flush>
         <div className="tbl-wrap">
           <table className="tbl">
@@ -120,8 +122,9 @@ export function Halls() {
           </table>
         </div>
       </Panel>
+      </div>
 
-      <div className="grid g-3">
+      <div id="halls-list" className="grid g-3">
         {halls.map((h) => (
           <button key={h.id} className="card hover pad" style={{ textAlign: "right" }} onClick={() => setOpen(h)}>
             <div className="row between wrap" style={{ gap: 8, marginBottom: 10 }}>

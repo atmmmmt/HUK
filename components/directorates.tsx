@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Building2, CheckCircle2, Clock3, GitFork, Inbox, ListTodo, MailQuestion, Network,
   Send, TrendingUp, TriangleAlert, Users,
@@ -148,10 +148,11 @@ export function EntityInbox() {
   const { assignments, me } = useStore();
   const scope = useScope();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "unread" | "late" | "closed">("all");
 
-  const all = assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a));
+  const all = useMemo(() => assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a)), [assignments, scope.entityId, me]);
   const unread = all.filter((a) => !a.chain.acknowledged);
   const list = filter === "unread" ? unread
     : filter === "late" ? all.filter((a) => a.status === "متأخر")
@@ -166,8 +167,13 @@ export function EntityInbox() {
     else if (requestedFilter === "closed") setFilter("closed");
     else if (requestedFilter === "unread") setFilter("unread");
     const requestedOpen = searchParams.get("open");
-    if (requestedOpen && all.some((a) => a.id === requestedOpen)) setOpen(requestedOpen);
-  }, [searchParams, all]);
+    if (requestedOpen && all.some((a) => a.id === requestedOpen)) {
+      setOpen(requestedOpen);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("open");
+      router.replace(`/directorates/inbox/${next.size ? `?${next.toString()}` : ""}`, { scroll: false });
+    }
+  }, [searchParams, all, router]);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>

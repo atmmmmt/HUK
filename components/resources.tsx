@@ -333,44 +333,6 @@ export function Files() {
         </Sheet>
       )}
     </div>
-
-    <div className="desktop-only grid stagger" style={{ gap: 16 }}>
-      <div className="lock-note" style={{ background: "var(--info-bg)", borderColor: "#cfe0fb", color: "#1a4c9e" }}>
-        <StickyNote size={17} style={{ color: "var(--info)" }} />
-        <span>لوح الملاحظات ملحق بكل كيان في المنظومة: الشخص، الجهة، القاعة، الاجتماع، التكليف، الكتاب، الوفد والملف. وكل ملاحظة تحمل اسم كاتبها وتاريخها ولا تُحذف بل تُؤرشف.</span>
-      </div>
-
-      <Pills value={scope} onChange={setScope} items={scopes.map((s) => ({ key: s, label: s, n: s === "الكل" ? notes.length : notes.filter((n) => n.scope === s).length }))} />
-
-      {grouped.length === 0 ? <Empty text="لا ملاحظات ضمن هذا التصنيف" /> : (
-        <div className="grid g-2">
-          {grouped.map(([label, items]) => (
-            <Panel key={label} title={label} icon={<StickyNote size={17} />} hint={`${items.length} ملاحظة`}>
-              {items.map((n) => (
-                <div key={n.id} className={`note-item ${n.scope === "توجيه المحافظ" ? "governor" : ""}`}>
-                  <Ava id={n.authorId} size="sm" />
-                  <div className="note-body">
-                    <div className="note-top">
-                      <b>{personOf(n.authorId).name}</b>
-                      <span className={`chip ${n.scope === "توجيه المحافظ" ? "gold" : n.scope === "رسمية" ? "navy" : ""}`} style={{ fontSize: 11 }}>{n.scope}</span>
-                      <time>{n.at}</time>
-                    </div>
-                    <p className="note-text">{n.text}</p>
-                    {n.mentions && (
-                      <div className="row" style={{ gap: 6, marginTop: 6 }}>
-                        <span className="tiny muted">أُشير إلى</span>
-                        {n.mentions.map((m) => <span key={m} className="chip">{personOf(m).name}</span>)}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </Panel>
-          ))}
-        </div>
-      )}
-    </div>
-    </>
   );
 }
 
@@ -512,6 +474,7 @@ export function Notes() {
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState("الكل");
+
   const target = `personal:${me.id}`;
   const mine = notes
     .filter((n) => n.authorId === me.id && n.target === target && n.scope === "خاصة")
@@ -539,62 +502,117 @@ export function Notes() {
 
   return (
     <>
-    <div className="personal-notes pwa-only">
-      <div className="personal-notes-tools">
-        <label className="notes-search">
-          <Search size={17} />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في ملاحظاتك…" />
-        </label>
-        <button className="btn gold notes-add" onClick={() => setCreating(true)}>
-          <Plus size={17} /> ملاحظة جديدة
-        </button>
+      <div className="personal-notes pwa-only">
+        <div className="personal-notes-tools">
+          <label className="notes-search">
+            <Search size={17} />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في ملاحظاتك…" />
+          </label>
+          <button className="btn gold notes-add" onClick={() => setCreating(true)}>
+            <Plus size={17} /> ملاحظة جديدة
+          </button>
+        </div>
+
+        <p className="personal-notes-private">
+          <Lock size={14} /> هذه المساحة شخصية وخاصة بك، ولا تظهر لباقي مستخدمي المنظومة.
+        </p>
+
+        {mine.length === 0 ? (
+          <Empty
+            text={query ? "لا توجد نتيجة مطابقة" : "لا توجد ملاحظات شخصية بعد"}
+            hint={query ? "جرّب كلمة بحث أخرى" : "اضغط «ملاحظة جديدة» ودوّن أي شيء تريد الرجوع إليه لاحقاً"}
+          />
+        ) : (
+          <div className="notes-grid">
+            {mine.map((n) => {
+              const rows = n.text.split("\n");
+              const title = rows[0].slice(0, 72);
+              const body = rows.slice(1).join("\n").trim();
+              return (
+                <article key={n.id} className="personal-note-card">
+                  <StickyNote size={18} />
+                  <div>
+                    <h3>{title}</h3>
+                    {body && <p>{body}</p>}
+                    <time>{n.at}</time>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {creating && (
+          <Sheet
+            title="ملاحظة جديدة"
+            sub="خاصة بك فقط"
+            onClose={() => { setCreating(false); setText(""); }}
+            footer={
+              <>
+                <button className="btn gold" onClick={() => void save()}>حفظ الملاحظة</button>
+                <button className="btn ghost" onClick={() => { setCreating(false); setText(""); }}>إلغاء</button>
+              </>
+            }
+          >
+            <div className="field note-editor-field">
+              <label htmlFor="personal-note-text">اكتب ملاحظتك</label>
+              <textarea
+                id="personal-note-text"
+                autoFocus
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={"العنوان في السطر الأول\nثم اكتب التفاصيل التي تريد الاحتفاظ بها…"}
+              />
+            </div>
+          </Sheet>
+        )}
       </div>
 
-      <p className="personal-notes-private">
-        <Lock size={14} /> هذه المساحة شخصية وخاصة بك، ولا تظهر لباقي مستخدمي المنظومة.
-      </p>
-
-      {mine.length === 0 ? (
-        <Empty text={query ? "لا توجد نتيجة مطابقة" : "لا توجد ملاحظات شخصية بعد"} hint={query ? "جرّب كلمة بحث أخرى" : "اضغط «ملاحظة جديدة» ودوّن أي شيء تريد الرجوع إليه لاحقاً"} />
-      ) : (
-        <div className="notes-grid">
-          {mine.map((n) => {
-            const rows = n.text.split("\n");
-            const title = rows[0].slice(0, 72);
-            const body = rows.slice(1).join("\n").trim();
-            return (
-              <article key={n.id} className="personal-note-card">
-                <StickyNote size={18} />
-                <div>
-                  <h3>{title}</h3>
-                  {body && <p>{body}</p>}
-                  <time>{n.at}</time>
-                </div>
-              </article>
-            );
-          })}
+      <div className="desktop-only grid stagger" style={{ gap: 16 }}>
+        <div className="lock-note" style={{ background: "var(--info-bg)", borderColor: "#cfe0fb", color: "#1a4c9e" }}>
+          <StickyNote size={17} style={{ color: "var(--info)" }} />
+          <span>لوح الملاحظات ملحق بكل كيان في المنظومة: الشخص، الجهة، القاعة، الاجتماع، التكليف، الكتاب، الوفد والملف. وكل ملاحظة تحمل اسم كاتبها وتاريخها ولا تُحذف بل تُؤرشف.</span>
         </div>
-      )}
 
-      {creating && (
-        <Sheet title="ملاحظة جديدة" sub="خاصة بك فقط" onClose={() => { setCreating(false); setText(""); }} footer={
-          <>
-            <button className="btn gold" onClick={() => void save()}>حفظ الملاحظة</button>
-            <button className="btn ghost" onClick={() => { setCreating(false); setText(""); }}>إلغاء</button>
-          </>
-        }>
-          <div className="field note-editor-field">
-            <label htmlFor="personal-note-text">اكتب ملاحظتك</label>
-            <textarea
-              id="personal-note-text"
-              autoFocus
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={"العنوان في السطر الأول\nثم اكتب التفاصيل التي تريد الاحتفاظ بها…"}
-            />
+        <Pills
+          value={scope}
+          onChange={setScope}
+          items={scopes.map((s) => ({
+            key: s,
+            label: s,
+            n: s === "الكل" ? notes.length : notes.filter((n) => n.scope === s).length,
+          }))}
+        />
+
+        {grouped.length === 0 ? <Empty text="لا ملاحظات ضمن هذا التصنيف" /> : (
+          <div className="grid g-2">
+            {grouped.map(([label, items]) => (
+              <Panel key={label} title={label} icon={<StickyNote size={17} />} hint={`${items.length} ملاحظة`}>
+                {items.map((n) => (
+                  <div key={n.id} className={`note-item ${n.scope === "توجيه المحافظ" ? "governor" : ""}`}>
+                    <Ava id={n.authorId} size="sm" />
+                    <div className="note-body">
+                      <div className="note-top">
+                        <b>{personOf(n.authorId).name}</b>
+                        <span className={`chip ${n.scope === "توجيه المحافظ" ? "gold" : n.scope === "رسمية" ? "navy" : ""}`} style={{ fontSize: 11 }}>{n.scope}</span>
+                        <time>{n.at}</time>
+                      </div>
+                      <p className="note-text">{n.text}</p>
+                      {n.mentions && (
+                        <div className="row" style={{ gap: 6, marginTop: 6 }}>
+                          <span className="tiny muted">أُشير إلى</span>
+                          {n.mentions.map((m) => <span key={m} className="chip">{personOf(m).name}</span>)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </Panel>
+            ))}
           </div>
-        </Sheet>
-      )}
-    </div>
+        )}
+      </div>
+    </>
   );
 }
+

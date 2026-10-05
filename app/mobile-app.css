@@ -953,3 +953,11 @@ body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
   from { opacity: .92; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
+
+
+/* Mobile-only feature surfaces; desktop keeps its current UI. */
+.pwa-only { display: none !important; }
+@media (max-width: 900px) {
+  .pwa-only { display: grid !important; }
+  .desktop-only { display: none !important; }
+}

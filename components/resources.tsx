@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   BadgeCheck, CalendarClock, CheckCircle2, Clock3, DoorOpen, Flag, FolderOpen, IdCard, Layers,
-  ListChecks, Lock, MapPin, MessageSquare, Phone, ShieldCheck, StickyNote, TriangleAlert, Users, XCircle,
+  ListChecks, Lock, MapPin, MessageSquare, Phone, Plus, Search, ShieldCheck, StickyNote, TriangleAlert, Users, XCircle,
   UploadCloud,
 } from "lucide-react";
 import { delegations, docFiles, entityOf, halls, people, personOf, roleOf } from "@/lib/lookup";
@@ -466,56 +466,79 @@ function PersonSheet({ p, onClose }: { p: Person; onClose: () => void }) {
 /* ═══════════════════════ الملاحظات ═══════════════════════ */
 
 export function Notes() {
-  const { notes } = useStore();
-  const [scope, setScope] = useState("الكل");
-  const scopes = ["الكل", "توجيه المحافظ", "رسمية", "الوحدة", "خاصة"];
-  const list = notes.filter((n) => scope === "الكل" || n.scope === scope);
+  const { notes, addNote, me, toast } = useStore();
+  const [creating, setCreating] = useState(false);
+  const [text, setText] = useState("");
+  const [query, setQuery] = useState("");
+  const target = `personal:${me.id}`;
+  const mine = notes
+    .filter((n) => n.authorId === me.id && n.target === target && n.scope === "خاصة")
+    .filter((n) => !query.trim() || n.text.toLowerCase().includes(query.trim().toLowerCase()));
 
-  const grouped = useMemo(() => {
-    const m = new Map<string, typeof list>();
-    list.forEach((n) => {
-      const arr = m.get(n.targetLabel) ?? [];
-      arr.push(n);
-      m.set(n.targetLabel, arr);
-    });
-    return [...m.entries()];
-  }, [list]);
+  const save = async () => {
+    const value = text.trim();
+    if (!value) return toast("اكتب الملاحظة أولاً", "warn");
+    await addNote({ target, targetLabel: "ملاحظاتي", text: value, scope: "خاصة" });
+    setText("");
+    setCreating(false);
+  };
 
   return (
-    <div className="grid stagger" style={{ gap: 16 }}>
-      <div className="lock-note" style={{ background: "var(--info-bg)", borderColor: "#cfe0fb", color: "#1a4c9e" }}>
-        <StickyNote size={17} style={{ color: "var(--info)" }} />
-        <span>لوح الملاحظات ملحق بكل كيان في المنظومة: الشخص، الجهة، القاعة، الاجتماع، التكليف، الكتاب، الوفد والملف. وكل ملاحظة تحمل اسم كاتبها وتاريخها ولا تُحذف بل تُؤرشف.</span>
+    <div className="personal-notes">
+      <div className="personal-notes-tools">
+        <label className="notes-search">
+          <Search size={17} />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="ابحث في ملاحظاتك…" />
+        </label>
+        <button className="btn gold notes-add" onClick={() => setCreating(true)}>
+          <Plus size={17} /> ملاحظة جديدة
+        </button>
       </div>
 
-      <Pills value={scope} onChange={setScope} items={scopes.map((s) => ({ key: s, label: s, n: s === "الكل" ? notes.length : notes.filter((n) => n.scope === s).length }))} />
+      <p className="personal-notes-private">
+        <Lock size={14} /> هذه المساحة شخصية وخاصة بك، ولا تظهر لباقي مستخدمي المنظومة.
+      </p>
 
-      {grouped.length === 0 ? <Empty text="لا ملاحظات ضمن هذا التصنيف" /> : (
-        <div className="grid g-2">
-          {grouped.map(([label, items]) => (
-            <Panel key={label} title={label} icon={<StickyNote size={17} />} hint={`${items.length} ملاحظة`}>
-              {items.map((n) => (
-                <div key={n.id} className={`note-item ${n.scope === "توجيه المحافظ" ? "governor" : ""}`}>
-                  <Ava id={n.authorId} size="sm" />
-                  <div className="note-body">
-                    <div className="note-top">
-                      <b>{personOf(n.authorId).name}</b>
-                      <span className={`chip ${n.scope === "توجيه المحافظ" ? "gold" : n.scope === "رسمية" ? "navy" : ""}`} style={{ fontSize: 11 }}>{n.scope}</span>
-                      <time>{n.at}</time>
-                    </div>
-                    <p className="note-text">{n.text}</p>
-                    {n.mentions && (
-                      <div className="row" style={{ gap: 6, marginTop: 6 }}>
-                        <span className="tiny muted">أُشير إلى</span>
-                        {n.mentions.map((m) => <span key={m} className="chip">{personOf(m).name}</span>)}
-                      </div>
-                    )}
-                  </div>
+      {mine.length === 0 ? (
+        <Empty text={query ? "لا توجد نتيجة مطابقة" : "لا توجد ملاحظات شخصية بعد"} hint={query ? "جرّب كلمة بحث أخرى" : "اضغط «ملاحظة جديدة» ودوّن أي شيء تريد الرجوع إليه لاحقاً"} />
+      ) : (
+        <div className="notes-grid">
+          {mine.map((n) => {
+            const rows = n.text.split("\n");
+            const title = rows[0].slice(0, 72);
+            const body = rows.slice(1).join("\n").trim();
+            return (
+              <article key={n.id} className="personal-note-card">
+                <StickyNote size={18} />
+                <div>
+                  <h3>{title}</h3>
+                  {body && <p>{body}</p>}
+                  <time>{n.at}</time>
                 </div>
-              ))}
-            </Panel>
-          ))}
+              </article>
+            );
+          })}
         </div>
+      )}
+
+      {creating && (
+        <Sheet title="ملاحظة جديدة" sub="خاصة بك فقط" onClose={() => { setCreating(false); setText(""); }} footer={
+          <>
+            <button className="btn gold" onClick={() => void save()}>حفظ الملاحظة</button>
+            <button className="btn ghost" onClick={() => { setCreating(false); setText(""); }}>إلغاء</button>
+          </>
+        }>
+          <div className="field note-editor-field">
+            <label htmlFor="personal-note-text">اكتب ملاحظتك</label>
+            <textarea
+              id="personal-note-text"
+              autoFocus
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={"العنوان في السطر الأول\nثم اكتب التفاصيل التي تريد الاحتفاظ بها…"}
+            />
+          </div>
+        </Sheet>
       )}
     </div>
   );

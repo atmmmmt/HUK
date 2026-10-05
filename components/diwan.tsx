@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlarmClock, ArrowLeft, Plus, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
   FileCheck2, Gavel, Inbox, ListTodo, MapPin, MessageSquare, Paperclip, Repeat2, Stamp, TriangleAlert,
@@ -586,6 +586,7 @@ const statusFilters = ["الكل", "متأخر", "قيد التنفيذ", "قي�
 export function Assignments() {
   const { assignments, me } = useStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [issuing, setIssuing] = useState(false);
   const [filter, setFilter] = useState("الكل");
   const [open, setOpen] = useState<string | null>(null);
@@ -598,8 +599,13 @@ export function Assignments() {
     const requestedFilter = searchParams.get("filter");
     if (requestedFilter && statusFilters.includes(requestedFilter)) setFilter(requestedFilter);
     const requestedOpen = searchParams.get("open");
-    if (requestedOpen && visible.some((a) => a.id === requestedOpen)) setOpen(requestedOpen);
-  }, [searchParams, visible]);
+    if (requestedOpen && visible.some((a) => a.id === requestedOpen)) {
+      setOpen(requestedOpen);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("open");
+      router.replace(`/diwan/assignments/${next.size ? `?${next.toString()}` : ""}`, { scroll: false });
+    }
+  }, [searchParams, visible, router]);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>

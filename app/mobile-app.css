@@ -737,3 +737,227 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
 /* أثناء سحب الرجوع يختفي زر الإضافة الثابت حتى لا ينفصل عن الصفحة */
 body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
+
+
+/* ============================================================
+   PWA mobile stability / speed pass
+   ============================================================ */
+@media (max-width: 900px) {
+  /* Keep one continuous surface between the native-like top bar and page hero. */
+  .shell, .main { background: var(--navy-900); }
+  .canvas {
+    background: var(--bg);
+    animation: none !important;
+    transform: none;
+    min-height: calc(100dvh - 58px);
+  }
+  .page-head {
+    margin-top: -1px;
+    animation: none !important;
+    border-top: 0 !important;
+  }
+  .topbar { border-bottom: 0 !important; }
+  .shell.scrolled .topbar { border-bottom-color: transparent !important; }
+
+  /* Page changes should never slide the whole canvas and reveal a white seam. */
+  .canvas.nav-fwd, .canvas.nav-back { animation: pwaPageFade .16s ease-out both !important; }
+  .canvas .card, .canvas .kpi, table.tbl tbody tr { animation: none !important; }
+  .m-today .mt-hero, .m-today .mt-quick, .m-today .mt-now, .m-today .mt-deck {
+    animation: none !important;
+  }
+
+  /* Interactive KPI cards: the whole box is a real navigation/filter target. */
+  .kpi.interactive {
+    display: block;
+    width: 100%;
+    text-align: right;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .kpi.interactive:active { transform: scale(.97); }
+
+  /* Governor's mobile home: keep summary categories; remove duplicated lower reports. */
+  .role-governor .gov-mobile-hide { display: none !important; }
+
+  /* Notification center is portalled to body, so it never depends on scroll position. */
+  .pop-panel {
+    position: fixed !important;
+    inset: calc(env(safe-area-inset-top, 0px) + 10px) 10px calc(env(safe-area-inset-bottom, 0px) + 10px) 10px !important;
+    width: auto !important;
+    max-height: none !important;
+    display: flex;
+    flex-direction: column;
+    border-radius: 26px !important;
+    overflow: hidden;
+    z-index: 79 !important;
+    background: var(--card);
+    box-shadow: 0 24px 70px rgba(6, 16, 30, .38);
+    animation: notifCenterIn .2s ease-out both !important;
+  }
+  .pop-scrim { z-index: 78 !important; }
+  .pop-head {
+    flex: none;
+    padding: var(--s4) var(--s5);
+    background: var(--card);
+  }
+  .pop-list {
+    flex: 1;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .notif {
+    min-height: 76px;
+    align-items: flex-start;
+    background: var(--card);
+  }
+  .notif.unread { background: var(--navy-50); }
+  .notif-empty {
+    min-height: 55dvh;
+    padding: var(--s8) var(--s5);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: var(--s2);
+    text-align: center;
+    color: var(--muted);
+  }
+  .notif-empty svg { color: var(--faint); }
+  .notif-empty b { color: var(--ink); font-size: 15px; }
+  .notif-empty span { max-width: 270px; font-size: 12.5px; line-height: 1.6; }
+
+  /* New-assignment sheet behaves like a fixed native screen, including with keyboard open. */
+  body:has(.sheet #as-title) {
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+  }
+  .sheet:has(#as-title) {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    animation: assignmentScreenIn .18s ease-out both !important;
+  }
+  .sheet:has(#as-title) .sheet-head {
+    flex: none;
+    padding-top: calc(env(safe-area-inset-top, 0px) + var(--s4));
+  }
+  .sheet:has(#as-title) .sheet-body {
+    min-height: 0;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--s8) + env(safe-area-inset-bottom, 0px));
+  }
+  .sheet:has(#as-title) .sheet-foot {
+    flex: none;
+    padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Keep avatars square/circular even in the More sheet flex layout. */
+  .more-head > .ava, .m-me .ava {
+    flex: 0 0 auto;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  /* Personal notes — phone-notes style. */
+  .personal-notes { display: grid; gap: var(--s4); }
+  .personal-notes-tools { display: flex; gap: var(--s2); align-items: center; }
+  .notes-search {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    padding: 0 var(--s4);
+    border-radius: 15px;
+    background: var(--card);
+    box-shadow: 0 1px 2px rgba(14,24,38,.05), 0 6px 18px rgba(14,24,38,.05);
+  }
+  .notes-search input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--ink);
+  }
+  .notes-add { min-height: 48px; border-radius: 15px; }
+  .personal-notes-private {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: -4px 2px 0;
+    color: var(--muted);
+    font-size: 11.5px;
+  }
+  .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+  .personal-note-card {
+    min-height: 138px;
+    padding: var(--s4);
+    border-radius: 20px;
+    background: var(--card);
+    box-shadow: 0 1px 2px rgba(14,24,38,.04), 0 8px 24px rgba(14,24,38,.07);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s3);
+    overflow: hidden;
+  }
+  .personal-note-card > svg { flex: none; color: var(--gold-600); margin-top: 2px; }
+  .personal-note-card h3 {
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 7px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .personal-note-card p {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .personal-note-card time { display: block; color: var(--faint); font-size: 10.5px; margin-top: 9px; }
+  .note-editor-field textarea { min-height: 52dvh !important; resize: none !important; line-height: 1.75; }
+
+  @media (max-width: 430px) {
+    .personal-notes-tools { align-items: stretch; }
+    .notes-add { padding-inline: 12px; }
+    .notes-add svg { margin: 0; }
+    .notes-grid { grid-template-columns: 1fr; }
+  }
+}
+
+@keyframes pwaPageFade {
+  from { opacity: .82; }
+  to { opacity: 1; }
+}
+@keyframes notifCenterIn {
+  from { opacity: 0; transform: scale(.985) translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes assignmentScreenIn {
+  from { opacity: .92; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+
+/* Mobile-only feature surfaces; desktop keeps its current UI. */
+.pwa-only { display: none !important; }
+@media (max-width: 900px) {
+  .pwa-only { display: grid !important; }
+  .desktop-only { display: none !important; }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { setData, type Bootstrap } from "./lookup";
 import type {
@@ -98,10 +98,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [dense, setDenseState] = useState(false);
+  const knownNotificationIds = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
       const data = (await call("/api/bootstrap")) as Bootstrap;
+      knownNotificationIds.current = new Set((data.notifications ?? []).map((n) => n.id));
       setData(data);
       setBoot(data);
       setAnon(false);
@@ -130,8 +132,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try { setDenseState(localStorage.getItem(DENSE_KEY) === "1"); } catch { /* محجوب */ }
   }, []);
 
-  /* مزامنة حيّة: ما يكتبه الآخرون (ملاحظات، قراءة، إشعارات) يصل دون إعادة فتح التطبيق —
-     كل 20 ثانية والتطبيق ظاهر، وفوراً عند العودة إليه */
+  /* مزامنة حيّة خفيفة للجوال: التكليفات والإشعارات والملاحظات تصل خلال ثوانٍ
+     من دون إعادة تحميل bootstrap الثقيل في كل مرة. */
   const signedIn = !!boot;
   useEffect(() => {
     if (!signedIn) return;
@@ -140,11 +142,46 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (busy || document.visibilityState !== "visible") return;
       busy = true;
       try {
-        const res = await fetch("/api/bootstrap", { headers: { "Content-Type": "application/json" } });
-        if (res.ok) { const data = (await res.json()) as Bootstrap; setData(data); setBoot(data); }
-      } catch { /* بلا شبكة: نحاول لاحقاً */ } finally { busy = false; }
+        const res = await fetch("/api/sync", { cache: "no-store", headers: { "Content-Type": "application/json" } });
+        if (!res.ok) return;
+        const data = await res.json() as Pick<Bootstrap, "assignments" | "notes" | "notifications" | "meetings">;
+        const incomingNotifications = data.notifications ?? [];
+        const fresh = incomingNotifications.filter((n) => !knownNotificationIds.current.has(n.id));
+        knownNotificationIds.current = new Set(incomingNotifications.map((n) => n.id));
+
+        if (fresh.length && "Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
+          void navigator.serviceWorker.ready.then((registration) => {
+            for (const n of fresh.slice(0, 3)) {
+              const url = n.link
+                ? `/${n.link.portal}/${n.link.section}/${n.link.itemId ? `?open=${encodeURIComponent(n.link.itemId)}` : ""}`
+                : "/";
+              void registration.showNotification(n.title, {
+                body: n.body,
+                icon: "/icons/icon-192.png",
+                badge: "/icons/icon-192.png",
+                tag: n.id,
+                data: { url },
+              });
+            }
+          }).catch(() => {});
+        }
+
+        setBoot((current) => {
+          if (!current) return current;
+          const next = {
+            ...current,
+            assignments: data.assignments ?? current.assignments,
+            notes: data.notes ?? current.notes,
+            notifications: data.notifications ?? current.notifications,
+            meetings: data.meetings ?? current.meetings,
+          };
+          setData(next);
+          return next;
+        });
+      } catch { /* بلا شبكة: نحاول تلقائياً لاحقاً */ } finally { busy = false; }
     };
-    const t = window.setInterval(sync, 20000);
+    void sync();
+    const t = window.setInterval(sync, 4000);
     const onShow = () => { if (document.visibilityState === "visible") void sync(); };
     document.addEventListener("visibilitychange", onShow);
     window.addEventListener("online", sync);

@@ -32,7 +32,7 @@ export default function MobileToday() {
         <Ring value={pct} />
         <div className="mt-stats">
           <Link href="/diwan/assignments/" className="mt-stat"><b>{open.length}</b><span>تكليف مفتوح</span></Link>
-          <Link href="/diwan/assignments/" className="mt-stat danger"><b>{late.length}</b><span>متأخر ومصعَّد</span></Link>
+          <Link href="/diwan/assignments/?filter=متأخر" className="mt-stat danger"><b>{late.length}</b><span>متأخر ومصعَّد</span></Link>
           <Link href="/diwan/correspondence/" className="mt-stat"><b>{unhandled}</b><span>كتاب وارد</span></Link>
         </div>
       </section>
@@ -44,7 +44,7 @@ export default function MobileToday() {
           { href: "/diwan/calendar/", icon: CalendarDays, label: "التقويم" },
           { href: "/diwan/halls/", icon: DoorOpen, label: "القاعات" },
           { href: "/diwan/correspondence/", icon: Inbox, label: "الوارد", n: unhandled },
-          { href: "/diwan/notes/", icon: StickyNote, label: "الملاحظات" },
+          { href: "/diwan/notes/", icon: StickyNote, label: "ملاحظاتي" },
         ].map((q) => (
           <Link key={q.href} href={q.href} className="mt-q" onClick={() => buzz(6)}>
             <span className="mt-q-ico"><q.icon size={21} />{q.n ? <i>{q.n}</i> : null}</span>

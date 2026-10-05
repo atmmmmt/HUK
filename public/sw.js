@@ -1,4 +1,4 @@
-const CACHE_VERSION = "governorate-exec-v5-raqqa";
+const CACHE_VERSION = "governorate-exec-v6-pwa";
 const APP_SHELL = [
   "/",
   "/diwan/overview/",
@@ -6,7 +6,6 @@ const APP_SHELL = [
   "/diwan/meetings/",
   "/diwan/halls/",
   "/directorates/entities/",
-  "/admin/roles/",
   "/offline.html",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -50,19 +49,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // CSS, JS, images and fonts: network first so new deployments appear immediately.
+  // Static assets: return cache immediately and refresh in the background.
+  // This makes the installed PWA feel substantially faster after the first load.
   if (["style", "script", "image", "font"].includes(request.destination)) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      const network = fetch(request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          void caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      }).catch(() => cached);
+      return cached || network;
+    })());
     return;
   }
 
@@ -78,4 +78,20 @@ self.addEventListener("fetch", (event) => {
       })
       .catch(() => caches.match(request))
   );
+});
+
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification?.data?.url || "/";
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of windows) {
+      if ("focus" in client) {
+        if ("navigate" in client) await client.navigate(target);
+        return client.focus();
+      }
+    }
+    return self.clients.openWindow(target);
+  })());
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlarmClock, ArrowLeft, Plus, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
   FileCheck2, Gavel, Inbox, ListTodo, MapPin, MessageSquare, Paperclip, Repeat2, Stamp, TriangleAlert,
@@ -39,11 +40,11 @@ export function Overview() {
     <div className="grid stagger" style={{ gap: 16 }}>
       <MobileToday />
       <div className="grid g-5">
-        <Kpi label="مواعيد اليوم" value={todaySchedule.length} meta="اجتماع واحد جارٍ الآن" icon={<CalendarDays size={17} />} tone="navy" />
-        <Kpi label="التكليفات المفتوحة" value={open.length} meta={`${review.length} بانتظار الاعتماد`} icon={<ListTodo size={17} />} tone="gold" />
-        <Kpi label="متأخرة ومصعَّدة" value={late.length} meta="تحتاج تدخلاً اليوم" icon={<TriangleAlert size={17} />} tone="danger" trend="down" />
-        <Kpi label="بانتظار قراركم" value={decisions.filter((d) => d.awaiting === "governor").length} meta={`من أصل ${decisions.length} معاملة`} icon={<Stamp size={17} />} tone="warn" />
-        <Kpi label="كتب غير مُعالَجة" value={unhandled.length} meta="وردت ولم تُحَل بعد" icon={<Inbox size={17} />} tone="navy" />
+        <Kpi href="/diwan/calendar/" label="مواعيد اليوم" value={todaySchedule.length} meta="اجتماع واحد جارٍ الآن" icon={<CalendarDays size={17} />} tone="navy" />
+        <Kpi href="/diwan/assignments/?filter=الكل" label="التكليفات المفتوحة" value={open.length} meta={`${review.length} بانتظار الاعتماد`} icon={<ListTodo size={17} />} tone="gold" />
+        <Kpi href="/diwan/assignments/?filter=متأخر" label="متأخرة ومصعَّدة" value={late.length} meta="تحتاج تدخلاً اليوم" icon={<TriangleAlert size={17} />} tone="danger" trend="down" />
+        <Kpi href="/diwan/decisions/" label="بانتظار قراركم" value={decisions.filter((d) => d.awaiting === "governor").length} meta={`من أصل ${decisions.length} معاملة`} icon={<Stamp size={17} />} tone="warn" />
+        <Kpi href="/diwan/correspondence/" label="كتب غير مُعالَجة" value={unhandled.length} meta="وردت ولم تُحَل بعد" icon={<Inbox size={17} />} tone="navy" />
       </div>
 
       <div className="split">
@@ -62,6 +63,7 @@ export function Overview() {
             </div>
           </Panel>
 
+          <div className="gov-mobile-hide">
           <Panel
             title="التكليفات المتأخرة والمصعَّدة"
             icon={<TriangleAlert size={17} />}
@@ -92,7 +94,9 @@ export function Overview() {
               </div>
             )}
           </Panel>
+          </div>
 
+          <div className="gov-mobile-hide">
           <Panel title="التزام الجهات بالمواعيد" icon={<BadgeCheck size={17} />} hint="آخر 30 يوماً">
             <div className="grid" style={{ gap: 12 }}>
               {[...entities].sort((a, b) => b.compliance - a.compliance).map((e) => (
@@ -104,9 +108,11 @@ export function Overview() {
               ))}
             </div>
           </Panel>
+          </div>
         </div>
 
         <div className="grid" style={{ gap: 16 }}>
+          <div className="gov-mobile-hide">
           {myReviews.length > 0 && (
             <Panel title="مراجعة مستحقة" icon={<AlarmClock size={17} />} hint="انتهت مهلتها — راجع المكلَّف">
               <div className="grid" style={{ gap: 10 }}>
@@ -122,6 +128,7 @@ export function Overview() {
               </div>
             </Panel>
           )}
+          </div>
 
           <Panel title="بانتظار اعتمادكم" icon={<Stamp size={17} />} hint={`${decisions.length} معاملة`}>
             <div className="grid" style={{ gap: 10 }}>
@@ -137,6 +144,7 @@ export function Overview() {
             </div>
           </Panel>
 
+          <div className="gov-mobile-hide">
           <Panel title="توجيهات السيد المحافظ" icon={<MessageSquare size={17} />} hint="آخر ما صدر">
             {directives.length === 0 ? <p className="muted tiny">لا توجيهات مسجّلة.</p> : directives.map((n) => (
               <div key={n.id} className="note-item governor">
@@ -148,7 +156,9 @@ export function Overview() {
               </div>
             ))}
           </Panel>
+          </div>
 
+          <div className="gov-mobile-hide">
           <Panel title="الاجتماعات القادمة" icon={<Users size={17} />}>
             <div className="grid" style={{ gap: 10 }}>
               {meetings.filter((m) => m.status !== "منعقد").slice(0, 4).map((m) => (
@@ -162,6 +172,7 @@ export function Overview() {
               ))}
             </div>
           </Panel>
+          </div>
         </div>
       </div>
     </div>
@@ -574,6 +585,8 @@ const statusFilters = ["الكل", "متأخر", "قيد التنفيذ", "قي�
 
 export function Assignments() {
   const { assignments, me } = useStore();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [issuing, setIssuing] = useState(false);
   const [filter, setFilter] = useState("الكل");
   const [open, setOpen] = useState<string | null>(null);
@@ -582,13 +595,25 @@ export function Assignments() {
   const list = filter === "الكل" ? visible : visible.filter((a) => a.status === filter);
   const current = visible.find((a) => a.id === open) ?? null;
 
+  useEffect(() => {
+    const requestedFilter = searchParams.get("filter");
+    if (requestedFilter && statusFilters.includes(requestedFilter)) setFilter(requestedFilter);
+    const requestedOpen = searchParams.get("open");
+    if (requestedOpen && visible.some((a) => a.id === requestedOpen)) {
+      setOpen(requestedOpen);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("open");
+      router.replace(`/diwan/assignments/${next.size ? `?${next.toString()}` : ""}`, { scroll: false });
+    }
+  }, [searchParams, visible, router]);
+
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <div className="grid g-4">
-        <Kpi label="ضمن نطاق رؤيتك" value={visible.length} meta="تكليف" icon={<ListTodo size={17} />} />
-        <Kpi label="متأخرة" value={visible.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
-        <Kpi label="بانتظار الاعتماد" value={visible.filter((a) => a.status === "قيد المراجعة").length} icon={<Stamp size={17} />} tone="warn" />
-        <Kpi label="مُغلقة" value={visible.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
+        <Kpi onClick={() => setFilter("الكل")} label="ضمن نطاق رؤيتك" value={visible.length} meta="تكليف" icon={<ListTodo size={17} />} />
+        <Kpi onClick={() => setFilter("متأخر")} label="متأخرة" value={visible.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => setFilter("قيد المراجعة")} label="بانتظار الاعتماد" value={visible.filter((a) => a.status === "قيد المراجعة").length} icon={<Stamp size={17} />} tone="warn" />
+        <Kpi onClick={() => setFilter("مُغلق")} label="مُغلقة" value={visible.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
       </div>
 
       <div className="row between wrap" style={{ gap: 12 }}>
@@ -797,10 +822,13 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
 export function Correspondence() {
   const { me, letters, letterAction } = useStore();
   const [tab, setTab] = useState("وارد");
+  const [letterView, setLetterView] = useState<"all" | "unhandled" | "secret">("all");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const canEdit = canRegisterLetters(me);
-  const list = letters.filter((l) => l.direction === tab);
+  const list = letterView === "secret"
+    ? letters.filter((l) => l.classification === "سرّي")
+    : letters.filter((l) => l.direction === tab && (letterView !== "unhandled" || !l.handled));
   const act = async (id: string, action: "handle" | "archive") => {
     setBusy(id);
     try { await letterAction(id, action); } catch { /* المتجر يعرض السبب */ } finally { setBusy(null); }
@@ -809,16 +837,16 @@ export function Correspondence() {
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <div className="grid g-4">
-        <Kpi label="وارد غير مُعالَج" value={letters.filter((l) => l.direction === "وارد" && !l.handled).length} icon={<Inbox size={17} />} tone="warn" />
-        <Kpi label="صادر هذا الأسبوع" value={letters.filter((l) => l.direction === "صادر").length} icon={<ArrowLeft size={17} />} />
-        <Kpi label="مؤرشف" value={letters.filter((l) => l.direction === "مؤرشف").length} icon={<FileCheck2 size={17} />} tone="ok" />
-        <Kpi label="كتب سرّية" value={letters.filter((l) => l.classification === "سرّي").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => { setTab("وارد"); setLetterView("unhandled"); }} label="وارد غير مُعالَج" value={letters.filter((l) => l.direction === "وارد" && !l.handled).length} icon={<Inbox size={17} />} tone="warn" />
+        <Kpi onClick={() => { setTab("صادر"); setLetterView("all"); }} label="صادر هذا الأسبوع" value={letters.filter((l) => l.direction === "صادر").length} icon={<ArrowLeft size={17} />} />
+        <Kpi onClick={() => { setTab("مؤرشف"); setLetterView("all"); }} label="مؤرشف" value={letters.filter((l) => l.direction === "مؤرشف").length} icon={<FileCheck2 size={17} />} tone="ok" />
+        <Kpi onClick={() => setLetterView("secret")} label="كتب سرّية" value={letters.filter((l) => l.classification === "سرّي").length} icon={<TriangleAlert size={17} />} tone="danger" />
       </div>
 
       <div className="row between wrap" style={{ gap: 12 }}>
       <Tabs
         value={tab}
-        onChange={setTab}
+        onChange={(value) => { setTab(value); setLetterView("all"); }}
         items={[
           { key: "وارد", label: "الوارد", n: letters.filter((l) => l.direction === "وارد").length },
           { key: "صادر", label: "الصادر", n: letters.filter((l) => l.direction === "صادر").length },

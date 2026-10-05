@@ -27,7 +27,11 @@ export interface UserDoc extends Person {
 }
 
 // الاتصال يُعاد استخدامه بين عمليات إعادة التحميل في بيئة التطوير
-const globalForMongo = globalThis as unknown as { _mongoClient?: Promise<MongoClient>; _namesSynced?: Promise<void> };
+const globalForMongo = globalThis as unknown as {
+  _mongoClient?: Promise<MongoClient>;
+  _namesSynced?: Promise<void>;
+  _indexesReady?: Promise<void>;
+};
 
 function clientPromise(): Promise<MongoClient> {
   if (!globalForMongo._mongoClient) {
@@ -43,8 +47,28 @@ export async function db(): Promise<Db> {
   const c = await clientPromise();
   const d = c.db(dbName);
   globalForMongo._namesSynced ??= syncIdentity(d);
+  globalForMongo._indexesReady ??= ensureIndexes(d);
+  void globalForMongo._indexesReady.catch((err) =>
+    console.error("[db] تعذّر إنشاء بعض الفهارس:", err instanceof Error ? err.message : err),
+  );
   await globalForMongo._namesSynced;
   return d;
+}
+
+async function ensureIndexes(d: Db) {
+  await Promise.all([
+    d.collection("assignments").createIndexes([
+      { key: { entityId: 1, status: 1 }, name: "assignment_entity_status" },
+      { key: { ownerId: 1 }, name: "assignment_owner" },
+      { key: { issuerId: 1 }, name: "assignment_issuer" },
+    ]),
+    d.collection("notifications").createIndex({ toId: 1 }, { name: "notification_recipient" }),
+    d.collection("notes").createIndexes([
+      { key: { authorId: 1, scope: 1 }, name: "note_author_scope" },
+      { key: { target: 1 }, name: "note_target" },
+    ]),
+    d.collection("documents").createIndex({ assignmentId: 1 }, { name: "document_assignment" }),
+  ]);
 }
 
 /**

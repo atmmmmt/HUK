@@ -8,6 +8,12 @@ import type { Assignment, DocFile, Letter, Person } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function assignmentQueryFor(me: Person): Record<string, unknown> {
+  if (["governor", "deputy", "assistant", "secgen", "chief", "followup"].includes(me.role)) return {};
+  if (me.role === "employee") return { $or: [{ ownerId: me.id }, { partnerIds: me.id }] };
+  return { entityId: me.entityId };
+}
+
 /**
  * كل ما تحتاجه الواجهة في طلب واحد — مُرشَّح على الخادم حسب صلاحية المستخدم.
  * الترشيح هنا هو خط الدفاع الحقيقي، لا إخفاء العناصر في المتصفح.
@@ -39,14 +45,14 @@ export async function GET() {
       peopleCol.find({}, { projection: { passwordHash: 0, username: 0 } }).toArray(),
       hallsCol.find().toArray(),
       bookingsCol.find().toArray(),
-      assignmentsCol.find().toArray(),
+      assignmentsCol.find(assignmentQueryFor(me)).sort({ _id: -1 }).toArray(),
       meetingsCol.find().toArray(),
       lettersCol.find().toArray(),
       decisionsCol.find().toArray(),
       delegationsCol.find().toArray(),
       filesCol.find().toArray(),
-      notesCol.find().toArray(),
-      notifsCol.find().toArray(),
+      notesCol.find({ $or: [{ scope: { $ne: "خاصة" } }, { authorId: me.id }] }).sort({ _id: -1 }).limit(300).toArray(),
+      notifsCol.find({ toId: me.id }).sort({ _id: -1 }).limit(150).toArray(),
       auditCol.find().sort({ _id: -1 }).limit(120).toArray(),
       requestsCol.find().toArray(),
     ]);
@@ -71,7 +77,7 @@ export async function GET() {
     const visibleLetters = cleanAll(letters as unknown as Letter[])
       .filter((l) => clearanceRank(l.classification) <= myRank);
 
-    const isAdmin = me.role === "admin" || me.role === "governor";
+    const isAdmin = me.role === "admin";
     const esc = await (await db()).collection("settings").findOne({ id: "escalation" });
     // المستندات: ما يسمح به التصريح، ومرفقات التكليفات المرئية فقط
     const visibleIds = new Set(assignments.map((a) => a.id));

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Inbox, Send, X } from "lucide-react";
@@ -10,17 +11,18 @@ import type { Assignment, Note, Priority } from "@/lib/types";
 /* ───────────── مؤشر ───────────── */
 
 export function Kpi({
-  label, value, meta, icon, tone = "navy", trend,
+  label, value, meta, icon, tone = "navy", trend, href, onClick,
 }: {
   label: string; value: string | number; meta?: string; icon: React.ReactNode;
   tone?: "navy" | "gold" | "danger" | "ok" | "warn"; trend?: "up" | "down";
+  href?: string; onClick?: () => void;
 }) {
   const [shown, setShown] = useState<string | number>(typeof value === "number" ? 0 : value);
   useEffect(() => {
     if (typeof value !== "number") { setShown(value); return; }
     let raf = 0;
     const start = performance.now();
-    const dur = 750;
+    const dur = 360;
     const tick = (t: number) => {
       const k = Math.min(1, (t - start) / dur);
       setShown(Math.round(value * (1 - Math.pow(1 - k, 3))));
@@ -30,16 +32,20 @@ export function Kpi({
     return () => cancelAnimationFrame(raf);
   }, [value]);
 
-  return (
-    <div className={`kpi ${tone}`}>
+  const body = (
+    <>
       <div className="kpi-top">
         <span className="kpi-label">{label}</span>
         <span className="kpi-icon">{icon}</span>
       </div>
       <div className="kpi-value">{shown}</div>
       {meta && <div className={`kpi-meta ${trend ?? ""}`}>{meta}</div>}
-    </div>
+    </>
   );
+  const className = `kpi ${tone} ${href || onClick ? "interactive" : ""}`;
+  if (href) return <Link href={href} className={className} aria-label={label}>{body}</Link>;
+  if (onClick) return <button type="button" className={className} onClick={onClick} aria-label={label}>{body}</button>;
+  return <div className={className}>{body}</div>;
 }
 
 /* ───────────── شريط تقدّم ───────────── */

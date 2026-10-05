@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Building2, CheckCircle2, Clock3, GitFork, Inbox, ListTodo, MailQuestion, Network,
   Send, TrendingUp, TriangleAlert, Users,
@@ -70,17 +71,18 @@ function ScopeBar({ entityId, setPicked, wide }: { entityId: string; setPicked: 
 export function Entities() {
   const { assignments } = useStore();
   const [open, setOpen] = useState<Entity | null>(null);
+  const jumpToEntities = () => window.setTimeout(() => document.getElementById("entities-grid")?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <div className="grid g-4">
-        <Kpi label="الجهات المفعّلة" value={entities.filter((e) => e.active).length} icon={<Building2 size={17} />} />
-        <Kpi label="إجمالي الموظفين" value={entities.reduce((s, e) => s + e.staffCount, 0)} icon={<Users size={17} />} tone="gold" />
-        <Kpi label="تكليفات مفتوحة" value={entities.reduce((s, e) => s + e.openTasks, 0)} icon={<ListTodo size={17} />} />
-        <Kpi label="متأخرة" value={entities.reduce((s, e) => s + e.lateTasks, 0)} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={jumpToEntities} label="الجهات المفعّلة" value={entities.filter((e) => e.active).length} icon={<Building2 size={17} />} />
+        <Kpi onClick={jumpToEntities} label="إجمالي الموظفين" value={entities.reduce((s, e) => s + e.staffCount, 0)} icon={<Users size={17} />} tone="gold" />
+        <Kpi href="/directorates/tasks/" label="تكليفات مفتوحة" value={entities.reduce((s, e) => s + e.openTasks, 0)} icon={<ListTodo size={17} />} />
+        <Kpi href="/directorates/inbox/?filter=late" label="متأخرة" value={entities.reduce((s, e) => s + e.lateTasks, 0)} icon={<TriangleAlert size={17} />} tone="danger" />
       </div>
 
-      <div className="grid g-3">
+      <div id="entities-grid" className="grid g-3">
         {entities.map((e) => {
           const open2 = assignments.filter((a) => a.entityId === e.id && a.status !== "مُغلق").length;
           return (
@@ -145,22 +147,43 @@ export function Entities() {
 export function EntityInbox() {
   const { assignments, me } = useStore();
   const scope = useScope();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [open, setOpen] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "unread" | "late" | "closed">("all");
 
-  const list = assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a));
-  const current = list.find((a) => a.id === open) ?? null;
-  const unread = list.filter((a) => !a.chain.acknowledged);
+  const all = useMemo(() => assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a)), [assignments, scope.entityId, me]);
+  const unread = all.filter((a) => !a.chain.acknowledged);
+  const list = filter === "unread" ? unread
+    : filter === "late" ? all.filter((a) => a.status === "متأخر")
+      : filter === "closed" ? all.filter((a) => a.status === "مُغلق")
+        : all;
+  const current = all.find((a) => a.id === open) ?? null;
   const inLetters = letters.filter((l) => l.direction === "وارد");
+
+  useEffect(() => {
+    const requestedFilter = searchParams.get("filter");
+    if (requestedFilter === "late") setFilter("late");
+    else if (requestedFilter === "closed") setFilter("closed");
+    else if (requestedFilter === "unread") setFilter("unread");
+    const requestedOpen = searchParams.get("open");
+    if (requestedOpen && all.some((a) => a.id === requestedOpen)) {
+      setOpen(requestedOpen);
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("open");
+      router.replace(`/directorates/inbox/${next.size ? `?${next.toString()}` : ""}`, { scroll: false });
+    }
+  }, [searchParams, all, router]);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <ScopeBar {...scope} />
 
       <div className="grid g-4">
-        <Kpi label="تكليفات واردة" value={list.length} icon={<Inbox size={17} />} />
-        <Kpi label="لم يُقرّ استلامها" value={unread.length} meta="تُصعَّد بعد 24 ساعة" icon={<Clock3 size={17} />} tone="warn" />
-        <Kpi label="متأخرة" value={list.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
-        <Kpi label="مُغلقة" value={list.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
+        <Kpi onClick={() => setFilter("all")} label="تكليفات واردة" value={all.length} icon={<Inbox size={17} />} />
+        <Kpi onClick={() => setFilter("unread")} label="لم يُقرّ استلامها" value={unread.length} meta="تُصعَّد بعد 24 ساعة" icon={<Clock3 size={17} />} tone="warn" />
+        <Kpi onClick={() => setFilter("late")} label="متأخرة" value={all.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => setFilter("closed")} label="مُغلقة" value={all.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
       </div>
 
       <Panel title="التكليفات الواردة من الديوان" icon={<Inbox size={17} />} hint={`${list.length} تكليف`} flush>
@@ -293,9 +316,13 @@ export function EntityReplies() {
   const { assignments, me } = useStore();
   const scope = useScope();
   const [open, setOpen] = useState<string | null>(null);
+  const [replyFilter, setReplyFilter] = useState<"submitted" | "review" | "returned">("submitted");
 
   const all = assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a));
   const submitted = all.filter((a) => a.chain.submitted);
+  const shown = replyFilter === "review" ? all.filter((a) => a.status === "قيد المراجعة")
+    : replyFilter === "returned" ? all.filter((a) => a.status === "مُعاد للتصحيح")
+      : submitted;
   const current = all.find((a) => a.id === open) ?? null;
 
   return (
@@ -303,14 +330,14 @@ export function EntityReplies() {
       <ScopeBar {...scope} />
 
       <div className="grid g-3">
-        <Kpi label="ردود مرفوعة" value={submitted.length} icon={<Send size={17} />} />
-        <Kpi label="بانتظار اعتماد الديوان" value={all.filter((a) => a.status === "قيد المراجعة").length} icon={<Clock3 size={17} />} tone="warn" />
-        <Kpi label="أُعيد للتصحيح" value={all.filter((a) => a.status === "مُعاد للتصحيح").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => setReplyFilter("submitted")} label="ردود مرفوعة" value={submitted.length} icon={<Send size={17} />} />
+        <Kpi onClick={() => setReplyFilter("review")} label="بانتظار اعتماد الديوان" value={all.filter((a) => a.status === "قيد المراجعة").length} icon={<Clock3 size={17} />} tone="warn" />
+        <Kpi onClick={() => setReplyFilter("returned")} label="أُعيد للتصحيح" value={all.filter((a) => a.status === "مُعاد للتصحيح").length} icon={<TriangleAlert size={17} />} tone="danger" />
       </div>
 
-      {submitted.length === 0 ? <Empty text="لم تُرفع ردود بعد" hint="ما يُسلَّم إلى الديوان يظهر هنا" /> : (
+      {shown.length === 0 ? <Empty text="لا توجد عناصر ضمن هذا التصنيف" hint="اختر مؤشراً آخر لعرض بياناته" /> : (
         <div className="grid g-2">
-          {submitted.map((a) => (
+          {shown.map((a) => (
             <button key={a.id} className="card hover pad" style={{ textAlign: "right" }} onClick={() => setOpen(a.id)}>
               <div className="row between wrap" style={{ gap: 8, marginBottom: 10 }}>
                 <span className="t-ref">{a.ref}</span>
@@ -456,6 +483,7 @@ export function EntityPerformance() {
   const avg = all.length ? Math.round(all.reduce((s, a) => s + a.progress, 0) / all.length) : 0;
   const staff = people.filter((p) => p.entityId === e.id);
   const bestResponse = [...staff].sort((a, b) => a.avgResponseHours - b.avgResponseHours)[0];
+  const jump = (id: string) => window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -470,13 +498,14 @@ export function EntityPerformance() {
       </div>
 
       <div className="grid g-4">
-        <Kpi label="الالتزام بالمواعيد" value={e.compliance} meta="٪ خلال 30 يوماً" icon={<TrendingUp size={17} />} tone={e.compliance >= 85 ? "ok" : e.compliance >= 70 ? "warn" : "danger"} />
-        <Kpi label="متوسط الإنجاز" value={avg} meta="٪ للتكليفات المفتوحة" icon={<ListTodo size={17} />} />
-        <Kpi label="تكليفات متأخرة" value={e.lateTasks} icon={<TriangleAlert size={17} />} tone="danger" />
-        <Kpi label="أسرع استجابة" value={bestResponse?.avgResponseHours ?? 0} meta={bestResponse?.name} icon={<Clock3 size={17} />} tone="ok" />
+        <Kpi onClick={() => jump("performance-status")} label="الالتزام بالمواعيد" value={e.compliance} meta="٪ خلال 30 يوماً" icon={<TrendingUp size={17} />} tone={e.compliance >= 85 ? "ok" : e.compliance >= 70 ? "warn" : "danger"} />
+        <Kpi onClick={() => jump("performance-status")} label="متوسط الإنجاز" value={avg} meta="٪ للتكليفات المفتوحة" icon={<ListTodo size={17} />} />
+        <Kpi href="/directorates/inbox/?filter=late" label="تكليفات متأخرة" value={e.lateTasks} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => jump("performance-response")} label="أسرع استجابة" value={bestResponse?.avgResponseHours ?? 0} meta={bestResponse?.name} icon={<Clock3 size={17} />} tone="ok" />
       </div>
 
       <div className="split">
+        <div id="performance-status">
         <Panel title="توزيع التكليفات حسب الحالة" icon={<ListTodo size={17} />}>
           <div className="grid" style={{ gap: 12 }}>
             {byStatus.map(([s, n]) => (
@@ -490,7 +519,9 @@ export function EntityPerformance() {
             ))}
           </div>
         </Panel>
+        </div>
 
+        <div id="performance-response">
         <Panel title="زمن الاستجابة لكل موظف" icon={<Clock3 size={17} />} hint="بالساعات — الأقل أفضل">
           <div className="grid" style={{ gap: 11 }}>
             {[...staff].sort((a, b) => a.avgResponseHours - b.avgResponseHours).map((p) => (
@@ -505,6 +536,7 @@ export function EntityPerformance() {
             ))}
           </div>
         </Panel>
+        </div>
       </div>
 
       <Panel title="مقارنة الجهات" icon={<TrendingUp size={17} />} hint="الالتزام بالمواعيد" flush>

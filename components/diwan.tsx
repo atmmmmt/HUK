@@ -297,7 +297,7 @@ export function Meetings() {
       <div className="row between wrap" style={{ gap: 12 }}>
         <Tabs
           value={tab}
-          onChange={(value) => { setTab(value); setLetterView("all"); }}
+          onChange={setTab}
           items={[
             { key: "all", label: "الكل", n: meetings.length },
             { key: "upcoming", label: "قادمة وجارية", n: meetings.filter((m) => m.status !== "منعقد").length },
@@ -840,7 +840,7 @@ export function Correspondence() {
       <div className="row between wrap" style={{ gap: 12 }}>
       <Tabs
         value={tab}
-        onChange={setTab}
+        onChange={(value) => { setTab(value); setLetterView("all"); }}
         items={[
           { key: "وارد", label: "الوارد", n: letters.filter((l) => l.direction === "وارد").length },
           { key: "صادر", label: "الصادر", n: letters.filter((l) => l.direction === "صادر").length },

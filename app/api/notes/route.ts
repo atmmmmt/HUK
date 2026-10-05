@@ -15,8 +15,11 @@ export async function POST(request: Request) {
     if (!text) throw new Error("لا يمكن إضافة ملاحظة فارغة");
     if (text.length > 2000) throw new Error("الملاحظة أطول من الحد المسموح");
 
-    // ملاحظة المحافظ تُسجَّل دائماً كتوجيه رسمي
-    const scope: Note["scope"] = me.role === "governor" ? "توجيه المحافظ" : input.scope ?? "رسمية";
+    // صفحة «ملاحظاتي» شخصية حتى للمحافظ؛ أما الملاحظات المرتبطة بعناصر العمل
+    // فتبقى توجيهاً رسمياً عندما يكتبها المحافظ.
+    const personalTarget = input.target === `personal:${me.id}`;
+    if (input.target.startsWith("personal:") && !personalTarget) throw new Error("لا يمكن الكتابة في ملاحظات مستخدم آخر");
+    const scope: Note["scope"] = personalTarget ? "خاصة" : me.role === "governor" ? "توجيه المحافظ" : input.scope ?? "رسمية";
 
     const note: Note = {
       id: "t" + Date.now() + Math.floor(Math.random() * 1000),
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
     await writeAudit(me.id, "أضاف ملاحظة", input.targetLabel, ipOf(request));
 
     // ملاحظة على تكليف تصل إلى أطرافه (إلا الخاصة)
-    const notified = new Set<string>([me.id, ...(input.mentions ?? [])]);
+    const notified = new Set<string>([me.id]);
     if (scope !== "خاصة") {
       const a = await (await collections.assignments()).findOne({ id: input.target });
       if (a) {
@@ -47,7 +50,7 @@ export async function POST(request: Request) {
             body: `${me.title} على «${a.title}»: ${text.slice(0, 90)}`,
             channel: "تنبيه التطبيق",
             toId: pid,
-            link: { portal: pid === a.ownerId ? "directorates" : "diwan", section: pid === a.ownerId ? "inbox" : "assignments" },
+            link: { portal: pid === a.ownerId ? "directorates" : "diwan", section: pid === a.ownerId ? "inbox" : "assignments", itemId: a.id },
             urgent: scope === "توجيه المحافظ",
           });
         }
@@ -55,12 +58,16 @@ export async function POST(request: Request) {
     }
 
     for (const id of input.mentions ?? []) {
+      if (!id || notified.has(id)) continue;
+      notified.add(id);
+      const a = await (await collections.assignments()).findOne({ id: input.target });
       await pushNotification({
         kind: "تكليف",
         title: "أُشير إليك في ملاحظة",
         body: `${me.title} على «${input.targetLabel}»: ${text.slice(0, 90)}`,
         channel: "تنبيه التطبيق",
         toId: id,
+        ...(a ? { link: { portal: id === a.ownerId ? "directorates" as const : "diwan" as const, section: id === a.ownerId ? "inbox" : "assignments", itemId: a.id } } : {}),
       });
     }
 

@@ -477,6 +477,7 @@ export function EntityPerformance() {
   const avg = all.length ? Math.round(all.reduce((s, a) => s + a.progress, 0) / all.length) : 0;
   const staff = people.filter((p) => p.entityId === e.id);
   const bestResponse = [...staff].sort((a, b) => a.avgResponseHours - b.avgResponseHours)[0];
+  const jump = (id: string) => window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
@@ -491,13 +492,14 @@ export function EntityPerformance() {
       </div>
 
       <div className="grid g-4">
-        <Kpi label="الالتزام بالمواعيد" value={e.compliance} meta="٪ خلال 30 يوماً" icon={<TrendingUp size={17} />} tone={e.compliance >= 85 ? "ok" : e.compliance >= 70 ? "warn" : "danger"} />
-        <Kpi label="متوسط الإنجاز" value={avg} meta="٪ للتكليفات المفتوحة" icon={<ListTodo size={17} />} />
-        <Kpi label="تكليفات متأخرة" value={e.lateTasks} icon={<TriangleAlert size={17} />} tone="danger" />
-        <Kpi label="أسرع استجابة" value={bestResponse?.avgResponseHours ?? 0} meta={bestResponse?.name} icon={<Clock3 size={17} />} tone="ok" />
+        <Kpi onClick={() => jump("performance-status")} label="الالتزام بالمواعيد" value={e.compliance} meta="٪ خلال 30 يوماً" icon={<TrendingUp size={17} />} tone={e.compliance >= 85 ? "ok" : e.compliance >= 70 ? "warn" : "danger"} />
+        <Kpi onClick={() => jump("performance-status")} label="متوسط الإنجاز" value={avg} meta="٪ للتكليفات المفتوحة" icon={<ListTodo size={17} />} />
+        <Kpi href="/directorates/inbox/?filter=late" label="تكليفات متأخرة" value={e.lateTasks} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => jump("performance-response")} label="أسرع استجابة" value={bestResponse?.avgResponseHours ?? 0} meta={bestResponse?.name} icon={<Clock3 size={17} />} tone="ok" />
       </div>
 
       <div className="split">
+        <div id="performance-status">
         <Panel title="توزيع التكليفات حسب الحالة" icon={<ListTodo size={17} />}>
           <div className="grid" style={{ gap: 12 }}>
             {byStatus.map(([s, n]) => (
@@ -511,7 +513,9 @@ export function EntityPerformance() {
             ))}
           </div>
         </Panel>
+        </div>
 
+        <div id="performance-response">
         <Panel title="زمن الاستجابة لكل موظف" icon={<Clock3 size={17} />} hint="بالساعات — الأقل أفضل">
           <div className="grid" style={{ gap: 11 }}>
             {[...staff].sort((a, b) => a.avgResponseHours - b.avgResponseHours).map((p) => (
@@ -526,6 +530,7 @@ export function EntityPerformance() {
             ))}
           </div>
         </Panel>
+        </div>
       </div>
 
       <Panel title="مقارنة الجهات" icon={<TrendingUp size={17} />} hint="الالتزام بالمواعيد" flush>

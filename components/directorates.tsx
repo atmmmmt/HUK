@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft, Building2, CheckCircle2, Clock3, GitFork, Inbox, ListTodo, MailQuestion, Network,
   Send, TrendingUp, TriangleAlert, Users,
@@ -145,22 +146,33 @@ export function Entities() {
 export function EntityInbox() {
   const { assignments, me } = useStore();
   const scope = useScope();
+  const searchParams = useSearchParams();
   const [open, setOpen] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "unread" | "late" | "closed">("all");
 
-  const list = assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a));
-  const current = list.find((a) => a.id === open) ?? null;
-  const unread = list.filter((a) => !a.chain.acknowledged);
+  const all = assignments.filter((a) => a.entityId === scope.entityId && seesAssignment(me, a));
+  const unread = all.filter((a) => !a.chain.acknowledged);
+  const list = filter === "unread" ? unread
+    : filter === "late" ? all.filter((a) => a.status === "متأخر")
+      : filter === "closed" ? all.filter((a) => a.status === "مُغلق")
+        : all;
+  const current = all.find((a) => a.id === open) ?? null;
   const inLetters = letters.filter((l) => l.direction === "وارد");
+
+  useEffect(() => {
+    const requestedOpen = searchParams.get("open");
+    if (requestedOpen && all.some((a) => a.id === requestedOpen)) setOpen(requestedOpen);
+  }, [searchParams, all]);
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <ScopeBar {...scope} />
 
       <div className="grid g-4">
-        <Kpi label="تكليفات واردة" value={list.length} icon={<Inbox size={17} />} />
-        <Kpi label="لم يُقرّ استلامها" value={unread.length} meta="تُصعَّد بعد 24 ساعة" icon={<Clock3 size={17} />} tone="warn" />
-        <Kpi label="متأخرة" value={list.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
-        <Kpi label="مُغلقة" value={list.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
+        <Kpi onClick={() => setFilter("all")} label="تكليفات واردة" value={all.length} icon={<Inbox size={17} />} />
+        <Kpi onClick={() => setFilter("unread")} label="لم يُقرّ استلامها" value={unread.length} meta="تُصعَّد بعد 24 ساعة" icon={<Clock3 size={17} />} tone="warn" />
+        <Kpi onClick={() => setFilter("late")} label="متأخرة" value={all.filter((a) => a.status === "متأخر").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => setFilter("closed")} label="مُغلقة" value={all.filter((a) => a.status === "مُغلق").length} icon={<CheckCircle2 size={17} />} tone="ok" />
       </div>
 
       <Panel title="التكليفات الواردة من الديوان" icon={<Inbox size={17} />} hint={`${list.length} تكليف`} flush>

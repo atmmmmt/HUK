@@ -1,0 +1,26 @@
+name: PWA build check
+
+on:
+  push:
+    branches:
+      - "fix/pwa-mobile-ux-realtime"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017
+      MONGODB_DB: governorate_build
+      SESSION_SECRET: ci-build-only-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build

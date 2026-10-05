@@ -20,7 +20,7 @@ const icons: Record<string, typeof LayoutGrid> = {
 
 /** الأقسام الأربعة الأهم في كل بوابة — تظهر في الشريط السفلي */
 const primary: Record<Portal, string[]> = {
-  diwan: ["overview", "assignments", "meetings", "halls"],
+  diwan: ["overview", "calendar", "decisions", "correspondence"],
   directorates: ["entities", "inbox", "tasks", "performance"],
   admin: ["entities", "users", "roles", "audit"],
 };
@@ -100,25 +100,22 @@ export default function TabBar({
 
               <div className="more-label">مساحات العمل</div>
               <div className="more-grid">
-                {(["diwan", "directorates", "admin"] as Portal[]).map((p) => {
-                  const Icon = p === "diwan" ? Building2 : p === "directorates" ? Network : SlidersHorizontal;
-                  const locked = !allowed.includes(p);
-                  return (
-                    <button
-                      key={p}
-                      className={`more-item ${p === portal ? "on" : ""}`}
-                      style={locked ? { opacity: .4 } : undefined}
-                      onClick={() => {
-                        if (locked) return;
-                        setMoreOpen(false);
-                        router.push(`/${p}/${p === "diwan" ? "overview" : "entities"}/`);
-                      }}
-                    >
-                      <Icon size={20} />
-                      <span>{portalLabels[p].title}</span>
-                    </button>
-                  );
-                })}
+                {(["diwan", "directorates"] as Portal[])
+                  .filter((p) => p !== portal && allowed.includes(p))
+                  .map((p) => {
+                    const Icon = p === "diwan" ? Building2 : Network;
+                    return (
+                      <Link
+                        key={p}
+                        href={`/${p}/${p === "diwan" ? "overview" : "entities"}/`}
+                        className="more-item"
+                        onClick={() => setMoreOpen(false)}
+                      >
+                        <Icon size={20} />
+                        <span>{portalLabels[p].title}</span>
+                      </Link>
+                    );
+                  })}
               </div>
 
               <div className="more-label">المظهر</div>

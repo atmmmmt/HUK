@@ -79,7 +79,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
           kind: "تكليف", title: "تسليم بانتظار الاعتماد",
           body: `«${current.title}» سُلّم وينتظر اعتمادك.`,
           channel: "تنبيه التطبيق", toId: chief.id,
-          link: { portal: "diwan", section: "assignments" },
+          link: { portal: "diwan", section: "assignments", itemId: current.id },
         });
       }
     }
@@ -89,7 +89,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         title: patch.status === "مُغلق" ? "اعتُمد تكليفك وأُغلق" : "أُعيد تكليفك للتصحيح",
         body: `«${current.title}»`,
         channel: "تنبيه التطبيق", toId: current.ownerId,
-        link: { portal: "directorates", section: "inbox" },
+        link: { portal: "directorates", section: "inbox", itemId: current.id },
         urgent: patch.status === "مُعاد للتصحيح",
       });
     }

@@ -297,7 +297,7 @@ export function Meetings() {
       <div className="row between wrap" style={{ gap: 12 }}>
         <Tabs
           value={tab}
-          onChange={setTab}
+          onChange={(value) => { setTab(value); setLetterView("all"); }}
           items={[
             { key: "all", label: "الكل", n: meetings.length },
             { key: "upcoming", label: "قادمة وجارية", n: meetings.filter((m) => m.status !== "منعقد").length },
@@ -816,10 +816,13 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
 export function Correspondence() {
   const { me, letters, letterAction } = useStore();
   const [tab, setTab] = useState("وارد");
+  const [letterView, setLetterView] = useState<"all" | "unhandled" | "secret">("all");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const canEdit = canRegisterLetters(me);
-  const list = letters.filter((l) => l.direction === tab);
+  const list = letterView === "secret"
+    ? letters.filter((l) => l.classification === "سرّي")
+    : letters.filter((l) => l.direction === tab && (letterView !== "unhandled" || !l.handled));
   const act = async (id: string, action: "handle" | "archive") => {
     setBusy(id);
     try { await letterAction(id, action); } catch { /* المتجر يعرض السبب */ } finally { setBusy(null); }
@@ -828,10 +831,10 @@ export function Correspondence() {
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <div className="grid g-4">
-        <Kpi label="وارد غير مُعالَج" value={letters.filter((l) => l.direction === "وارد" && !l.handled).length} icon={<Inbox size={17} />} tone="warn" />
-        <Kpi label="صادر هذا الأسبوع" value={letters.filter((l) => l.direction === "صادر").length} icon={<ArrowLeft size={17} />} />
-        <Kpi label="مؤرشف" value={letters.filter((l) => l.direction === "مؤرشف").length} icon={<FileCheck2 size={17} />} tone="ok" />
-        <Kpi label="كتب سرّية" value={letters.filter((l) => l.classification === "سرّي").length} icon={<TriangleAlert size={17} />} tone="danger" />
+        <Kpi onClick={() => { setTab("وارد"); setLetterView("unhandled"); }} label="وارد غير مُعالَج" value={letters.filter((l) => l.direction === "وارد" && !l.handled).length} icon={<Inbox size={17} />} tone="warn" />
+        <Kpi onClick={() => { setTab("صادر"); setLetterView("all"); }} label="صادر هذا الأسبوع" value={letters.filter((l) => l.direction === "صادر").length} icon={<ArrowLeft size={17} />} />
+        <Kpi onClick={() => { setTab("مؤرشف"); setLetterView("all"); }} label="مؤرشف" value={letters.filter((l) => l.direction === "مؤرشف").length} icon={<FileCheck2 size={17} />} tone="ok" />
+        <Kpi onClick={() => setLetterView("secret")} label="كتب سرّية" value={letters.filter((l) => l.classification === "سرّي").length} icon={<TriangleAlert size={17} />} tone="danger" />
       </div>
 
       <div className="row between wrap" style={{ gap: 12 }}>

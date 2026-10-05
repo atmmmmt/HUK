@@ -250,7 +250,7 @@ export interface Notification {
   read: boolean;
   channel: "تنبيه التطبيق" | "رسالة نصية" | "البريد";
   toId: string;
-  link?: { portal: Portal; section: string };
+  link?: { portal: Portal; section: string; itemId?: string };
   urgent?: boolean;
 }
 

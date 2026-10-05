@@ -21,7 +21,7 @@ export const navByPortal: Record<Portal, NavItem[]> = {
     { key: "delegations", label: "الوفود والمراسم", icon: "Flag", group: "الموارد", title: "الوفود والفعاليات", sub: "برامج الزيارات والترتيبات البروتوكولية" },
     { key: "files", label: "الملفات والأرشيف", icon: "FolderOpen", group: "الموارد", title: "الملفات والأرشيف", sub: "أرشيف رقمي قابل للبحث مصنّف حسب درجة السرّية" },
     { key: "people", label: "الأشخاص والمهام", icon: "IdCard", group: "الموارد", title: "الأشخاص ومهامهم", sub: "لكل شخص ملف واحد: دوره وصلاحياته ومهامه المفتوحة" },
-    { key: "notes", label: "الملاحظات", icon: "StickyNote", group: "الموارد", title: "لوح الملاحظات", sub: "ملاحظات مرتبطة بكل عنصر في المنظومة" },
+    { key: "notes", label: "ملاحظاتي", icon: "StickyNote", group: "الموارد", title: "ملاحظاتي الشخصية", sub: "مساحة خاصة لتدوين ملاحظاتك والرجوع إليها بسرعة" },
   ],
   directorates: [
     { key: "entities", label: "الجهات", icon: "Network", group: "المديريات", title: "مديريات المحافظة ومؤسساتها", sub: "قائمة ديناميكية تُدار من لوحة التحكم" },

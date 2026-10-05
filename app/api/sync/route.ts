@@ -7,6 +7,12 @@ import type { Assignment, Meeting, Note, Notification, Person } from "@/lib/type
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function assignmentQueryFor(me: Person): Record<string, unknown> {
+  if (["governor", "deputy", "assistant", "secgen", "chief", "followup"].includes(me.role)) return {};
+  if (me.role === "employee") return { $or: [{ ownerId: me.id }, { partnerIds: me.id }] };
+  return { entityId: me.entityId };
+}
+
 const cleanAll = <T extends object>(docs: T[]) => docs.map((d) => clean(d));
 
 /**
@@ -26,7 +32,7 @@ export async function GET() {
 
     const [rawPeople, rawAssignments, rawNotes, rawNotifications, rawMeetings] = await Promise.all([
       peopleCol.find({}, { projection: { passwordHash: 0, username: 0 } }).toArray(),
-      assignmentsCol.find().sort({ _id: -1 }).toArray(),
+      assignmentsCol.find(assignmentQueryFor(me)).sort({ _id: -1 }).toArray(),
       notesCol.find({ $or: [{ scope: { $ne: "خاصة" } }, { authorId: me.id }] }).sort({ _id: -1 }).limit(300).toArray(),
       notificationsCol.find({ toId: me.id }).sort({ _id: -1 }).limit(150).toArray(),
       meetingsCol.find().sort({ _id: -1 }).limit(100).toArray(),

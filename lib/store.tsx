@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { setData, type Bootstrap } from "./lookup";
 import type {
@@ -98,10 +98,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [dense, setDenseState] = useState(false);
+  const knownNotificationIds = useRef<Set<string>>(new Set());
 
   const load = useCallback(async () => {
     try {
       const data = (await call("/api/bootstrap")) as Bootstrap;
+      knownNotificationIds.current = new Set((data.notifications ?? []).map((n) => n.id));
       setData(data);
       setBoot(data);
       setAnon(false);
@@ -143,6 +145,27 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch("/api/sync", { cache: "no-store", headers: { "Content-Type": "application/json" } });
         if (!res.ok) return;
         const data = await res.json() as Pick<Bootstrap, "assignments" | "notes" | "notifications" | "meetings">;
+        const incomingNotifications = data.notifications ?? [];
+        const fresh = incomingNotifications.filter((n) => !knownNotificationIds.current.has(n.id));
+        knownNotificationIds.current = new Set(incomingNotifications.map((n) => n.id));
+
+        if (fresh.length && "Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
+          void navigator.serviceWorker.ready.then((registration) => {
+            for (const n of fresh.slice(0, 3)) {
+              const url = n.link
+                ? `/${n.link.portal}/${n.link.section}/${n.link.itemId ? `?open=${encodeURIComponent(n.link.itemId)}` : ""}`
+                : "/";
+              void registration.showNotification(n.title, {
+                body: n.body,
+                icon: "/icons/icon-192.png",
+                badge: "/icons/icon-192.png",
+                tag: n.id,
+                data: { url },
+              });
+            }
+          }).catch(() => {});
+        }
+
         setBoot((current) => {
           if (!current) return current;
           const next = {

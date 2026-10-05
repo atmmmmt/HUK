@@ -333,6 +333,44 @@ export function Files() {
         </Sheet>
       )}
     </div>
+
+    <div className="desktop-only grid stagger" style={{ gap: 16 }}>
+      <div className="lock-note" style={{ background: "var(--info-bg)", borderColor: "#cfe0fb", color: "#1a4c9e" }}>
+        <StickyNote size={17} style={{ color: "var(--info)" }} />
+        <span>لوح الملاحظات ملحق بكل كيان في المنظومة: الشخص، الجهة، القاعة، الاجتماع، التكليف، الكتاب، الوفد والملف. وكل ملاحظة تحمل اسم كاتبها وتاريخها ولا تُحذف بل تُؤرشف.</span>
+      </div>
+
+      <Pills value={scope} onChange={setScope} items={scopes.map((s) => ({ key: s, label: s, n: s === "الكل" ? notes.length : notes.filter((n) => n.scope === s).length }))} />
+
+      {grouped.length === 0 ? <Empty text="لا ملاحظات ضمن هذا التصنيف" /> : (
+        <div className="grid g-2">
+          {grouped.map(([label, items]) => (
+            <Panel key={label} title={label} icon={<StickyNote size={17} />} hint={`${items.length} ملاحظة`}>
+              {items.map((n) => (
+                <div key={n.id} className={`note-item ${n.scope === "توجيه المحافظ" ? "governor" : ""}`}>
+                  <Ava id={n.authorId} size="sm" />
+                  <div className="note-body">
+                    <div className="note-top">
+                      <b>{personOf(n.authorId).name}</b>
+                      <span className={`chip ${n.scope === "توجيه المحافظ" ? "gold" : n.scope === "رسمية" ? "navy" : ""}`} style={{ fontSize: 11 }}>{n.scope}</span>
+                      <time>{n.at}</time>
+                    </div>
+                    <p className="note-text">{n.text}</p>
+                    {n.mentions && (
+                      <div className="row" style={{ gap: 6, marginTop: 6 }}>
+                        <span className="tiny muted">أُشير إلى</span>
+                        {n.mentions.map((m) => <span key={m} className="chip">{personOf(m).name}</span>)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </Panel>
+          ))}
+        </div>
+      )}
+    </div>
+    </>
   );
 }
 
@@ -473,10 +511,23 @@ export function Notes() {
   const [creating, setCreating] = useState(false);
   const [text, setText] = useState("");
   const [query, setQuery] = useState("");
+  const [scope, setScope] = useState("الكل");
   const target = `personal:${me.id}`;
   const mine = notes
     .filter((n) => n.authorId === me.id && n.target === target && n.scope === "خاصة")
     .filter((n) => !query.trim() || n.text.toLowerCase().includes(query.trim().toLowerCase()));
+
+  const scopes = ["الكل", "توجيه المحافظ", "رسمية", "الوحدة", "خاصة"];
+  const legacyList = notes.filter((n) => scope === "الكل" || n.scope === scope);
+  const grouped = useMemo(() => {
+    const m = new Map<string, typeof legacyList>();
+    legacyList.forEach((n) => {
+      const arr = m.get(n.targetLabel) ?? [];
+      arr.push(n);
+      m.set(n.targetLabel, arr);
+    });
+    return [...m.entries()];
+  }, [legacyList]);
 
   const save = async () => {
     const value = text.trim();
@@ -487,7 +538,8 @@ export function Notes() {
   };
 
   return (
-    <div className="personal-notes">
+    <>
+    <div className="personal-notes pwa-only">
       <div className="personal-notes-tools">
         <label className="notes-search">
           <Search size={17} />

@@ -1,7 +1,7 @@
 import { clean, collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
-import { canAdvance, seesAssignment } from "@/lib/access";
+import { canAdvance, portalsFor, seesAssignment } from "@/lib/access";
 import type { Assignment, AssignmentStatus } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -84,12 +84,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     }
     if (patch.status === "مُعاد للتصحيح" || patch.status === "مُغلق") {
+      const owner = people.find((p) => p.id === current.ownerId);
+      const ownerPortal: "directorates" | "diwan" = owner && portalsFor(owner).includes("directorates") ? "directorates" : "diwan";
       await pushNotification({
         kind: "تكليف",
         title: patch.status === "مُغلق" ? "اعتُمد تكليفك وأُغلق" : "أُعيد تكليفك للتصحيح",
         body: `«${current.title}»`,
         channel: "تنبيه التطبيق", toId: current.ownerId,
-        link: { portal: "directorates", section: "inbox", itemId: current.id },
+        link: { portal: ownerPortal, section: ownerPortal === "directorates" ? "inbox" : "assignments", itemId: current.id },
         urgent: patch.status === "مُعاد للتصحيح",
       });
     }

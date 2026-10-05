@@ -75,7 +75,7 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
     body: `«${a.title}» — ${a.priority}، يستحق ${a.due}.`,
     channel: "تنبيه التطبيق",
     toId: owner.id,
-    link: { portal: "directorates", section: "inbox" },
+    link: { portal: "directorates", section: "inbox", itemId: a.id },
     urgent: a.priority === "عاجل جداً",
   });
   return a;

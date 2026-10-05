@@ -130,8 +130,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     try { setDenseState(localStorage.getItem(DENSE_KEY) === "1"); } catch { /* محجوب */ }
   }, []);
 
-  /* مزامنة حيّة: ما يكتبه الآخرون (ملاحظات، قراءة، إشعارات) يصل دون إعادة فتح التطبيق —
-     كل 20 ثانية والتطبيق ظاهر، وفوراً عند العودة إليه */
+  /* مزامنة حيّة خفيفة للجوال: التكليفات والإشعارات والملاحظات تصل خلال ثوانٍ
+     من دون إعادة تحميل bootstrap الثقيل في كل مرة. */
   const signedIn = !!boot;
   useEffect(() => {
     if (!signedIn) return;
@@ -140,11 +140,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (busy || document.visibilityState !== "visible") return;
       busy = true;
       try {
-        const res = await fetch("/api/bootstrap", { headers: { "Content-Type": "application/json" } });
-        if (res.ok) { const data = (await res.json()) as Bootstrap; setData(data); setBoot(data); }
-      } catch { /* بلا شبكة: نحاول لاحقاً */ } finally { busy = false; }
+        const res = await fetch("/api/sync", { cache: "no-store", headers: { "Content-Type": "application/json" } });
+        if (!res.ok) return;
+        const data = await res.json() as Pick<Bootstrap, "assignments" | "notes" | "notifications" | "meetings">;
+        setBoot((current) => {
+          if (!current) return current;
+          const next = {
+            ...current,
+            assignments: data.assignments ?? current.assignments,
+            notes: data.notes ?? current.notes,
+            notifications: data.notifications ?? current.notifications,
+            meetings: data.meetings ?? current.meetings,
+          };
+          setData(next);
+          return next;
+        });
+      } catch { /* بلا شبكة: نحاول تلقائياً لاحقاً */ } finally { busy = false; }
     };
-    const t = window.setInterval(sync, 20000);
+    void sync();
+    const t = window.setInterval(sync, 4000);
     const onShow = () => { if (document.visibilityState === "visible") void sync(); };
     document.addEventListener("visibilitychange", onShow);
     window.addEventListener("online", sync);

@@ -50,7 +50,7 @@ export function portalsFor(person: Person): Portal[] {
     case "governor":
     case "deputy":
     case "assistant":
-      return ["diwan", "directorates", "admin"];
+      return ["diwan", "directorates"];
     case "admin":
       return ["admin"];
     case "secgen":
@@ -131,7 +131,7 @@ export function canApproveBooking(person: Person): boolean {
 }
 
 export function canManageSystem(person: Person): boolean {
-  return person.role === "admin" || person.role === "governor";
+  return person.role === "admin";
 }
 
 /* ─────────────── أولوية القاعات عند التعارض ───────────────

@@ -1,6 +1,7 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
+import { portalsFor } from "@/lib/access";
 import type { Note } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     };
 
     const col = await collections.notes();
+    const users = await collections.users();
     await col.insertOne(note);
     await writeAudit(me.id, "أضاف ملاحظة", input.targetLabel, ipOf(request));
 
@@ -44,13 +46,16 @@ export async function POST(request: Request) {
         for (const pid of [a.ownerId, a.issuerId, ...(a.partnerIds ?? [])]) {
           if (!pid || notified.has(pid)) continue;
           notified.add(pid);
+          const recipient = await users.findOne({ id: pid });
+          const recipientPortal: "directorates" | "diwan" =
+            recipient && portalsFor(recipient).includes("directorates") ? "directorates" : "diwan";
           await pushNotification({
             kind: "تكليف",
             title: scope === "توجيه المحافظ" ? "توجيه من السيد المحافظ" : "ملاحظة جديدة على تكليف",
             body: `${me.title} على «${a.title}»: ${text.slice(0, 90)}`,
             channel: "تنبيه التطبيق",
             toId: pid,
-            link: { portal: pid === a.ownerId ? "directorates" : "diwan", section: pid === a.ownerId ? "inbox" : "assignments", itemId: a.id },
+            link: { portal: recipientPortal, section: recipientPortal === "directorates" ? "inbox" : "assignments", itemId: a.id },
             urgent: scope === "توجيه المحافظ",
           });
         }
@@ -61,13 +66,16 @@ export async function POST(request: Request) {
       if (!id || notified.has(id)) continue;
       notified.add(id);
       const a = await (await collections.assignments()).findOne({ id: input.target });
+      const recipient = await users.findOne({ id });
+      const recipientPortal: "directorates" | "diwan" =
+        recipient && portalsFor(recipient).includes("directorates") ? "directorates" : "diwan";
       await pushNotification({
         kind: "تكليف",
         title: "أُشير إليك في ملاحظة",
         body: `${me.title} على «${input.targetLabel}»: ${text.slice(0, 90)}`,
         channel: "تنبيه التطبيق",
         toId: id,
-        ...(a ? { link: { portal: id === a.ownerId ? "directorates" as const : "diwan" as const, section: id === a.ownerId ? "inbox" : "assignments", itemId: a.id } } : {}),
+        ...(a ? { link: { portal: recipientPortal, section: recipientPortal === "directorates" ? "inbox" : "assignments", itemId: a.id } } : {}),
       });
     }
 

@@ -750,7 +750,6 @@ body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
     animation: none !important;
     transform: none;
     min-height: calc(100dvh - 58px);
-    contain: layout paint;
   }
   .page-head {
     margin-top: -1px;

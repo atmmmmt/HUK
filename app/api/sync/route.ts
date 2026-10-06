@@ -51,7 +51,7 @@ export async function GET() {
         agenda: m.agenda ?? [],
       }))
       .filter((m) =>
-        ["governor", "deputy", "assistant", "secgen", "chief", "registry", "protocol"].includes(me.role) ||
+        ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role) ||
         m.chairId === me.id ||
         m.secretaryId === me.id ||
         (m.inviteeIds ?? []).includes(me.id)

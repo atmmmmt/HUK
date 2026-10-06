@@ -1,7 +1,7 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { handle, ipOf } from "@/lib/api";
-import { canApproveDecision, canIssueAssignment, canRegisterLetters, canSubmitDecision, clearanceRank, seesAssignment } from "@/lib/access";
+import { canAccessSection, canApproveDecision, canIssueAssignment, canRegisterLetters, canSubmitDecision, clearanceRank, seesAssignment } from "@/lib/access";
 import { ALLOWED, MAX_UPLOAD, documentsCol, storeFile, type DocumentMeta } from "@/lib/documents";
 import { stampNow } from "@/lib/ops";
 import type { Assignment, Classification, Decision } from "@/lib/types";
@@ -51,8 +51,15 @@ export async function POST(request: Request) {
       const folder = await (await collections.files()).findOne({ id: folderId });
       if (!folder) throw new Error("المجلد غير موجود");
       if (clearanceRank(folder.classification) > clearanceRank(me.clearance)) throw new ForbiddenError("المجلد محجوب عن درجة تصريحك");
-      const owner = folder.ownerId === me.id || folder.entityId === me.entityId;
-      if (!owner && !canRegisterLetters(me) && !canIssueAssignment(me)) throw new ForbiddenError("الرفع إلى هذا المجلد لأصحابه وللديوان");
+      const ownsFolder = folder.ownerId === me.id;
+      const inOwnEntity = folder.entityId === me.entityId;
+      const canUseArchive = canAccessSection(me, "diwan", "files");
+      if (!ownsFolder && !canUseArchive) {
+        throw new ForbiddenError("هذا المجلد خارج قسم الملفات المسموح لدورك");
+      }
+      if (!ownsFolder && !inOwnEntity && !canRegisterLetters(me) && !canIssueAssignment(me)) {
+        throw new ForbiddenError("الرفع إلى هذا المجلد خارج نطاقك");
+      }
       if (folder.classification === "سرّي") classification = "سرّي";
     }
 
@@ -75,10 +82,17 @@ export async function POST(request: Request) {
     const size = file.size < 1024 * 1024 ? `${Math.max(1, Math.round(file.size / 1024))} ك.ب` : `${(file.size / 1048576).toFixed(1)} م.ب`;
     if (assignment) {
       await (await collections.assignments()).updateOne({ id: assignment.id }, { $push: { attachments: { name: doc.name, size, docId: doc.id } } } as never);
+      const users = await collections.users();
       for (const pid of [assignment.ownerId, assignment.issuerId].filter((p) => p !== me.id)) {
+        const recipient = await users.findOne({ id: pid, active: { $ne: false } });
+        const link = recipient && canAccessSection(recipient, "diwan", "assignments")
+          ? { portal: "diwan" as const, section: "assignments", itemId: assignment.id }
+          : recipient && canAccessSection(recipient, "directorates", "inbox")
+            ? { portal: "directorates" as const, section: "inbox", itemId: assignment.id }
+            : undefined;
         await pushNotification({
           kind: "تكليف", title: "مرفق جديد على تكليف", body: `«${doc.name}» على «${assignment.title}»`,
-          channel: "تنبيه التطبيق", toId: pid, link: { portal: "diwan", section: "assignments" },
+          channel: "تنبيه التطبيق", toId: pid, ...(link ? { link } : {}),
         });
       }
     } else if (folderId) {

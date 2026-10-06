@@ -77,8 +77,8 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
       : undefined;
   await pushNotification({
     kind: "تكليف",
-    title: "تكليف جديد أُسند إليك",
-    body: `«${a.title}» — ${a.priority}، يستحق ${a.due}.`,
+    title: "تكليف جديد",
+    body: `أُسند إليك «${a.title}» · الأولوية: ${a.priority} · الاستحقاق: ${a.due}`,
     channel: "تنبيه التطبيق",
     toId: owner.id,
     ...(link ? { link } : {}),

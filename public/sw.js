@@ -1,4 +1,4 @@
-const CACHE_VERSION = "governorate-exec-v7-quick-slider";
+const CACHE_VERSION = "governorate-exec-v8-premium-select";
 const APP_SHELL = [
   "/",
   "/diwan/overview/",

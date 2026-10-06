@@ -1,18 +1,15 @@
 import { cleanAll, collections, db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { handle } from "@/lib/api";
-import { clearanceRank, seesAssignment } from "@/lib/access";
+import {
+  assignmentQueryFor, canAccessSection, canIssueAssignment, canManageMeetings, canRespondRequest,
+  canScheduleMeeting, clearanceRank, seesAssignment,
+} from "@/lib/access";
 import { runReviewSweep } from "@/lib/review";
 import type { Assignment, DocFile, Letter, Person } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function assignmentQueryFor(me: Person): Record<string, unknown> {
-  if (["governor", "deputy", "assistant", "secgen", "chief", "followup"].includes(me.role)) return {};
-  if (me.role === "employee") return { $or: [{ ownerId: me.id }, { partnerIds: me.id }] };
-  return { entityId: me.entityId };
-}
 
 /**
  * كل ما تحتاجه الواجهة في طلب واحد — مُرشَّح على الخادم حسب صلاحية المستخدم.
@@ -60,6 +57,36 @@ export async function GET() {
     const people = cleanAll(rawPeople) as unknown as Person[];
     const myRank = clearanceRank(me.clearance);
 
+    const canSeeMeetings =
+      canAccessSection(me, "diwan", "meetings") ||
+      canAccessSection(me, "directorates", "meetings");
+    const canSeeHalls = canAccessSection(me, "diwan", "halls");
+    const canSeeCorrespondence = canAccessSection(me, "diwan", "correspondence");
+    const canSeeDecisions =
+      canAccessSection(me, "diwan", "decisions") ||
+      canAccessSection(me, "directorates", "decisions");
+    const canSeeDelegations = canAccessSection(me, "diwan", "delegations");
+    const canSeeFiles = canAccessSection(me, "diwan", "files");
+    const canSeeRequests =
+      canAccessSection(me, "directorates", "requests") ||
+      canRespondRequest(me) ||
+      me.role === "halls";
+    const needsAllPeople =
+      ["governor", "deputy", "secgen", "chief", "followup", "admin"].includes(me.role) ||
+      canIssueAssignment(me) ||
+      canManageMeetings(me) ||
+      canScheduleMeeting(me);
+    const visiblePeople = needsAllPeople
+      ? people
+      : people.filter((p) => p.id === me.id || p.entityId === me.entityId);
+
+    const canSeeEntityMetrics = ["governor", "deputy", "secgen", "followup", "admin"].includes(me.role);
+    const clientEntities = cleanAll(entities).map((e) =>
+      canSeeEntityMetrics || e.id === me.entityId
+        ? e
+        : { ...e, managerId: "", units: [], staffCount: 0, compliance: 0, openTasks: 0, lateTasks: 0 }
+    );
+
     // التكليفات: نطاق الدور + درجة التصريح
     // الحقول المصفوفية لا تصل ناقصة أبداً (سجلات قديمة أو مرحَّلة)
     const assignments = cleanAll(rawAssignments as unknown as Assignment[])
@@ -82,30 +109,62 @@ export async function GET() {
     // المستندات: ما يسمح به التصريح، ومرفقات التكليفات المرئية فقط
     const visibleIds = new Set(assignments.map((a) => a.id));
     const documents = cleanAll(await (await db()).collection("documents").find({}, { projection: { fileId: 0 } }).toArray())
-      .filter((d) => clearanceRank(String(d.classification)) <= myRank && (!d.assignmentId || visibleIds.has(String(d.assignmentId))));
+      .filter((d) =>
+        clearanceRank(String(d.classification)) <= myRank &&
+        (d.assignmentId ? visibleIds.has(String(d.assignmentId)) : canSeeFiles)
+      );
 
     return {
       me: cleanAll([me])[0],
       roles: cleanAll(roles),
-      entities: cleanAll(entities),
-      people,
-      halls: cleanAll(halls),
-      bookings: cleanAll(bookings),
+      entities: clientEntities,
+      people: visiblePeople,
+      halls: canSeeHalls ? cleanAll(halls) : [],
+      bookings: canSeeHalls ? cleanAll(bookings) : [],
       assignments,
-      // الحقول الجماعية مضمونة دائماً حتى لو خُزّن اجتماع قديم دونها
-      meetings: cleanAll(meetings).map((m) => ({
-        ...m,
-        outcomes: m.outcomes ?? [], inviteeIds: m.inviteeIds ?? [], confirmed: m.confirmed ?? [],
-        apologized: m.apologized ?? [], agenda: m.agenda ?? [],
-      })),
-      letters: visibleLetters,
-      decisions: cleanAll(decisions).filter((d) => clearanceRank(String(d.classification ?? "عادي")) <= myRank),
-      delegations: cleanAll(delegations),
-      files,
-      notes: cleanAll(notes).filter((n) => n.scope !== "خاصة" || n.authorId === me.id),
+      // غير القيادات ترى فقط الاجتماعات التي تشارك فيها فعلياً.
+      meetings: (canSeeMeetings ? cleanAll(meetings) : [])
+        .map((m) => ({
+          ...m,
+          outcomes: m.outcomes ?? [], inviteeIds: m.inviteeIds ?? [], confirmed: m.confirmed ?? [],
+          apologized: m.apologized ?? [], agenda: m.agenda ?? [],
+        }))
+        .filter((m) =>
+          ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role) ||
+          m.chairId === me.id ||
+          m.secretaryId === me.id ||
+          (m.inviteeIds ?? []).includes(me.id)
+        ),
+      letters: canSeeCorrespondence ? visibleLetters : [],
+      decisions: canSeeDecisions
+        ? cleanAll(decisions)
+            .filter((d) => clearanceRank(String(d.classification ?? "عادي")) <= myRank)
+            .filter((d) =>
+              ["governor", "deputy", "assistant", "secgen", "chief"].includes(me.role) ||
+              d.entityId === me.entityId ||
+              d.submittedBy === me.id
+            )
+        : [],
+      delegations: canSeeDelegations ? cleanAll(delegations) : [],
+      files: canSeeFiles ? files : [],
+      notes: cleanAll(notes).filter((n) => {
+        if (n.scope === "خاصة") return n.authorId === me.id;
+        if (n.authorId === me.id) return true;
+        if (visibleIds.has(n.target)) return true;
+        if (canSeeMeetings && cleanAll(meetings).some((m) => m.id === n.target)) return true;
+        if (canSeeHalls && cleanAll(halls).some((h) => h.id === n.target)) return true;
+        if (canSeeDelegations && cleanAll(delegations).some((d) => d.id === n.target)) return true;
+        return false;
+      }),
       notifications: cleanAll(notifications).filter((n) => n.toId === me.id),
       audit: isAdmin ? cleanAll(audit) : [],
-      requests: cleanAll(requests),
+      requests: canSeeRequests
+        ? cleanAll(requests).filter((r) =>
+            canRespondRequest(me, r.kind) ||
+            r.byId === me.id ||
+            r.entityId === me.entityId
+          )
+        : [],
       documents,
       settings: { escalationLevels: Array.isArray(esc?.levels) ? (esc.levels as number[]) : null },
     };

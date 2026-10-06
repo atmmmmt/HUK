@@ -1,17 +1,11 @@
 import { clean, collections } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { handle } from "@/lib/api";
-import { seesAssignment } from "@/lib/access";
+import { assignmentQueryFor, canAccessSection, seesAssignment } from "@/lib/access";
 import type { Assignment, Meeting, Note, Notification, Person } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function assignmentQueryFor(me: Person): Record<string, unknown> {
-  if (["governor", "deputy", "assistant", "secgen", "chief", "followup"].includes(me.role)) return {};
-  if (me.role === "employee") return { $or: [{ ownerId: me.id }, { partnerIds: me.id }] };
-  return { entityId: me.entityId };
-}
 
 const cleanAll = <T extends object>(docs: T[]) => docs.map((d) => clean(d));
 
@@ -43,16 +37,34 @@ export async function GET() {
       .map((a) => ({ ...a, partnerIds: a.partnerIds ?? [], attachments: a.attachments ?? [], chain: a.chain ?? {} }))
       .filter((a) => seesAssignment(me, a, { people }));
 
-    const notes = cleanAll(rawNotes as unknown as Note[]).filter((n) => n.scope !== "خاصة" || n.authorId === me.id);
+    const canSeeMeetings =
+      canAccessSection(me, "diwan", "meetings") ||
+      canAccessSection(me, "directorates", "meetings");
+
+    const meetings = (canSeeMeetings ? cleanAll(rawMeetings as unknown as Meeting[]) : [])
+      .map((m) => ({
+        ...m,
+        outcomes: m.outcomes ?? [],
+        inviteeIds: m.inviteeIds ?? [],
+        confirmed: m.confirmed ?? [],
+        apologized: m.apologized ?? [],
+        agenda: m.agenda ?? [],
+      }))
+      .filter((m) =>
+        ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role) ||
+        m.chairId === me.id ||
+        m.secretaryId === me.id ||
+        (m.inviteeIds ?? []).includes(me.id)
+      );
+
+    const visibleAssignmentIds = new Set(assignments.map((a) => a.id));
+    const visibleMeetingIds = new Set(meetings.map((m) => m.id));
+    const notes = cleanAll(rawNotes as unknown as Note[]).filter((n) => {
+      if (n.scope === "خاصة") return n.authorId === me.id;
+      if (n.authorId === me.id) return true;
+      return visibleAssignmentIds.has(n.target) || visibleMeetingIds.has(n.target);
+    });
     const notifications = cleanAll(rawNotifications as unknown as Notification[]);
-    const meetings = cleanAll(rawMeetings as unknown as Meeting[]).map((m) => ({
-      ...m,
-      outcomes: m.outcomes ?? [],
-      inviteeIds: m.inviteeIds ?? [],
-      confirmed: m.confirmed ?? [],
-      apologized: m.apologized ?? [],
-      agenda: m.agenda ?? [],
-    }));
 
     return { ok: true, assignments, notes, notifications, meetings };
   });

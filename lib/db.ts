@@ -86,6 +86,20 @@ async function syncIdentity(d: Db) {
     }));
     const res = await d.collection("users").bulkWrite(ops, { ordered: false });
     if (res.modifiedCount) console.log(`[db] حُدّثت أسماء ${res.modifiedCount} حساباً`);
+
+    // مصفوفة الأدوار في لوحة الإدارة مرجعية من الكود؛ الواجهة لا تسمح بتحريرها،
+    // لذلك نزامن الوصف والمنح حتى لا تعرض القاعدة القديمة صلاحيات تخالف الحماية الفعلية.
+    await d.collection("roles").bulkWrite(
+      seed.roles.map((role) => ({
+        updateOne: {
+          filter: { key: role.key },
+          update: { $set: { ...role } },
+          upsert: true,
+        },
+      })),
+      { ordered: false },
+    );
+
     // طلبات العرض الجديدة في ملف البيانات تُضاف إن غابت، دون المساس بالموجود
     await d.collection("requests").bulkWrite(
       seedRequests.map((r) => ({ updateOne: { filter: { id: r.id }, update: { $setOnInsert: { ...r } }, upsert: true } })),

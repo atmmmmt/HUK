@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CalendarClock, Check, FileText, Search, Users, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
 import { entities, entityOf, halls, people, roles } from "@/lib/lookup";
+import { canSubmitDecisionForAnyEntity } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Classification, Letter, MeetingOutcome, Priority, RequestItem, RoleKey } from "@/lib/types";
 import { Sheet } from "@/components/ui";
@@ -439,7 +440,7 @@ export function NewDecisionSheet({ onClose }: { onClose: () => void }) {
   const [entityId, setEntityId] = useState(me.entityId);
   const [classification, setClass] = useState<Classification>("عادي");
   const [files, setFiles] = useState<File[]>([]);
-  const isDirector = me.role === "director";
+  const canChooseEntity = canSubmitDecisionForAnyEntity(me);
 
   function pick(e: React.ChangeEvent<HTMLInputElement>) {
     const chosen = Array.from(e.target.files ?? []);
@@ -452,7 +453,7 @@ export function NewDecisionSheet({ onClose }: { onClose: () => void }) {
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!title.trim()) return toast("عنوان المعاملة مطلوب", "warn");
-    void run(() => submitDecision({ title, note, amount, priority, awaiting, entityId: isDirector ? undefined : entityId, classification }, files), onClose);
+    void run(() => submitDecision({ title, note, amount, priority, awaiting, entityId: canChooseEntity ? entityId : undefined, classification }, files), onClose);
   };
 
   return (
@@ -503,7 +504,7 @@ export function NewDecisionSheet({ onClose }: { onClose: () => void }) {
             <option value="assistant">معاون المحافظ</option>
           </select>
         </div>
-        {!isDirector && (
+        {canChooseEntity && (
           <div className="field">
             <label htmlFor="dc-ent">الجهة صاحبة المعاملة</label>
             <select id="dc-ent" value={entityId} onChange={(e) => setEntityId(e.target.value)}>

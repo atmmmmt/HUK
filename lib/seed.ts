@@ -7,76 +7,76 @@ import type {
 
 export const roles: Role[] = [
   {
-    key: "governor", title: "السيد المحافظ", scope: "كل المحافظة", reach: "البوابتان معاً",
-    summary: "صلاحية مطلقة: الاطلاع والتوجيه والاعتماد النهائي وإغلاق أي تكليف، ويرى مؤشرات كل الجهات دون استثناء.",
+    key: "governor", title: "السيد المحافظ", scope: "كل المحافظة", reach: "الديوان والمديريات",
+    summary: "صلاحية تنفيذية عليا: يرى كل العمل التنفيذي ويعتمد ويوجّه ويغلق ضمن المنظومة.",
     grants: { view: "full", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "full", delete: "full" },
   },
   {
-    key: "deputy", title: "نائب المحافظ", scope: "كل المحافظة", reach: "البوابتان معاً",
-    summary: "كامل الصلاحيات بقرار مكتب المحافظ — يعتمد ويغلق ويوجّه كما السيد المحافظ.",
+    key: "deputy", title: "نائب المحافظ", scope: "كل المحافظة", reach: "الديوان والمديريات",
+    summary: "ينوب عن المحافظ في العمل التنفيذي والاعتماد والمتابعة على مستوى المحافظة.",
     grants: { view: "full", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "full", delete: "full" },
   },
   {
-    key: "assistant", title: "معاون المحافظ", scope: "كل المحافظة", reach: "البوابتان معاً",
-    summary: "يعتمد ويتابع نيابة عن السيد المحافظ، ولا يملك الحذف النهائي.",
-    grants: { view: "full", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "full", delete: "none" },
+    key: "assistant", title: "معاون المحافظ", scope: "الديوان والملفات المكلّف بها", reach: "الديوان",
+    summary: "يتابع ويعتمد الملفات المكلّف بها من داخل الديوان، ولا يدخل إدارة المديريات أو بياناتها التشغيلية كمدير عام.",
+    grants: { view: "partial", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "partial", delete: "none" },
   },
   {
-    key: "secgen", title: "الأمين العام", scope: "الديوان وكل الجهات", reach: "تنظيم ومتابعة",
-    summary: "ينظّم سير العمل بين الديوان والمديريات ويتابع التنفيذ ويؤرشف — دون صلاحية اعتماد.",
+    key: "secgen", title: "الأمين العام", scope: "تنسيق الديوان ومتابعة الجهات", reach: "تنظيم ورقابة",
+    summary: "ينسّق العمل بين الديوان والجهات ويتابع التنفيذ والتقارير دون اعتماد نهائي.",
     grants: { view: "full", create: "full", edit: "full", assign: "full", approve: "none", close: "none", archive: "full", delete: "none" },
   },
   {
-    key: "chief", title: "مدير مكتب المحافظ", scope: "الديوان", reach: "اطلاع وترتيب ومتابعة",
-    summary: "الاطلاع وترتيب المواعيد والوارد والإحالات ومتابعة التنفيذ — لا يعتمد ولا يغلق، بقرار مكتب المحافظ.",
+    key: "chief", title: "مدير مكتب المحافظ", scope: "مكتب المحافظ", reach: "الديوان",
+    summary: "يدير التقويم والاجتماعات والوارد والتكليفات المرتبطة بمكتب المحافظ، دون صلاحية اعتماد نهائي.",
     grants: { view: "full", create: "full", edit: "full", assign: "full", approve: "none", close: "none", archive: "full", delete: "none" },
   },
   {
-    key: "followup", title: "مكتب المتابعة", scope: "كل التكليفات", reach: "اطلاع عابر للجهات",
-    summary: "العين المحايدة: يرى كل التكليفات ويطالب ويصعّد، ولا ينفّذ ولا يعتمد.",
+    key: "followup", title: "مكتب المتابعة", scope: "التكليفات والمؤشرات", reach: "رقابة عابرة للجهات",
+    summary: "يراقب التكليفات ومؤشرات الالتزام عبر الجهات للاطلاع والتصعيد فقط، دون تنفيذ أو اعتماد.",
     grants: { view: "full", create: "none", edit: "none", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
     key: "director", title: "مدير المديرية", scope: "جهته فقط", reach: "بوابة المديريات",
-    summary: "يوزّع التكليفات داخلياً ويعتمد ردود جهته قبل رفعها، ويدير موظفيه ووحداته.",
+    summary: "يرى ويدير عمل جهته، يوزّع المهام ويرفع الردود والمعاملات باسم الجهة فقط.",
     grants: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
   },
   {
-    key: "head", title: "رئيس قسم", scope: "وحدته", reach: "وحدته داخل المديرية",
-    summary: "يوزّع المهام على موظفي وحدته ويراجع قبل الرفع إلى مدير الجهة.",
+    key: "head", title: "رئيس قسم", scope: "وحدته", reach: "داخل المديرية",
+    summary: "يرى عمل وحدته والمهام المرتبطة بها ويوزّع العمل ضمن حدود القسم.",
     grants: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
     key: "employee", title: "موظف منفّذ", scope: "المسند إليه", reach: "مهامه فقط",
-    summary: "يرى ما أُسند إليه فقط، يحدّث نسبة الإنجاز ويرفع المرفقات ويطلب تمديداً مبرّراً.",
+    summary: "يرى تكليفاته ومشاركاته واجتماعاته وطلباته فقط ويحدّث التنفيذ ويرفع المرفقات.",
     grants: { view: "partial", create: "none", edit: "partial", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
-    key: "area", title: "مسؤول منطقة أو حي", scope: "منطقته أو حيّه", reach: "إحصائيات نطاقه",
-    summary: "يرفع إحصائيات منطقته أو حيّه عند الطلب، ويستقبل ما يخصّ نطاقه من تكليفات.",
+    key: "area", title: "مسؤول منطقة أو حي", scope: "نطاقه الجغرافي", reach: "نطاقه فقط",
+    summary: "يتابع ما يخص منطقته أو حيّه ويرفع الطلبات والتقارير ضمن نطاقه.",
     grants: { view: "partial", create: "full", edit: "partial", assign: "partial", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
-    key: "registry", title: "الديوان وأمانة السر", scope: "المراسلات", reach: "الوارد والصادر",
-    summary: "قيد الوارد والصادر وترقيم الكتب والأرشفة وإدارة المحاضر.",
-    grants: { view: "full", create: "full", edit: "full", assign: "partial", approve: "none", close: "none", archive: "full", delete: "none" },
+    key: "registry", title: "الديوان وأمانة السر", scope: "المراسلات والمحاضر", reach: "اختصاص أمانة السر",
+    summary: "يقيد الوارد والصادر ويدير المحاضر والملفات المرتبطة بعمله، ويرى تكليفاته فقط خارج ذلك.",
+    grants: { view: "partial", create: "full", edit: "full", assign: "partial", approve: "none", close: "none", archive: "full", delete: "none" },
   },
   {
-    key: "protocol", title: "المراسم والإعلام", scope: "الفعاليات", reach: "الوفود والزيارات",
-    summary: "الوفود والفعاليات وبرامج الزيارات وحجوزات التشريفات.",
+    key: "protocol", title: "المراسم والإعلام", scope: "الوفود والزيارات", reach: "اختصاص المراسم",
+    summary: "يدير الوفود والزيارات والترتيبات البروتوكولية ويجدولها، ويرى تكليفاته فقط ولا يدخل المديريات.",
     grants: { view: "partial", create: "full", edit: "full", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
-    key: "halls", title: "مشرف القاعات", scope: "القاعات", reach: "الحجوزات والتجهيزات",
-    summary: "إدارة القاعات والتجهيزات وتأكيد أو رفض طلبات الحجز وفق سلّم الأولوية.",
+    key: "halls", title: "مشرف القاعات", scope: "القاعات والحجوزات", reach: "اختصاص القاعات",
+    summary: "يدير القاعات ويؤكد أو يرفض طلبات الحجز ويرى تكليفاته فقط، دون وصول لباقي أعمال الديوان.",
     grants: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
   },
   {
-    key: "admin", title: "مدير النظام", scope: "الإعدادات", reach: "لوحة التحكم",
-    summary: "الجهات والأدوار والمستخدمون والقوالب وسجل التدقيق، ولا يطّلع على محتوى الملفات السرّية.",
+    key: "admin", title: "مدير النظام", scope: "الإعدادات التقنية", reach: "لوحة التحكم فقط",
+    summary: "يدير المستخدمين والجهات والأدوار وقواعد التصعيد والسجل، ولا يدخل محتوى العمل التنفيذي.",
     grants: { view: "partial", create: "full", edit: "full", assign: "none", approve: "none", close: "none", archive: "none", delete: "partial" },
   },
-];
+]
 
 export const roleOf = (key: string) => roles.find((r) => r.key === key)!;
 

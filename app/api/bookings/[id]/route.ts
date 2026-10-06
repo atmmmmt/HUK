@@ -11,7 +11,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return handle(async () => {
     const me = await requireUser();
     if (!canApproveBooking(me)) {
-      throw new ForbiddenError("تأكيد الحجوزات من صلاحية مشرف القاعات ومدير المكتب");
+      throw new ForbiddenError("تأكيد الحجوزات من صلاحية مشرف القاعات، مع استثناء المحافظ أو نائبه");
     }
 
     const { id } = await params;

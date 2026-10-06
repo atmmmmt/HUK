@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { collections, writeAudit } from "@/lib/db";
 import { createSession } from "@/lib/session";
+import { homeSectionFor, portalsFor } from "@/lib/access";
 import { body, handle, ipOf } from "@/lib/api";
 
 export const runtime = "nodejs";
@@ -32,9 +33,19 @@ export async function POST(request: Request) {
     );
     await writeAudit(user.id, "سجّل الدخول", user.username, ipOf(request));
 
+    const homes = Object.fromEntries(
+      portalsFor(user).map((portal) => {
+        const section = homeSectionFor(user, portal);
+        return [portal, section ? `/${portal}/${section}/` : null];
+      }),
+    );
+    const firstHome = Object.values(homes).find((x): x is string => typeof x === "string") ?? "/";
+
     return {
       ok: true,
       user: { id: user.id, name: user.name, title: user.title, role: user.role, entityId: user.entityId },
+      homes,
+      home: firstHome,
     };
   });
 }

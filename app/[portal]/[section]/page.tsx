@@ -1,6 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Shell from "@/components/shell";
+import { canAccessSection, homeSectionFor, portalsFor } from "@/lib/access";
 import { navByPortal } from "@/lib/nav";
+import { currentUser } from "@/lib/session";
 import type { Portal } from "@/lib/types";
 
 const portals = ["diwan", "directorates", "admin"] as const;
@@ -18,6 +20,22 @@ export default async function SectionPage({
 }) {
   const { portal, section } = await params;
   if (!portals.includes(portal as (typeof portals)[number])) notFound();
-  if (!navByPortal[portal as Portal].some((n) => n.key === section)) notFound();
-  return <Shell portal={portal as Portal} section={section} />;
+
+  const typedPortal = portal as Portal;
+  if (!navByPortal[typedPortal].some((n) => n.key === section)) notFound();
+
+  const me = await currentUser();
+  if (!me) redirect(`/login/?next=${encodeURIComponent(`/${portal}/${section}/`)}`);
+
+  if (!canAccessSection(me, typedPortal, section)) {
+    const samePortalHome = homeSectionFor(me, typedPortal);
+    if (samePortalHome) redirect(`/${typedPortal}/${samePortalHome}/`);
+
+    const fallbackPortal = portalsFor(me)[0];
+    if (!fallbackPortal) redirect("/");
+    const fallbackSection = homeSectionFor(me, fallbackPortal);
+    redirect(fallbackSection ? `/${fallbackPortal}/${fallbackSection}/` : "/");
+  }
+
+  return <Shell portal={typedPortal} section={section} />;
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Landmark, Lock, Network } from "lucide-react";
-import { portalsFor } from "@/lib/access";
+import { ArrowLeft, Check, Landmark, Lock, Network, ShieldCheck } from "lucide-react";
+import { homeSectionFor, portalsFor } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import { DarkStage } from "@/components/motion";
 import type { Portal } from "@/lib/types";
@@ -22,9 +22,14 @@ const cards: { portal: Portal; title: string; sub: string; icon: typeof Landmark
     icon: Network,
     points: ["التعليمات واللوائح", "المهام والردود", "الطلبات والتقارير", "متابعة تنفيذ التوجيهات"],
   },
+  {
+    portal: "admin",
+    title: "إدارة النظام",
+    sub: "المستخدمون والأدوار والإعدادات التقنية",
+    icon: ShieldCheck,
+    points: ["إدارة المستخدمين", "الأدوار والصلاحيات", "قواعد التصعيد", "سجل التدقيق"],
+  },
 ];
-
-const landing: Record<Portal, string> = { diwan: "overview", directorates: "entities", admin: "entities" };
 
 export default function Gate() {
   const router = useRouter();
@@ -34,7 +39,8 @@ export default function Gate() {
   function open(p: Portal) {
     if (!allowed.includes(p)) return;
     if (anon) { router.push(`/login/?portal=${p}`); return; }
-    router.push(`/${p}/${landing[p]}/`);
+    const home = homeSectionFor(me, p);
+    if (home) router.push(`/${p}/${home}/`);
   }
 
   if (!ready && !anon) {
@@ -78,7 +84,7 @@ export default function Gate() {
         </div>
 
         <div className="gate-grid gate-grid-showcase">
-          {cards.map((c) => {
+          {(anon ? cards.filter((c) => c.portal !== "admin") : cards.filter((c) => allowed.includes(c.portal))).map((c) => {
             const locked = !allowed.includes(c.portal);
             const Icon = c.icon;
             return (

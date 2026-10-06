@@ -1,7 +1,7 @@
 import { clean, cleanAll, collections, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
-import { canManageSystem } from "@/lib/access";
+import { canAccessSection, canManageSystem } from "@/lib/access";
 import type { Entity } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -9,9 +9,15 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   return handle(async () => {
-    await requireUser();
+    const me = await requireUser();
+    const canListAll =
+      canManageSystem(me) ||
+      ["governor", "deputy", "secgen", "followup"].includes(me.role);
     const col = await collections.entities();
-    return { entities: cleanAll(await col.find().toArray()) };
+    const entities = canListAll
+      ? await col.find().toArray()
+      : await col.find({ id: me.entityId }).toArray();
+    return { entities: cleanAll(entities) };
   });
 }
 

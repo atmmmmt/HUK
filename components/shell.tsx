@@ -11,7 +11,7 @@ import {
   LogOut, Sparkles, Stamp, StickyNote, TrendingUp, Users,
 } from "lucide-react";
 import { metaOf, navByPortal } from "@/lib/nav";
-import { portalLabels, portalsFor, reachLabel } from "@/lib/access";
+import { canAccessSection, homeSectionFor, portalLabels, portalsFor, reachLabel } from "@/lib/access";
 import { entityOf } from "@/lib/lookup";
 import { useStore } from "@/lib/store";
 import type { Portal } from "@/lib/types";
@@ -44,10 +44,13 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const nav = navByPortal[portal];
+  const nav = useMemo(
+    () => ready ? navByPortal[portal].filter((item) => canAccessSection(me, portal, item.key)) : navByPortal[portal],
+    [ready, me, portal],
+  );
   const meta = metaOf(portal, section);
   const allowed = ready ? portalsFor(me) : [];
-  const blocked = !allowed.includes(portal);
+  const blocked = ready && !canAccessSection(me, portal, section);
 
   useEffect(() => { setOpen(false); setMore(false); }, [section, portal]);
   const closeSearch = useCallback(() => setFinding(false), []);
@@ -130,7 +133,10 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
                 <button
                   key={p}
                   className="nav-item"
-                  onClick={() => router.push(`/${p}/${p === "diwan" ? "overview" : "entities"}/`)}
+                  onClick={() => {
+                    const home = homeSectionFor(me, p);
+                    if (home) router.push(`/${p}/${home}/`);
+                  }}
                   title={mini ? portalLabels[p].title : undefined}
                 >
                   <Icon size={18} />
@@ -291,7 +297,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
               <Lock size={34} style={{ color: "var(--warn)", marginBottom: 12 }} />
               <h3 style={{ marginBottom: 6 }}>لا تملك صلاحية الدخول إلى هذه البوابة</h3>
               <p className="muted" style={{ marginBottom: 16 }}>
-                صفتك الحالية «{me.title}» ونطاق رؤيتك «{reachLabel(me)}». الفصل بين البوابتين إجرائي ولا يتجاوزه إلا السيد المحافظ ونائبه.
+                صفتك الحالية «{me.title}» لا تملك هذا القسم. نطاقك الفعلي هو «{reachLabel(me)}»، وتظهر لك فقط الأدوات المرتبطة باختصاصك.
               </p>
               <button className="btn primary" onClick={() => router.push("/")}>العودة إلى البوابات</button>
             </div>

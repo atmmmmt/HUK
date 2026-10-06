@@ -8,7 +8,7 @@ import {
   ShieldCheck, SlidersHorizontal, Sparkles, Stamp, StickyNote, TrendingUp, Users, X,
 } from "lucide-react";
 import { navByPortal } from "@/lib/nav";
-import { portalLabels, portalsFor } from "@/lib/access";
+import { canAccessSection, homeSectionFor, portalLabels, portalsFor } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import ThemeToggle from "@/components/theme-toggle";
 import type { Portal } from "@/lib/types";
@@ -32,10 +32,12 @@ export default function TabBar({
 }) {
   const router = useRouter();
   const { me, logout } = useStore();
-  const nav = navByPortal[portal];
+  const nav = navByPortal[portal].filter((item) => canAccessSection(me, portal, item.key));
   const keys = primary[portal];
-  const tabs = keys.map((k) => nav.find((n) => n.key === k)).filter(Boolean) as typeof nav;
-  const rest = nav.filter((n) => !keys.includes(n.key));
+  const preferred = keys.map((k) => nav.find((n) => n.key === k)).filter(Boolean) as typeof nav;
+  const tabs = [...preferred, ...nav.filter((n) => !preferred.includes(n))].slice(0, 4);
+  const tabKeys = new Set(tabs.map((n) => n.key));
+  const rest = nav.filter((n) => !tabKeys.has(n.key));
   const allowed = portalsFor(me);
   const tap = () => { try { navigator.vibrate?.(8); } catch {} };
 
@@ -107,7 +109,7 @@ export default function TabBar({
                     return (
                       <Link
                         key={p}
-                        href={`/${p}/${p === "diwan" ? "overview" : "entities"}/`}
+                        href={`/${p}/${homeSectionFor(me, p) ?? ""}/`}
                         className="more-item"
                         onClick={() => setMoreOpen(false)}
                       >

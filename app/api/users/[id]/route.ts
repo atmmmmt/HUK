@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const users = await collections.users();
     const u = await users.findOne({ id });
     if (!u) throw new Error("الحساب غير موجود");
-    if (u.role === "governor" && me.role !== "governor") throw new ForbiddenError("حساب المحافظ لا يُعطَّل إلا بصلاحيته");
+    if (u.role === "governor" && !active) throw new ForbiddenError("حساب المحافظ محمي من التعطيل المباشر؛ يلزم إجراء نقل صلاحية إداري منفصل");
 
     await users.updateOne({ id }, { $set: { active: !!active } });
     await writeAudit(me.id, active ? "فعّل حساباً" : "عطّل حساباً", u.username, ipOf(request));

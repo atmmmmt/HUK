@@ -1,7 +1,7 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
-import { canSubmitDecision, clearanceRank } from "@/lib/access";
+import { canSubmitDecision, canSubmitDecisionForAnyEntity, clearanceRank } from "@/lib/access";
 import type { Decision, Priority } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -23,9 +23,12 @@ export async function POST(request: Request) {
     const classification = input.classification === "سرّي" ? "سرّي" : "عادي";
     if (clearanceRank(classification) > clearanceRank(me.clearance)) throw new ForbiddenError("لا ترفع معاملة بدرجة أعلى من تصريحك");
 
-    // المدير يرفع باسم جهته فقط؛ الديوان يختار الجهة
+    // الأصل أن المستخدم يرفع باسم جهته. اختيار جهة أخرى محصور بقيادة الديوان المخوّلة.
     let entityId = me.entityId;
-    if (me.role !== "director" && input.entityId) {
+    if (input.entityId && input.entityId !== me.entityId && !canSubmitDecisionForAnyEntity(me)) {
+      throw new ForbiddenError("لا يمكنك رفع معاملة باسم جهة أخرى");
+    }
+    if (input.entityId && canSubmitDecisionForAnyEntity(me)) {
       const ent = await (await collections.entities()).findOne({ id: input.entityId });
       if (!ent) throw new Error("الجهة غير موجودة");
       entityId = input.entityId;

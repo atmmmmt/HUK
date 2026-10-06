@@ -1,4 +1,4 @@
-const CACHE_VERSION = "governorate-exec-v8-premium-select";
+const CACHE_VERSION = "governorate-exec-v9-calendar-select";
 const APP_SHELL = [
   "/",
   "/diwan/overview/",

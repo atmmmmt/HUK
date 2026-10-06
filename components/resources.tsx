@@ -7,7 +7,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { delegations, docFiles, entityOf, halls, people, personOf, roleOf } from "@/lib/lookup";
-import { actionLabels, bookingRank, bookingRankLabel, clearanceRank, reachLabel } from "@/lib/access";
+import { actionLabels, bookingRank, bookingRankLabel, canApproveBooking, clearanceRank, reachLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import { DocList, UploadButton } from "@/components/upload";
 import type { Action, Hall, Person } from "@/lib/types";
@@ -20,13 +20,15 @@ import {
 const dayOrder = ["اليوم", "غداً", "بعد غد"];
 
 export function Halls() {
-  const { bookings, setBookingStatus, me, toast } = useStore();
+  const { bookings, setBookingStatus, requests, respondRequest, me, toast } = useStore();
   const [day, setDay] = useState("اليوم");
   const [open, setOpen] = useState<Hall | null>(null);
-  const canApprove = ["halls", "chief", "governor", "deputy", "registry"].includes(me.role);
+  const [requestBusy, setRequestBusy] = useState<string | null>(null);
+  const canApprove = canApproveBooking(me);
 
   const ofDay = bookings.filter((b) => b.day === day);
   const pending = bookings.filter((b) => b.status === "بانتظار الموافقة");
+  const pendingHallRequests = requests.filter((x) => x.kind === "حجز قاعة" && x.status === "بانتظار الرد");
   const jump = (id: string) => window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 20);
 
   return (
@@ -34,7 +36,7 @@ export function Halls() {
       <div className="grid g-4">
         <Kpi onClick={() => jump("halls-list")} label="القاعات المسجّلة" value={halls.length} icon={<DoorOpen size={17} />} />
         <Kpi onClick={() => { setDay("اليوم"); jump("halls-calendar"); }} label="حجوزات اليوم" value={bookings.filter((b) => b.day === "اليوم" && b.status === "مؤكد").length} icon={<CalendarClock size={17} />} tone="gold" />
-        <Kpi onClick={() => { if (pending[0]?.day) setDay(pending[0].day); jump("halls-calendar"); }} label="بانتظار الموافقة" value={pending.length} icon={<Clock3 size={17} />} tone="warn" />
+        <Kpi onClick={() => jump("hall-requests")} label="بانتظار الموافقة" value={pending.length + pendingHallRequests.length} icon={<Clock3 size={17} />} tone="warn" />
         <Kpi onClick={() => jump("halls-list")} label="متوسط الإشغال" value={Math.round(halls.reduce((s, h) => s + h.occupancy, 0) / halls.length)} meta="٪ من ساعات الدوام" icon={<Layers size={17} />} tone="ok" />
       </div>
 
@@ -44,6 +46,52 @@ export function Halls() {
           <b>منع التعارض:</b> النظام يرفض أي طلب يتقاطع زمنياً مع حجز مؤكد على القاعة نفسها، ويقترح بدائل.
         </span>
       </div>
+
+      {pendingHallRequests.length > 0 && (
+        <div id="hall-requests">
+          <Panel title="طلبات حجز القاعات" icon={<Clock3 size={17} />} hint={`${pendingHallRequests.length} بانتظار الرد`}>
+            <div className="grid" style={{ gap: 10 }}>
+              {pendingHallRequests.map((req) => (
+                <div key={req.id} className="card pad" style={{ padding: 13 }}>
+                  <div className="row between wrap" style={{ gap: 8 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <b style={{ display: "block", fontSize: 13.5 }}>{req.title}</b>
+                      <span className="tiny muted">{req.detail}</span>
+                    </div>
+                    <PersonLine id={req.byId} />
+                  </div>
+                  {me.role === "halls" && (
+                    <div className="row" style={{ gap: 7, marginTop: 10 }}>
+                      <button
+                        className="btn gold sm"
+                        disabled={requestBusy === req.id}
+                        onClick={async () => {
+                          setRequestBusy(req.id);
+                          try { await respondRequest(req.id, { action: "approve" }); }
+                          finally { setRequestBusy(null); }
+                        }}
+                      >
+                        <CheckCircle2 size={13} /> موافقة
+                      </button>
+                      <button
+                        className="btn ghost sm"
+                        disabled={requestBusy === req.id}
+                        onClick={async () => {
+                          setRequestBusy(req.id);
+                          try { await respondRequest(req.id, { action: "reject" }); }
+                          finally { setRequestBusy(null); }
+                        }}
+                      >
+                        <XCircle size={13} /> رفض
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      )}
 
       <Panel title="سلّم الأولوية عند تعارض حجزين" icon={<ShieldCheck size={17} />} hint="المعتمد من مكتب السيد المحافظ">
         <div className="row wrap" style={{ gap: 8, alignItems: "center" }}>

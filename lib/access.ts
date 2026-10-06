@@ -345,8 +345,8 @@ export function canScheduleMeeting(person: Person): boolean {
 }
 
 export function canRespondRequest(person: Person, kind?: string): boolean {
-  if (["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role)) return true;
-  return kind === "حجز قاعة" && person.role === "halls";
+  if (kind === "حجز قاعة") return ["halls", "governor", "deputy"].includes(person.role);
+  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
 }
 
 export function canRaiseRequest(person: Person): boolean {

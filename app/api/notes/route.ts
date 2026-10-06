@@ -45,7 +45,7 @@ export async function POST(request: Request) {
             meeting.chairId === me.id ||
             meeting.secretaryId === me.id ||
             (meeting.inviteeIds ?? []).includes(me.id);
-          const broad = ["governor", "deputy", "assistant", "secgen", "chief", "registry", "protocol"].includes(me.role);
+          const broad = ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role);
           if (!canSeeMeeting || (!broad && !involved)) throw new ForbiddenError("هذا الاجتماع خارج نطاقك");
         } else if (hall) {
           if (!canAccessSection(me, "diwan", "halls")) throw new ForbiddenError("القاعات خارج اختصاص دورك");

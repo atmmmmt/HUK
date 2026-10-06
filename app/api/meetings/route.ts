@@ -1,7 +1,7 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
-import { canManageMeetings } from "@/lib/access";
+import { canAccessSection, canScheduleMeeting } from "@/lib/access";
 import { validISO } from "@/lib/ops";
 import type { Meeting } from "@/lib/types";
 
@@ -24,7 +24,7 @@ function timeLabel(hhmm: string) {
 export async function POST(request: Request) {
   return handle(async () => {
     const me = await requireUser();
-    if (!canManageMeetings(me)) throw new ForbiddenError("جدولة الاجتماعات من صلاحية مكتب المحافظ والديوان");
+    if (!canScheduleMeeting(me)) throw new ForbiddenError("جدولة الاجتماعات خارج صلاحية دورك");
     const input = await body<Input>(request);
 
     const title = input.title?.trim().slice(0, 200);
@@ -37,7 +37,10 @@ export async function POST(request: Request) {
     const users = await collections.users();
     const ids = [...new Set((input.inviteeIds ?? []).map(String))].filter((x) => x !== me.id).slice(0, 60);
     if (!ids.length) throw new Error("اختر مدعوّاً واحداً على الأقل");
-    const found = await users.find({ id: { $in: ids }, active: { $ne: false } }, { projection: { id: 1 } }).toArray();
+    const found = await users.find(
+      { id: { $in: ids }, active: { $ne: false } },
+      { projection: { passwordHash: 0, username: 0 } },
+    ).toArray();
     if (found.length !== ids.length) throw new Error("أحد المدعوين غير موجود أو موقوف");
 
     let hallId: string | undefined;
@@ -73,11 +76,17 @@ export async function POST(request: Request) {
 
     const where = meeting.online ? "اتصال مرئي" : hallId ? String((await (await collections.halls()).findOne({ id: hallId }))?.name ?? "") : "";
     for (const pid of ids) {
+      const recipient = found.find((p) => p.id === pid);
+      const link = recipient && canAccessSection(recipient, "diwan", "meetings")
+        ? { portal: "diwan" as const, section: "meetings" }
+        : recipient && canAccessSection(recipient, "directorates", "meetings")
+          ? { portal: "directorates" as const, section: "meetings" }
+          : undefined;
       await pushNotification({
         kind: "اجتماع",
         title: "دعوة إلى اجتماع",
         body: `«${title}» — ${day} · ${meeting.time}${where ? ` · ${where}` : ""}. الدعوة من ${me.title}.`,
-        channel: "تنبيه التطبيق", toId: pid, link: { portal: "diwan", section: "meetings" }, urgent: true,
+        channel: "تنبيه التطبيق", toId: pid, ...(link ? { link } : {}), urgent: true,
       });
     }
     await writeAudit(me.id, "جدول اجتماعاً ودعا المشاركين", title, ipOf(request));

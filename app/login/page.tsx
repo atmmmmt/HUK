@@ -41,7 +41,8 @@ function LoginForm() {
       if (!res.ok) throw new Error(data?.error ?? "تعذّر تسجيل الدخول");
       let seen = "0";
       try { seen = localStorage.getItem("gov.welcomed") ?? "0"; } catch { /* محجوب */ }
-      const home = portal ? `/${portal}/${portal === "diwan" ? "overview" : "entities"}/` : next ?? "/";
+      const requestedHome = portal && typeof data?.homes?.[portal] === "string" ? data.homes[portal] : null;
+      const home = requestedHome ?? (portal ? data?.home : next ?? data?.home ?? "/");
       router.replace(seen === "1" ? home : "/welcome/?next=" + encodeURIComponent(home));
       router.refresh();
     } catch (err) {

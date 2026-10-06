@@ -145,6 +145,32 @@ export function clearanceRank(c: string): number {
 /** أدوار الرقابة العليا التي ترى كل التكليفات بحكم الوظيفة. */
 const assignmentOversight: RoleKey[] = ["governor", "deputy", "secgen", "chief", "followup"];
 
+/** استعلام أولي لتقليل ما يُقرأ من MongoDB قبل تطبيق seesAssignment. */
+export function assignmentQueryFor(person: Person): Record<string, unknown> {
+  if (assignmentOversight.includes(person.role)) return {};
+  if (person.role === "admin") return { id: "__no_assignments__" };
+  if (person.role === "assistant") {
+    return {
+      $or: [
+        { entityId: person.entityId },
+        { ownerId: person.id },
+        { issuerId: person.id },
+        { partnerIds: person.id },
+      ],
+    };
+  }
+  if (["employee", "registry", "protocol", "halls"].includes(person.role)) {
+    return {
+      $or: [
+        { ownerId: person.id },
+        { issuerId: person.id },
+        { partnerIds: person.id },
+      ],
+    };
+  }
+  return { entityId: person.entityId };
+}
+
 /** هل يرى هذا الشخص تكليفاً بعينه؟ يُطبَّق على الخادم قبل إرسال أي بيانات. */
 export function seesAssignment(person: Person, a: Assignment, ctx: Ctx = {}): boolean {
   if (clearanceRank(person.clearance) < clearanceRank(a.classification)) return false;

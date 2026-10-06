@@ -74,8 +74,7 @@ export async function GET() {
       ["governor", "deputy", "secgen", "chief", "followup", "admin"].includes(me.role) ||
       canIssueAssignment(me) ||
       canManageMeetings(me) ||
-      canScheduleMeeting(me) ||
-      canAccessSection(me, "directorates", "structure");
+      canScheduleMeeting(me);
     const visiblePeople = needsAllPeople
       ? people
       : people.filter((p) => p.id === me.id || p.entityId === me.entityId);

@@ -19,7 +19,7 @@ import {
 /** الجهة التي يعمل عليها المستخدم — قابلة للتبديل لمن يرى كل الجهات */
 function useScope() {
   const { me } = useStore();
-  const wide = ["governor", "deputy", "followup", "chief", "admin"].includes(me.role);
+  const wide = ["governor", "deputy", "secgen", "followup"].includes(me.role);
   const [picked, setPicked] = useState<string>(wide ? "e1" : me.entityId);
   const entityId = wide ? picked : me.entityId;
   return { entityId, setPicked, wide, entity: entityOf(entityId) };

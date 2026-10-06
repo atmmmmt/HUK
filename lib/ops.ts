@@ -1,6 +1,6 @@
 import "server-only";
 import { collections, pushNotification } from "./db";
-import { portalsFor } from "./access";
+import { canAccessSection } from "./access";
 import type { Assignment, Classification, Priority } from "./types";
 
 export const stampNow = () =>
@@ -70,14 +70,18 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
   };
 
   await (await collections.assignments()).insertOne({ ...a });
-  const recipientPortal = portalsFor(owner).includes("directorates") ? "directorates" : "diwan";
+  const link = canAccessSection(owner, "diwan", "assignments")
+    ? { portal: "diwan" as const, section: "assignments", itemId: a.id }
+    : canAccessSection(owner, "directorates", "inbox")
+      ? { portal: "directorates" as const, section: "inbox", itemId: a.id }
+      : undefined;
   await pushNotification({
     kind: "تكليف",
     title: "تكليف جديد أُسند إليك",
     body: `«${a.title}» — ${a.priority}، يستحق ${a.due}.`,
     channel: "تنبيه التطبيق",
     toId: owner.id,
-    link: { portal: recipientPortal, section: recipientPortal === "directorates" ? "inbox" : "assignments", itemId: a.id },
+    ...(link ? { link } : {}),
     urgent: a.priority === "عاجل جداً",
   });
   return a;

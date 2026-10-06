@@ -4,17 +4,14 @@ import { requireUser, UnauthorizedError } from "@/lib/session";
 import { assistantTools } from "@/lib/assistant-tools";
 import { guideAsText, guideIndex, roleGuides } from "@/lib/guide";
 import { compatChat, compatConfig } from "@/lib/ai-compat";
+import { canAccessSection } from "@/lib/access";
 import { navByPortal } from "@/lib/nav";
-import type { RoleKey } from "@/lib/types";
+import type { Portal, RoleKey } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = "claude-opus-5-5";
-
-const sitemap = (Object.keys(navByPortal) as (keyof typeof navByPortal)[])
-  .map((p) => navByPortal[p].map((n) => `/${p}/${n.key}/ — ${n.label}: ${n.sub}`).join("\n"))
-  .join("\n");
 
 const RULES = `أنت «المساعد الذكي» في منظومة العمل التنفيذي لمحافظة الرقة.
 مهمتك: أن يصل أي مستخدم إلى ما يريده دون أن يضيع. تفهم طلبه بأي لهجة عربية، وتبحث، وتفتح الشاشة المناسبة، وتنفّذ الإجراء عنه.
@@ -28,8 +25,7 @@ const RULES = `أنت «المساعد الذكي» في منظومة العمل
 - لا تعِد بما لا تستطيعه أدواتك (مثل إنشاء حساب أو حذف بيانات)؛ دُلّه على الشاشة والخطوات من الدليل.
 - كل ما تنفّذه يُسجَّل في سجل التدقيق باسم المستخدم.
 
-خريطة الشاشات:
-${sitemap}
+خريطة الشاشات المسموحة للمستخدم الحالي تُرسل لك مع سياق كل طلب.
 /guide/ — دليل الاستخدام`;
 
 /** الجزء الثابت من التعليمات — يُخزَّن مؤقتاً لأنه لا يتغيّر بين الطلبات */
@@ -72,8 +68,17 @@ export async function POST(request: Request) {
   }
 
   const role = roleGuides[me.role as RoleKey];
+  const roleSitemap = (Object.keys(navByPortal) as Portal[])
+    .flatMap((portal) =>
+      navByPortal[portal]
+        .filter((item) => canAccessSection(me, portal, item.key))
+        .map((item) => `/${portal}/${item.key}/ — ${item.label}: ${item.sub}`)
+    )
+    .join("\n");
   const context = `المستخدم الحالي: ${me.name} — ${me.title} (الدور: ${role?.title ?? me.role}، المعرّف ${me.id}).
 الشاشة المفتوحة الآن: ${String(body.page ?? "/").slice(0, 120)}
+الشاشات المسموحة لهذا المستخدم:
+${roleSitemap || "لا توجد شاشات تشغيلية متاحة"}
 التاريخ: ${new Date().toLocaleDateString("ar-SY", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}`;
 
   // مزوّد مفتوح المصدر (Groq / Ollama / OpenRouter…) إن كان مضبوطاً، وإلا Claude

@@ -49,7 +49,7 @@ const ALL_DIWAN = [
 ] as const;
 
 const ALL_DIRECTORATES = [
-  "entities", "inbox", "tasks", "replies", "decisions", "requests", "structure", "performance", "notes",
+  "entities", "inbox", "tasks", "replies", "meetings", "decisions", "requests", "structure", "performance", "notes",
 ] as const;
 
 const ALL_ADMIN = ["entities", "users", "roles", "escalation", "audit"] as const;
@@ -72,7 +72,7 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
 
   // الأمين العام ينسّق بين الديوان والجهات ويحتاج رقابة تشغيلية، لا إدارة داخلية للمديريات.
   secgen: {
-    diwan: ["overview", "calendar", "meetings", "assignments", "correspondence", "files", "people", "notes"],
+    diwan: ["overview", "calendar", "meetings", "decisions", "assignments", "correspondence", "files", "people", "notes"],
     directorates: ["entities", "inbox", "replies", "performance", "notes"],
   },
 
@@ -89,21 +89,21 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
 
   // الجهات التابعة
   director: {
-    directorates: ["inbox", "tasks", "replies", "decisions", "requests", "structure", "performance", "notes"],
+    directorates: ["inbox", "tasks", "replies", "meetings", "decisions", "requests", "structure", "performance", "notes"],
   },
   head: {
-    directorates: ["inbox", "tasks", "replies", "requests", "structure", "notes"],
+    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "structure", "notes"],
   },
   employee: {
-    directorates: ["inbox", "tasks", "replies", "requests", "notes"],
+    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "notes"],
   },
   area: {
-    directorates: ["inbox", "tasks", "replies", "requests", "performance", "notes"],
+    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "performance", "notes"],
   },
 
   // اختصاصات الديوان
   registry: {
-    diwan: ["calendar", "meetings", "correspondence", "files", "notes"],
+    diwan: ["calendar", "meetings", "decisions", "correspondence", "files", "notes"],
   },
   protocol: {
     diwan: ["calendar", "meetings", "halls", "delegations", "notes"],

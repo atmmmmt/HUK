@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { decisions, entityOf, letters } from "@/lib/lookup";
 import { todaySchedule } from "@/lib/constants";
-import { canApproveDecision, seesAssignment } from "@/lib/access";
+import { canAccessSection, canApproveDecision, seesAssignment } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Decision } from "@/lib/types";
 
@@ -31,21 +31,27 @@ export default function MobileToday() {
       <section className="mt-hero">
         <Ring value={pct} />
         <div className="mt-stats">
-          <Link href="/diwan/assignments/" className="mt-stat"><b>{open.length}</b><span>تكليف مفتوح</span></Link>
-          <Link href="/diwan/assignments/?filter=متأخر" className="mt-stat danger"><b>{late.length}</b><span>متأخر ومصعَّد</span></Link>
-          <Link href="/diwan/correspondence/" className="mt-stat"><b>{unhandled}</b><span>كتاب وارد</span></Link>
+          {canAccessSection(me, "diwan", "assignments") && (
+            <>
+              <Link href="/diwan/assignments/" className="mt-stat"><b>{open.length}</b><span>تكليف مفتوح</span></Link>
+              <Link href="/diwan/assignments/?filter=متأخر" className="mt-stat danger"><b>{late.length}</b><span>متأخر ومصعَّد</span></Link>
+            </>
+          )}
+          {canAccessSection(me, "diwan", "correspondence") && (
+            <Link href="/diwan/correspondence/" className="mt-stat"><b>{unhandled}</b><span>كتاب وارد</span></Link>
+          )}
         </div>
       </section>
 
       <nav className="mt-quick" aria-label="إجراءات سريعة">
         {[
-          { href: "/diwan/decisions/", icon: Stamp, label: "القرارات", n: pending.length },
-          { href: "/diwan/assignments/", icon: ListTodo, label: "التكليفات" },
-          { href: "/diwan/calendar/", icon: CalendarDays, label: "التقويم" },
-          { href: "/diwan/halls/", icon: DoorOpen, label: "القاعات" },
-          { href: "/diwan/correspondence/", icon: Inbox, label: "الوارد", n: unhandled },
-          { href: "/diwan/notes/", icon: StickyNote, label: "ملاحظاتي" },
-        ].map((q) => (
+          canAccessSection(me, "diwan", "decisions") ? { href: "/diwan/decisions/", icon: Stamp, label: "القرارات", n: pending.length } : null,
+          canAccessSection(me, "diwan", "assignments") ? { href: "/diwan/assignments/", icon: ListTodo, label: "التكليفات" } : null,
+          canAccessSection(me, "diwan", "calendar") ? { href: "/diwan/calendar/", icon: CalendarDays, label: "التقويم" } : null,
+          canAccessSection(me, "diwan", "halls") ? { href: "/diwan/halls/", icon: DoorOpen, label: "القاعات" } : null,
+          canAccessSection(me, "diwan", "correspondence") ? { href: "/diwan/correspondence/", icon: Inbox, label: "الوارد", n: unhandled } : null,
+          canAccessSection(me, "diwan", "notes") ? { href: "/diwan/notes/", icon: StickyNote, label: "ملاحظاتي" } : null,
+        ].filter((q): q is NonNullable<typeof q> => !!q).map((q) => (
           <Link key={q.href} href={q.href} className="mt-q" onClick={() => buzz(6)}>
             <span className="mt-q-ico"><q.icon size={21} />{q.n ? <i>{q.n}</i> : null}</span>
             <span>{q.label}</span>

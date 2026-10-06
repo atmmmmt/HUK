@@ -80,11 +80,7 @@ export async function GET() {
       ? people
       : people.filter((p) => p.id === me.id || p.entityId === me.entityId);
 
-    const canSeeEntityMetrics =
-      canManageMeetings(me) ||
-      canAccessSection(me, "directorates", "entities") ||
-      canAccessSection(me, "directorates", "performance") ||
-      me.role === "admin";
+    const canSeeEntityMetrics = ["governor", "deputy", "secgen", "followup", "admin"].includes(me.role);
     const clientEntities = cleanAll(entities).map((e) =>
       canSeeEntityMetrics || e.id === me.entityId
         ? e

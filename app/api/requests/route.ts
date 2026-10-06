@@ -2,7 +2,7 @@ import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
 import { canAccessSection, canRaiseRequest } from "@/lib/access";
-import type { RequestItem } from "@/lib/types";
+import type { RequestItem, RoleKey } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // كل طلب يصل إلى الاختصاص المسؤول عنه، لا إلى قسم عام لا يخصه.
     const users = await collections.users();
-    const targetRoles = r.kind === "حجز قاعة" ? ["halls"] : ["chief"];
+    const targetRoles: RoleKey[] = r.kind === "حجز قاعة" ? ["halls"] : ["chief"];
     const targets = await users.find({ role: { $in: targetRoles }, active: true }).toArray();
     for (const t of targets) {
       const preferredSection =

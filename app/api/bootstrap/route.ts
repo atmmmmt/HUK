@@ -69,7 +69,8 @@ export async function GET() {
     const canSeeFiles = canAccessSection(me, "diwan", "files");
     const canSeeRequests =
       canAccessSection(me, "directorates", "requests") ||
-      canRespondRequest(me);
+      canRespondRequest(me) ||
+      me.role === "halls";
     const needsAllPeople =
       ["governor", "deputy", "secgen", "chief", "followup", "admin"].includes(me.role) ||
       canIssueAssignment(me) ||

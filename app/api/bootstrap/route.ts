@@ -80,6 +80,17 @@ export async function GET() {
       ? people
       : people.filter((p) => p.id === me.id || p.entityId === me.entityId);
 
+    const canSeeEntityMetrics =
+      canManageMeetings(me) ||
+      canAccessSection(me, "directorates", "entities") ||
+      canAccessSection(me, "directorates", "performance") ||
+      me.role === "admin";
+    const clientEntities = cleanAll(entities).map((e) =>
+      canSeeEntityMetrics || e.id === me.entityId
+        ? e
+        : { ...e, managerId: "", units: [], staffCount: 0, compliance: 0, openTasks: 0, lateTasks: 0 }
+    );
+
     // التكليفات: نطاق الدور + درجة التصريح
     // الحقول المصفوفية لا تصل ناقصة أبداً (سجلات قديمة أو مرحَّلة)
     const assignments = cleanAll(rawAssignments as unknown as Assignment[])
@@ -110,7 +121,7 @@ export async function GET() {
     return {
       me: cleanAll([me])[0],
       roles: cleanAll(roles),
-      entities: cleanAll(entities),
+      entities: clientEntities,
       people: visiblePeople,
       halls: canSeeHalls ? cleanAll(halls) : [],
       bookings: canSeeHalls ? cleanAll(bookings) : [],

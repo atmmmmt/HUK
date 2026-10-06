@@ -24,7 +24,9 @@ export async function POST(request: Request) {
     if (!username || !/^[a-z][a-z0-9._-]{2,31}$/.test(username)) throw new Error("اسم المستخدم: أحرف إنكليزية صغيرة وأرقام ونقطة، من 3 إلى 32 حرفاً");
     if (!input.password || input.password.length < 8) throw new Error("كلمة المرور 8 أحرف على الأقل");
     if (!ROLES.includes(input.role)) throw new Error("الدور غير صحيح");
-    if (input.role === "governor" && me.role !== "governor") throw new ForbiddenError("لا يُنشأ حساب محافظ إلا بصلاحية المحافظ");
+    if (input.role === "governor" && await (await collections.users()).findOne({ role: "governor", active: { $ne: false } })) {
+      throw new ForbiddenError("يوجد حساب محافظ فعّال مسبقاً؛ لا يمكن إنشاء محافظ ثانٍ من لوحة النظام");
+    }
 
     const entity = await (await collections.entities()).findOne({ id: input.entityId });
     if (!entity) throw new Error("الجهة غير موجودة");

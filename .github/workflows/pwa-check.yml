@@ -3,6 +3,7 @@ name: PWA build check
 on:
   push:
     branches:
+      - main
       - "fix/pwa-mobile-ux-realtime"
   pull_request:
     branches:

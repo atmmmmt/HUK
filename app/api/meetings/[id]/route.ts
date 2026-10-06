@@ -1,7 +1,7 @@
 import { clean, collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { body, handle, ipOf } from "@/lib/api";
-import { canManageMeetings } from "@/lib/access";
+import { canAccessSection, canManageMeetings } from "@/lib/access";
 import { createAssignment } from "@/lib/ops";
 import type { Assignment, Meeting, Priority } from "@/lib/types";
 
@@ -22,11 +22,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const col = await collections.meetings();
     const m = (await col.findOne({ id })) as Meeting | null;
     if (!m) throw new Error("الاجتماع غير موجود");
-    const involved = m.chairId === me.id || m.secretaryId === me.id;
     const invited = (m.inviteeIds ?? []).includes(me.id);
     if (input.action === "rsvp") {
       if (!invited) throw new ForbiddenError("لست مدعوّاً إلى هذا الاجتماع");
-    } else if (!canManageMeetings(me) && !involved) throw new ForbiddenError("إدارة هذا الاجتماع خارج صلاحيتك");
+    } else if (!canManageMeetings(me)) {
+      throw new ForbiddenError("اعتماد المحاضر وتحويل المخرجات خارج صلاحية دورك");
+    }
 
     const created: Assignment[] = [];
 
@@ -50,10 +51,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (m.status !== "منعقد" && m.status !== "جارٍ الآن") throw new Error("لا يُعتمد محضر اجتماع لم ينعقد بعد");
       await col.updateOne({ id }, { $set: { minutesApproved: true } });
       await writeAudit(me.id, "اعتمد محضر الاجتماع", m.title, ipOf(request));
+      const users = await collections.users();
+      const recipients = await users.find(
+        { id: { $in: (m.inviteeIds ?? []).filter((p) => p !== me.id) }, active: { $ne: false } },
+        { projection: { passwordHash: 0, username: 0 } },
+      ).toArray();
       for (const pid of (m.inviteeIds ?? []).filter((p) => p !== me.id)) {
+        const recipient = recipients.find((p) => p.id === pid);
+        const link = recipient && canAccessSection(recipient, "diwan", "meetings")
+          ? { portal: "diwan" as const, section: "meetings" }
+          : recipient && canAccessSection(recipient, "directorates", "meetings")
+            ? { portal: "directorates" as const, section: "meetings" }
+            : undefined;
         await pushNotification({
           kind: "اجتماع", title: "اعتُمد محضر الاجتماع", body: `«${m.title}»`,
-          channel: "تنبيه التطبيق", toId: pid, link: { portal: "diwan", section: "meetings" },
+          channel: "تنبيه التطبيق", toId: pid, ...(link ? { link } : {}),
         });
       }
     } else if (input.action === "assign_outcomes") {

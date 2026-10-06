@@ -132,10 +132,10 @@ html[data-theme="dark"] .guide-go { background: var(--gold); color: var(--navy-9
 .theme-toggle.compact button.on { background: rgba(255, 255, 255, .12); color: #fff; box-shadow: none; }
 
 /* ============================ المستندات ============================ */
-.doc-list { display: grid; gap: 8px; }
-.doc-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line-2); }
-.doc-row b { display: block; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.doc-row small { display: block; font-size: 11.5px; color: var(--muted); }
+.doc-list { display: grid; gap: 8px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; }
+.doc-row { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 100%; min-width: 0; overflow: hidden; box-sizing: border-box; padding: 10px 12px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line-2); }
+.doc-row b { display: block; max-width: 100%; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; direction: ltr; text-align: right; }
+.doc-row small { display: block; max-width: 100%; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .doc-ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--navy-50); color: var(--navy-700); flex: none; }
 .spin { animation: spin .8s linear infinite; }
 
@@ -207,3 +207,5 @@ html[data-theme="dark"] .dv-sheet th { background: rgba(255,255,255,.06); }
 .mt-person small { font-size: 11.5px; color: var(--muted); }
 .mt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .rsvp { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+.doc-row > span:nth-child(2) { min-width: 0 !important; max-width: 100%; overflow: hidden; }

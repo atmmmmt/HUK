@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { decisions, entities, entityOf, hallOf, letters, meetings } from "@/lib/lookup";
 import { lifecycle, todaySchedule } from "@/lib/constants";
-import { canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
+import { canAccessSection, canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Assignment, Meeting, Person } from "@/lib/types";
 import {
@@ -35,21 +35,27 @@ export function Overview() {
   const myReviews = visible.filter(
     (a) => a.issuerId === me.id && a.status !== "مُغلق" && (a.status === "متأخر" || a.reviewNotified),
   );
+  const showCalendar = canAccessSection(me, "diwan", "calendar");
+  const showAssignments = canAccessSection(me, "diwan", "assignments");
+  const showDecisions = canAccessSection(me, "diwan", "decisions");
+  const showCorrespondence = canAccessSection(me, "diwan", "correspondence");
+  const showMeetings = canAccessSection(me, "diwan", "meetings");
+  const showPerformance = canAccessSection(me, "directorates", "performance");
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
       <MobileToday />
       <div className="grid g-5">
-        <Kpi href="/diwan/calendar/" label="مواعيد اليوم" value={todaySchedule.length} meta="اجتماع واحد جارٍ الآن" icon={<CalendarDays size={17} />} tone="navy" />
-        <Kpi href="/diwan/assignments/?filter=الكل" label="التكليفات المفتوحة" value={open.length} meta={`${review.length} بانتظار الاعتماد`} icon={<ListTodo size={17} />} tone="gold" />
-        <Kpi href="/diwan/assignments/?filter=متأخر" label="متأخرة ومصعَّدة" value={late.length} meta="تحتاج تدخلاً اليوم" icon={<TriangleAlert size={17} />} tone="danger" trend="down" />
-        <Kpi href="/diwan/decisions/" label="بانتظار قراركم" value={decisions.filter((d) => d.awaiting === "governor").length} meta={`من أصل ${decisions.length} معاملة`} icon={<Stamp size={17} />} tone="warn" />
-        <Kpi href="/diwan/correspondence/" label="كتب غير مُعالَجة" value={unhandled.length} meta="وردت ولم تُحَل بعد" icon={<Inbox size={17} />} tone="navy" />
+        {showCalendar && <Kpi href="/diwan/calendar/" label="مواعيد اليوم" value={todaySchedule.length} meta="برنامج اليوم" icon={<CalendarDays size={17} />} tone="navy" />}
+        {showAssignments && <Kpi href="/diwan/assignments/?filter=الكل" label="التكليفات المفتوحة" value={open.length} meta={`${review.length} بانتظار المراجعة`} icon={<ListTodo size={17} />} tone="gold" />}
+        {showAssignments && <Kpi href="/diwan/assignments/?filter=متأخر" label="متأخرة ومصعَّدة" value={late.length} meta="تحتاج متابعة" icon={<TriangleAlert size={17} />} tone="danger" trend="down" />}
+        {showDecisions && <Kpi href="/diwan/decisions/" label="معاملات التوقيع" value={decisions.length} meta="ضمن نطاق دورك" icon={<Stamp size={17} />} tone="warn" />}
+        {showCorrespondence && <Kpi href="/diwan/correspondence/" label="كتب غير مُعالَجة" value={unhandled.length} meta="وردت ولم تُعالج بعد" icon={<Inbox size={17} />} tone="navy" />}
       </div>
 
       <div className="split">
         <div className="grid" style={{ gap: 16 }}>
-          <Panel title="برنامج اليوم" icon={<Clock3 size={17} />} hint="بتوقيت المحافظة">
+          {showCalendar && <Panel title="برنامج اليوم" icon={<Clock3 size={17} />} hint="بتوقيت المحافظة">
             <div className="tline">
               {todaySchedule.map((s) => (
                 <div key={s.time} className={`tline-item ${s.tone === "done" ? "dim" : ""}`}>
@@ -61,9 +67,9 @@ export function Overview() {
                 </div>
               ))}
             </div>
-          </Panel>
+          </Panel>}
 
-          <div className="gov-mobile-hide">
+          {showAssignments && <div className="gov-mobile-hide">
           <Panel
             title="التكليفات المتأخرة والمصعَّدة"
             icon={<TriangleAlert size={17} />}
@@ -94,9 +100,9 @@ export function Overview() {
               </div>
             )}
           </Panel>
-          </div>
+          </div>}
 
-          <div className="gov-mobile-hide">
+          {showPerformance && <div className="gov-mobile-hide">
           <Panel title="التزام الجهات بالمواعيد" icon={<BadgeCheck size={17} />} hint="آخر 30 يوماً">
             <div className="grid" style={{ gap: 12 }}>
               {[...entities].sort((a, b) => b.compliance - a.compliance).map((e) => (
@@ -108,11 +114,11 @@ export function Overview() {
               ))}
             </div>
           </Panel>
-          </div>
+          </div>}
         </div>
 
         <div className="grid" style={{ gap: 16 }}>
-          <div className="gov-mobile-hide">
+          {showAssignments && <div className="gov-mobile-hide">
           {myReviews.length > 0 && (
             <Panel title="مراجعة مستحقة" icon={<AlarmClock size={17} />} hint="انتهت مهلتها — راجع المكلَّف">
               <div className="grid" style={{ gap: 10 }}>
@@ -128,9 +134,9 @@ export function Overview() {
               </div>
             </Panel>
           )}
-          </div>
+          </div>}
 
-          <Panel title="بانتظار اعتمادكم" icon={<Stamp size={17} />} hint={`${decisions.length} معاملة`}>
+          {showDecisions && <Panel title={canApproveDecision(me) ? "بانتظار اعتمادكم" : "معاملات التوقيع"} icon={<Stamp size={17} />} hint={`${decisions.length} معاملة`}>
             <div className="grid" style={{ gap: 10 }}>
               {decisions.slice(0, 4).map((d) => (
                 <div key={d.id} className="card hover pad" style={{ padding: 13 }}>
@@ -142,9 +148,9 @@ export function Overview() {
                 </div>
               ))}
             </div>
-          </Panel>
+          </Panel>}
 
-          <div className="gov-mobile-hide">
+          {showAssignments && <div className="gov-mobile-hide">
           <Panel title="توجيهات السيد المحافظ" icon={<MessageSquare size={17} />} hint="آخر ما صدر">
             {directives.length === 0 ? <p className="muted tiny">لا توجيهات مسجّلة.</p> : directives.map((n) => (
               <div key={n.id} className="note-item governor">
@@ -156,9 +162,9 @@ export function Overview() {
               </div>
             ))}
           </Panel>
-          </div>
+          </div>}
 
-          <div className="gov-mobile-hide">
+          {showMeetings && <div className="gov-mobile-hide">
           <Panel title="الاجتماعات القادمة" icon={<Users size={17} />}>
             <div className="grid" style={{ gap: 10 }}>
               {meetings.filter((m) => m.status !== "منعقد").slice(0, 4).map((m) => (
@@ -172,7 +178,7 @@ export function Overview() {
               ))}
             </div>
           </Panel>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

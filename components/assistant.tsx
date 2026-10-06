@@ -179,8 +179,14 @@ export default function Assistant() {
         return "تم تعليم كل الإشعارات مقروءة";
       case "add_note": {
         if (i.scope === "توجيه المحافظ" && me.role !== "governor") return "خطأ: «توجيه المحافظ» للسيد المحافظ وحده";
-        const about = String(i.about || "عام");
-        await s.addNote({ target: "general", targetLabel: about, text: String(i.text), scope: i.scope as Note["scope"] });
+        const privateNote = i.scope === "خاصة";
+        const about = privateNote ? "ملاحظاتي" : String(i.about || "عام");
+        await s.addNote({
+          target: privateNote ? `personal:${me.id}` : "general",
+          targetLabel: about,
+          text: String(i.text),
+          scope: i.scope as Note["scope"],
+        });
         return `تمت إضافة الملاحظة (${i.scope})`;
       }
       default:

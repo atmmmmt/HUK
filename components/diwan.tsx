@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { decisions, entities, entityOf, hallOf, letters, meetings } from "@/lib/lookup";
 import { lifecycle, todaySchedule } from "@/lib/constants";
-import { canAccessSection, canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
+import { canAccessSection, canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canScheduleMeeting, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Assignment, Meeting, Person } from "@/lib/types";
 import {
@@ -293,7 +293,7 @@ export function Meetings() {
   const [busy, setBusy] = useState(false);
   const open = live.find((m) => m.id === openId) ?? null;
   const setOpen = (m: Meeting | null) => { setOpenId(m?.id ?? null); setAssigning(false); };
-  const canManage = !!open && (canManageMeetings(me) || open.chairId === me.id || open.secretaryId === me.id);
+  const canManage = !!open && canManageMeetings(me);
   const unassigned = open ? open.outcomes.filter((o) => !o.assignmentRef && !o.closed).length : 0;
   const [tab, setTab] = useState("all");
   const list = live.filter((m) => (tab === "all" ? true : tab === "upcoming" ? m.status !== "منعقد" : m.status === "منعقد"));
@@ -310,7 +310,7 @@ export function Meetings() {
             { key: "done", label: "منعقدة", n: meetings.filter((m) => m.status === "منعقد").length },
           ]}
         />
-        {canManageMeetings(me) && (
+        {canScheduleMeeting(me) && (
           <button className="btn gold btn-add" onClick={() => setCreating(true)}><Plus size={16} /> اجتماع جديد</button>
         )}
         <span className="lock-note" style={{ padding: "8px 13px" }}>

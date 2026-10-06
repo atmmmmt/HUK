@@ -357,6 +357,11 @@ export function canSubmitDecision(person: Person): boolean {
   return ["director", "registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
 }
 
+/** من يستطيع اختيار جهة أخرى عند رفع معاملة؛ البقية يرفعون باسم جهتهم فقط. */
+export function canSubmitDecisionForAnyEntity(person: Person): boolean {
+  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
+}
+
 export function canRegisterLetters(person: Person): boolean {
   return ["registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
 }

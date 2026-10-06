@@ -1018,3 +1018,89 @@ body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
     white-space: nowrap;
   }
 }
+
+
+/* ============================================================
+   Mobile sheet containment + premium selectors
+   ============================================================ */
+@media (max-width: 900px) {
+  .sheet-open,
+  .sheet,
+  .sheet-body {
+    max-width: 100vw;
+    overflow-x: hidden !important;
+  }
+
+  .sheet {
+    box-sizing: border-box;
+  }
+
+  .sheet-body,
+  .sheet-body > *,
+  .sheet form,
+  .sheet .field,
+  .sheet .panel,
+  .sheet .card,
+  .sheet .doc-list,
+  .sheet .doc-row {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
+  }
+
+  .sheet .row {
+    max-width: 100%;
+  }
+
+  .premium-select-trigger {
+    min-height: 54px;
+    border-radius: 15px;
+    padding: 8px 10px 8px 13px;
+  }
+
+  .premium-select-menu {
+    border-radius: 18px;
+    padding: 7px;
+    max-height: min(300px, 44dvh);
+    box-shadow: 0 22px 54px rgba(10, 26, 48, .2), 0 4px 12px rgba(10, 26, 48, .08);
+  }
+
+  .premium-select-option {
+    min-height: 52px;
+    border-radius: 13px;
+    padding: 9px;
+  }
+
+  .premium-select-copy b {
+    font-size: 14px;
+  }
+
+  .premium-select-copy small {
+    font-size: 11px;
+  }
+
+  .doc-row {
+    overflow: hidden !important;
+  }
+
+  .doc-row b,
+  .doc-row small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+html[data-theme="dark"] .premium-select-trigger,
+html[data-theme="dark"] .premium-select-menu {
+  background: var(--card);
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .premium-select-option:hover {
+  background: var(--bg);
+}
+
+html[data-theme="dark"] .premium-select-option.selected {
+  background: rgba(201, 163, 78, .12);
+}

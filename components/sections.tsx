@@ -27,6 +27,7 @@ const views: Record<Portal, Record<string, () => React.JSX.Element>> = {
     inbox: EntityInbox,
     tasks: EntityTasks,
     replies: EntityReplies,
+    meetings: Meetings,
     requests: EntityRequests,
     decisions: EntityDecisions,
     structure: EntityStructure,

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CalendarClock, Check, FileText, Search, Users, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CalendarClock, Check, ChevronDown, FileText, Search, Users, Inbox, MailQuestion, Paperclip, Plus, Send, Stamp, UserPlus, X } from "lucide-react";
 import { entities, entityOf, halls, people, roles } from "@/lib/lookup";
 import { canSubmitDecisionForAnyEntity } from "@/lib/access";
 import { useStore } from "@/lib/store";
@@ -9,6 +9,83 @@ import type { Classification, Letter, MeetingOutcome, Priority, RequestItem, Rol
 import { Sheet } from "@/components/ui";
 
 const PRIORITIES: Priority[] = ["عادي", "هام", "عاجل", "عاجل جداً"];
+
+type PremiumOption<T extends string> = {
+  value: T;
+  label: string;
+  meta?: string;
+};
+
+function PremiumSelect<T extends string>({
+  id,
+  value,
+  options,
+  onChange,
+}: {
+  id: string;
+  value: T;
+  options: PremiumOption<T>[];
+  onChange: (value: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.value === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: PointerEvent) => {
+      if (!root.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+
+  return (
+    <div ref={root} className={`premium-select ${open ? "open" : ""}`}>
+      <button
+        id={id}
+        type="button"
+        className="premium-select-trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => setOpen((x) => !x)}
+      >
+        <span className="premium-select-value">
+          <b>{selected?.label ?? value}</b>
+          {selected?.meta && <small>{selected.meta}</small>}
+        </span>
+        <span className="premium-select-chevron"><ChevronDown size={17} /></span>
+      </button>
+
+      {open && (
+        <div className="premium-select-menu" role="listbox" aria-labelledby={id}>
+          {options.map((option) => {
+            const active = option.value === value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                role="option"
+                aria-selected={active}
+                className={`premium-select-option ${active ? "selected" : ""}`}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                }}
+              >
+                <span className="premium-select-check">{active && <Check size={14} />}</span>
+                <span className="premium-select-copy">
+                  <b>{option.label}</b>
+                  {option.meta && <small>{option.meta}</small>}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** تاريخ بعد عدد من الأيام بصيغة yyyy-mm-dd */
 export function isoIn(days: number) {
@@ -93,10 +170,18 @@ export function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
         </div>
         <div className="field">
           <label htmlFor="as-pr">الأولوية</label>
-          <select id="as-pr" value={priority} onChange={(e) => { const p = e.target.value as Priority; setPriority(p); setDue(isoIn(defaultDays[p])); }}>
-            {PRIORITIES.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <div className="hint-text">العاجل: رد خلال 24 ساعة · الهام: 48 ساعة · العادي: جدول زمني يُحدَّد هنا</div>
+          <PremiumSelect
+            id="as-pr"
+            value={priority}
+            options={[
+              { value: "عادي", label: "عادي", meta: "حسب الجدول الزمني المحدد" },
+              { value: "هام", label: "هام", meta: "مهلة افتراضية 48 ساعة" },
+              { value: "عاجل", label: "عاجل", meta: "رد خلال 24 ساعة" },
+              { value: "عاجل جداً", label: "عاجل جداً", meta: "أولوية قصوى · خلال 24 ساعة" },
+            ]}
+            onChange={(p) => { setPriority(p); setDue(isoIn(defaultDays[p])); }}
+          />
+          <div className="hint-text">اختر الأولوية حسب حساسية التكليف والمهلة المطلوبة.</div>
         </div>
         <div className="field">
           <label htmlFor="as-due">تاريخ الاستحقاق</label>
@@ -108,16 +193,30 @@ export function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
         </div>
         <div className="field">
           <label htmlFor="as-src">المصدر</label>
-          <select id="as-src" value={source} onChange={(e) => setSource(e.target.value)}>
-            {["توجيه السيد المحافظ", "قرار اجتماع", "كتاب وارد", "خطة سنوية", "طلب مجلس المحافظة"].map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <PremiumSelect
+            id="as-src"
+            value={source}
+            options={[
+              { value: "توجيه السيد المحافظ", label: "توجيه السيد المحافظ", meta: "تكليف صادر مباشرة عن مكتب المحافظ" },
+              { value: "قرار اجتماع", label: "قرار اجتماع", meta: "ناتج عن اجتماع أو محضر رسمي" },
+              { value: "كتاب وارد", label: "كتاب وارد", meta: "تكليف مرتبط بمراسلة واردة" },
+              { value: "خطة سنوية", label: "خطة سنوية", meta: "بند ضمن خطة العمل المعتمدة" },
+              { value: "طلب مجلس المحافظة", label: "طلب مجلس المحافظة", meta: "طلب أو متابعة واردة من المجلس" },
+            ]}
+            onChange={setSource}
+          />
         </div>
         <div className="field">
           <label htmlFor="as-cl">درجة السرّية</label>
-          <select id="as-cl" value={classification} onChange={(e) => setClass(e.target.value as Classification)}>
-            <option value="عادي">عادي</option>
-            <option value="سرّي">سرّي</option>
-          </select>
+          <PremiumSelect
+            id="as-cl"
+            value={classification}
+            options={[
+              { value: "عادي", label: "عادي", meta: "متاح ضمن نطاق الصلاحيات المعتاد" },
+              { value: "سرّي", label: "سرّي", meta: "يظهر فقط لمن يملك تصريحاً مناسباً" },
+            ]}
+            onChange={setClass}
+          />
         </div>
       </form>
     </Sheet>

@@ -1104,3 +1104,51 @@ html[data-theme="dark"] .premium-select-option:hover {
 html[data-theme="dark"] .premium-select-option.selected {
   background: rgba(201, 163, 78, .12);
 }
+
+
+/* ============================================================
+   Interactive weekly calendar
+   ============================================================ */
+@media (max-width: 900px) {
+  .week-strip {
+    scroll-padding-inline: var(--s4);
+  }
+
+  .week-day-card {
+    text-align: right;
+    border: 1px solid var(--line) !important;
+    background: var(--card) !important;
+    color: var(--ink);
+    transition: transform .18s var(--e-soft), border-color .18s var(--e-soft), background .18s var(--e-soft), box-shadow .18s var(--e-soft);
+  }
+
+  .week-day-card:active {
+    transform: scale(.97);
+  }
+
+  .week-day-card.active {
+    border-color: var(--gold) !important;
+    background: var(--gold-50) !important;
+    box-shadow: 0 0 0 2px var(--gold-100), 0 8px 22px rgba(10, 26, 48, .08);
+  }
+
+  .week-day-card.active .mini-label {
+    color: var(--gold-700);
+    font-weight: 800;
+  }
+
+  .week-day-date {
+    margin-top: 2px;
+    font-size: 10.5px;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+
+  .week-day-card.active .week-day-date {
+    color: var(--gold-700);
+  }
+
+  .calendar-day-details {
+    scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px));
+  }
+}

@@ -103,13 +103,13 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
 
   // اختصاصات الديوان
   registry: {
-    diwan: ["calendar", "meetings", "decisions", "correspondence", "files", "notes"],
+    diwan: ["calendar", "meetings", "decisions", "assignments", "correspondence", "files", "notes"],
   },
   protocol: {
-    diwan: ["calendar", "meetings", "halls", "delegations", "notes"],
+    diwan: ["calendar", "meetings", "assignments", "halls", "delegations", "notes"],
   },
   halls: {
-    diwan: ["calendar", "halls", "notes"],
+    diwan: ["calendar", "assignments", "halls", "notes"],
   },
 
   // مدير النظام لا يدخل محتوى العمل التنفيذي.

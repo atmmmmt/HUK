@@ -239,7 +239,7 @@ export function canApproveDecision(person: Person): boolean {
 
 /** اعتماد حجوزات القاعات محصور بسلسلة الحجز الفعلية. */
 export function canApproveBooking(person: Person): boolean {
-  return ["halls", "chief", "secgen", "governor", "deputy"].includes(person.role);
+  return ["halls", "governor", "deputy"].includes(person.role);
 }
 
 export function canManageSystem(person: Person): boolean {

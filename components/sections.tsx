@@ -31,6 +31,7 @@ const views: Record<Portal, Record<string, () => React.JSX.Element>> = {
     decisions: EntityDecisions,
     structure: EntityStructure,
     performance: EntityPerformance,
+    notes: Notes,
   },
   admin: {
     entities: AdminEntities,

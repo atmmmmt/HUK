@@ -157,6 +157,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
                 : "/";
               void registration.showNotification(n.title, {
                 body: n.body,
+                lang: "ar",
+                dir: "rtl",
                 icon: "/icons/icon-192.png",
                 badge: "/icons/icon-192.png",
                 tag: n.id,

@@ -5,11 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 import { ArrowUp, Check, Loader2, RotateCcw, Sparkles, X } from "lucide-react";
 import type Anthropic from "@anthropic-ai/sdk";
 import { decisions, entities, entityOf, hallOf, meetings, people, personOf } from "@/lib/lookup";
-import { canAdvance, seesAssignment } from "@/lib/access";
+import { canAccessSection, canAdvance, seesAssignment } from "@/lib/access";
 import { CONFIRM_TOOLS } from "@/lib/assistant-tools";
 import { guideTopicText } from "@/lib/guide";
 import { useStore } from "@/lib/store";
-import type { AssignmentStatus, Note } from "@/lib/types";
+import type { AssignmentStatus, Note, Portal } from "@/lib/types";
 
 type Msg = Anthropic.Beta.BetaMessageParam;
 type Block = Anthropic.Beta.BetaContentBlock;
@@ -27,13 +27,6 @@ type Pending = { tool: ToolUse; label: string; resolve: (ok: boolean) => void };
 const MAX_STEPS = 8;
 const norm = (s: string) =>
   s.toLowerCase().replace(/[أإآ]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/[ً-ْـ]/g, "");
-
-const SUGGESTIONS = [
-  "شو التكليفات المتأخرة؟",
-  "شو في عندي اليوم؟",
-  "افتحلي القاعات",
-  "كيف بعتمد قرار؟",
-];
 
 export default function Assistant() {
   const store = useStore();
@@ -64,6 +57,14 @@ export default function Assistant() {
   }, [open]);
 
   if (!store.ready || pathname?.startsWith("/login") || pathname?.startsWith("/welcome")) return null;
+
+  const suggestions = [
+    (canAccessSection(store.me, "diwan", "assignments") || canAccessSection(store.me, "directorates", "inbox")) ? "شو التكليفات المتأخرة؟" : null,
+    (canAccessSection(store.me, "diwan", "calendar") || canAccessSection(store.me, "directorates", "meetings")) ? "شو في عندي اليوم؟" : null,
+    canAccessSection(store.me, "diwan", "halls") ? "افتحلي القاعات" : null,
+    (canAccessSection(store.me, "diwan", "decisions") || canAccessSection(store.me, "directorates", "decisions")) ? "شو المعاملات عندي؟" : null,
+    (canAccessSection(store.me, "diwan", "notes") || canAccessSection(store.me, "directorates", "notes")) ? "افتح ملاحظاتي" : null,
+  ].filter((x): x is string => !!x).slice(0, 4);
 
   const push = (it: Item) => setItems((xs) => [...xs, it]);
 
@@ -104,6 +105,15 @@ export default function Assistant() {
       case "navigate": {
         const path = String(i.path || "/");
         if (!path.startsWith("/")) return "مسار غير صالح";
+        const cleanPath = path.split("?")[0].replace(/\/$/, "");
+        const parts = cleanPath.split("/").filter(Boolean);
+        if (parts.length >= 2 && ["diwan", "directorates", "admin"].includes(parts[0])) {
+          const portal = parts[0] as Portal;
+          const section = parts[1];
+          if (!canAccessSection(me, portal, section)) {
+            return `خطأ: قسم «${section}» خارج صلاحيات «${me.title}»`;
+          }
+        }
         router.push(path.endsWith("/") ? path : path + "/");
         if (window.matchMedia("(max-width: 900px)").matches) setOpen(false);
         return `فُتحت الشاشة ${path}`;
@@ -282,7 +292,7 @@ export default function Assistant() {
                   <b>أهلاً {store.me.name?.split(" ").slice(0, 2).join(" ")} 👋</b>
                   <p>قلّي شو بدك، وأنا بدوّر وبفتحلك الشاشة وبنفّذ عنك.</p>
                   <div className="ai-sugs">
-                    {SUGGESTIONS.map((s) => <button key={s} onClick={() => send(s)}>{s}</button>)}
+                    {suggestions.map((s) => <button key={s} onClick={() => send(s)}>{s}</button>)}
                   </div>
                 </div>
               )}

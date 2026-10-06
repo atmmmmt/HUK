@@ -22,7 +22,7 @@ function PremiumSelect<T extends string>({
   options,
   onChange,
 }: {
-  id: string;
+  id?: string;
   value: T;
   options: PremiumOption<T>[];
   onChange: (value: T) => void;
@@ -100,20 +100,15 @@ const defaultDays: Record<Priority, number> = { "عاجل جداً": 1, "عاج�
 export function OwnerSelect({ id, value, onChange }: { id?: string; value: string; onChange: (v: string) => void }) {
   const { people } = useStore();
   const active = people.filter((p) => (p as { active?: boolean }).active !== false && p.role !== "governor" && p.role !== "admin");
-  return (
-    <select id={id} value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">— اختر المكلَّف —</option>
-      {entities.map((e) => {
-        const list = active.filter((p) => p.entityId === e.id);
-        if (!list.length) return null;
-        return (
-          <optgroup key={e.id} label={e.name}>
-            {list.map((p) => <option key={p.id} value={p.id}>{p.name}{p.name !== p.title ? ` — ${p.title}` : ""}</option>)}
-          </optgroup>
-        );
-      })}
-    </select>
-  );
+  const options: PremiumOption<string>[] = [
+    { value: "", label: "اختر المكلَّف", meta: "حدّد الشخص المسؤول عن تنفيذ التكليف" },
+    ...active.map((p) => ({
+      value: p.id,
+      label: p.name !== p.title ? `${p.name} — ${p.title}` : p.name,
+      meta: entityOf(p.entityId).name,
+    })),
+  ];
+  return <PremiumSelect id={id} value={value} options={options} onChange={onChange} />;
 }
 
 function useSubmit() {

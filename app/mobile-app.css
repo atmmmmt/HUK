@@ -961,3 +961,60 @@ body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
   .pwa-only { display: grid !important; }
   .desktop-only { display: none !important; }
 }
+
+
+/* Quick actions: always one clean horizontal slider on PWA mobile. */
+@media (max-width: 900px) {
+  .m-today .mt-quick {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    width: calc(100% + (2 * var(--s4))) !important;
+    max-width: none !important;
+    margin-inline: calc(-1 * var(--s4)) !important;
+    padding: 4px var(--s4) 10px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--s4);
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+
+  .m-today .mt-quick::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .m-today .mt-quick .mt-q {
+    flex: 0 0 72px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    display: grid !important;
+    grid-template-rows: 60px auto;
+    justify-items: center;
+    align-content: start;
+    gap: 7px;
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+    white-space: nowrap;
+  }
+
+  .m-today .mt-quick .mt-q-ico {
+    width: 60px !important;
+    height: 60px !important;
+    flex: none !important;
+  }
+
+  .m-today .mt-quick .mt-q > span:last-child {
+    width: 100%;
+    overflow: visible;
+    text-align: center;
+    white-space: nowrap;
+  }
+}

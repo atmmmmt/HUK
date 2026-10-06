@@ -32,6 +32,7 @@ export const navByPortal: Record<Portal, NavItem[]> = {
     { key: "requests", label: "الطلبات إلى الديوان", icon: "MailQuestion", group: "العمل", title: "الطلبات المرفوعة إلى الديوان", sub: "حجز قاعة · موعد لدى المحافظ · طلب اجتماع · تمديد مهلة" },
     { key: "structure", label: "هيكل المديرية", icon: "GitFork", group: "الجهة", title: "الهيكل والموظفون", sub: "الأقسام والموظفون ومهام كل شخص" },
     { key: "performance", label: "مؤشرات الأداء", icon: "TrendingUp", group: "الجهة", title: "مؤشرات أداء الجهة", sub: "الالتزام بالمواعيد وتوزيع الأحمال ومواضع الاختناق" },
+    { key: "notes", label: "ملاحظاتي", icon: "StickyNote", group: "الجهة", title: "ملاحظاتي الشخصية", sub: "مساحة خاصة بك فقط لتدوين الملاحظات" },
   ],
   admin: [
     { key: "entities", label: "الجهات والوحدات", icon: "Building2", group: "الهيكل", title: "الجهات والمؤسسات", sub: "إضافة مديرية أو مؤسسة وتعديل شجرتها دون أي تدخل برمجي" },

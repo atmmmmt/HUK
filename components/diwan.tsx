@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlarmClock, ArrowLeft, Plus, BadgeCheck, CalendarDays, CheckCircle2, ClipboardList, Clock3, DoorOpen,
@@ -192,73 +192,175 @@ function PriorityChipInline({ p }: { p: Assignment["priority"] }) {
 /* ═══════════════════════ التقويم والمواعيد ═══════════════════════ */
 
 export function Calendar() {
-  const { me, requests, respondRequest } = useStore();
+  const { me, requests, respondRequest, meetings: liveMeetings } = useStore();
   const [slot, setSlot] = useState<{ id: string; mode: "schedule" | "propose" } | null>(null);
   const interviews = requests.filter((r) => r.kind === "موعد لدى المحافظ" && r.status === "بانتظار الرد");
   const canRespond = canRespondRequest(me, "موعد لدى المحافظ");
   const slotReq = slot ? requests.find((r) => r.id === slot.id) : null;
-  const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
-  const load = [3, 5, 2, 4, 1];
+  const detailRef = useRef<HTMLDivElement>(null);
+
+  const days = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"] as const;
+  const isoLocal = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const week = useMemo(() => {
+    const now = new Date();
+    const sunday = new Date(now);
+    sunday.setHours(12, 0, 0, 0);
+    sunday.setDate(now.getDate() - now.getDay());
+
+    return days.map((name, index) => {
+      const date = new Date(sunday);
+      date.setDate(sunday.getDate() + index);
+      return {
+        name,
+        date,
+        iso: isoLocal(date),
+        shortDate: date.toLocaleDateString("ar-SY-u-nu-latn", { day: "numeric", month: "long" }),
+      };
+    });
+  }, []);
+
+  const todayISO = isoLocal(new Date());
+  const defaultISO = week.find((d) => d.iso === todayISO)?.iso ?? week[0]?.iso ?? todayISO;
+  const [selectedISO, setSelectedISO] = useState(defaultISO);
+  const selected = week.find((d) => d.iso === selectedISO) ?? week[0];
+
+  const meetingISO = (m: Meeting): string | null => {
+    const explicit = (m as Meeting & { dateISO?: string }).dateISO;
+    if (explicit) return explicit;
+
+    if (m.day === "اليوم") return todayISO;
+    if (m.day === "غداً") {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return isoLocal(tomorrow);
+    }
+
+    return week.find((d) => d.shortDate === m.day)?.iso ?? null;
+  };
+
+  const appointmentsFor = (iso: string) => {
+    const meetingRows = liveMeetings
+      .filter((m) => meetingISO(m) === iso)
+      .map((m) => ({
+        id: m.id,
+        time: m.time,
+        title: m.title,
+        place: m.online ? "اتصال مرئي" : hallOf(m.hallId ?? "")?.name ?? "قاعة",
+        status: m.status,
+        tone: m.status === "جارٍ الآن" ? "now" : m.status === "منعقد" ? "done" : "next",
+      }));
+
+    if (iso !== todayISO) return meetingRows;
+
+    const known = new Set(meetingRows.map((m) => `${m.time}|${m.title}`));
+    const agendaRows = todaySchedule
+      .filter((s) => !known.has(`${s.time}|${s.title}`))
+      .map((s, i) => ({ ...s, id: `today-${i}` }));
+
+    return [...agendaRows, ...meetingRows].sort((a, b) =>
+      String(a.time).localeCompare(String(b.time), "ar", { numeric: true })
+    );
+  };
+
+  const selectedAppointments = appointmentsFor(selectedISO);
+
+  function selectDay(iso: string) {
+    setSelectedISO(iso);
+    requestAnimationFrame(() => {
+      window.setTimeout(() => {
+        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 40);
+    });
+  }
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>
-      <Panel title="الأسبوع الجاري" icon={<CalendarDays size={17} />} hint="عدد المواعيد في كل يوم">
+      <Panel title="الأسبوع الجاري" icon={<CalendarDays size={17} />} hint="اضغط على اليوم لعرض برنامجه">
         <div className="grid week-strip" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: 10 }}>
-          {days.map((d, i) => (
-            <div key={d} className={`card hover pad ${i === 1 ? "" : ""}`} style={{ padding: 14, borderColor: i === 1 ? "var(--gold)" : undefined, background: i === 1 ? "var(--gold-soft)" : undefined }}>
-              <div className="mini-label">{d}</div>
-              <div style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{load[i]}</div>
-              <div className="tiny muted">موعد</div>
-              <div className="spark" style={{ height: 34, marginTop: 8 }}>
-                {Array.from({ length: load[i] }).map((_, k) => (
-                  <i key={k} className={i === 1 ? "gold" : ""} style={{ height: `${40 + k * 14}%` }} />
-                ))}
-              </div>
-            </div>
-          ))}
+          {week.map((d) => {
+            const active = d.iso === selectedISO;
+            const count = appointmentsFor(d.iso).length;
+            return (
+              <button
+                type="button"
+                key={d.iso}
+                className={`card hover pad week-day-card ${active ? "active" : ""}`}
+                style={{ padding: 14 }}
+                onClick={() => selectDay(d.iso)}
+                aria-pressed={active}
+              >
+                <div className="mini-label">{d.name}</div>
+                <div className="week-day-date">{d.shortDate}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{count}</div>
+                <div className="tiny muted">{count === 1 ? "موعد" : "مواعيد"}</div>
+                <div className="spark" style={{ height: 34, marginTop: 8 }}>
+                  {Array.from({ length: Math.min(Math.max(count, 1), 5) }).map((_, k) => (
+                    <i key={k} className={active ? "gold" : ""} style={{ height: `${count ? 40 + k * 12 : 18}%` }} />
+                  ))}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </Panel>
 
-      <div className="split">
-        <Panel title="برنامج اليوم بالتفصيل" icon={<Clock3 size={17} />} flush>
-          <div className="tbl-wrap">
-            <table className="tbl">
-              <thead><tr><th>الوقت</th><th>الموعد</th><th>المكان</th><th>الحالة</th></tr></thead>
-              <tbody>
-                {todaySchedule.map((s) => (
-                  <tr key={s.time}>
-                    <td className="ltr t-ref" style={{ fontSize: 13 }}>{s.time}</td>
-                    <td className="t-main">{s.title}</td>
-                    <td className="tiny muted">{s.place}</td>
-                    <td><StatusChip status={s.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
+      <div ref={detailRef} id="calendar-day-details" className="calendar-day-details">
+        <div className="split">
+          <Panel
+            title={`برنامج ${selected?.name ?? "اليوم"} بالتفصيل`}
+            icon={<Clock3 size={17} />}
+            hint={selected?.shortDate}
+            flush
+          >
+            {selectedAppointments.length === 0 ? (
+              <Empty text="لا توجد مواعيد في هذا اليوم" hint="اختر يوماً آخر من الشريط بالأعلى" />
+            ) : (
+              <div className="tbl-wrap">
+                <table className="tbl">
+                  <thead><tr><th>الوقت</th><th>الموعد</th><th>المكان</th><th>الحالة</th></tr></thead>
+                  <tbody>
+                    {selectedAppointments.map((s) => (
+                      <tr key={s.id}>
+                        <td className="ltr t-ref" style={{ fontSize: 13 }}>{s.time}</td>
+                        <td className="t-main">{s.title}</td>
+                        <td className="tiny muted">{s.place}</td>
+                        <td><StatusChip status={s.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Panel>
 
-        <Panel title="طلبات المقابلة" icon={<Users size={17} />} hint={`${interviews.length} بانتظار التحديد`}>
-          {interviews.length === 0 ? <Empty text="لا طلبات مقابلة معلّقة" hint="تصل هنا طلبات «موعد لدى المحافظ» من الجهات" /> : (
-            <div className="grid" style={{ gap: 12 }}>
-              {interviews.map((r) => (
-                <div key={r.id} className="card pad hover" style={{ padding: 13 }}>
-                  <PersonLine id={r.byId} />
-                  <p className="tiny" style={{ margin: "8px 0" }}>{r.title}</p>
-                  <div className="row between wrap" style={{ gap: 8 }}>
-                    <span className="chip">{r.detail}</span>
-                    {canRespond ? (
-                      <div className="row" style={{ gap: 6 }}>
-                        <button className="btn ghost sm" onClick={() => setSlot({ id: r.id, mode: "propose" })}>اقتراح وقت</button>
-                        <button className="btn primary sm" onClick={() => setSlot({ id: r.id, mode: "schedule" })}>تحديد</button>
+          <Panel title="طلبات المقابلة" icon={<CalendarClock size={17} />} hint={interviews.length ? `${interviews.length} بانتظار الرد` : "لا طلبات معلقة"}>
+            {interviews.length === 0 ? (
+              <Empty text="لا توجد طلبات مقابلة معلّقة" />
+            ) : (
+              <div className="grid" style={{ gap: 10 }}>
+                {interviews.map((r) => (
+                  <div key={r.id} className="card pad" style={{ padding: 13 }}>
+                    <div className="row between wrap" style={{ gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <b style={{ fontSize: 13.5, display: "block" }}>{r.title}</b>
+                        <span className="tiny muted">{r.detail}</span>
                       </div>
-                    ) : <span className="chip">اطلاع فقط</span>}
+                      <PersonLine id={r.byId} />
+                    </div>
+                    {canRespond && (
+                      <div className="row" style={{ gap: 7, marginTop: 10 }}>
+                        <button className="btn primary sm" onClick={() => setSlot({ id: r.id, mode: "schedule" })}>تحديد</button>
+                        <button className="btn ghost sm" onClick={() => setSlot({ id: r.id, mode: "propose" })}>اقتراح وقت</button>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Panel>
+                ))}
+              </div>
+            )}
+          </Panel>
+        </div>
       </div>
 
       {slot && slotReq && (
@@ -266,8 +368,8 @@ export function Calendar() {
           title={slot.mode === "schedule" ? "تحديد موعد المقابلة" : "اقتراح وقت بديل"}
           sub={slotReq.title}
           cta={slot.mode === "schedule" ? "تحديد وإضافة إلى الاجتماعات" : "إرسال الاقتراح"}
-          onSubmit={(dayISO, time, note) => respondRequest(slotReq.id, { action: slot.mode, dayISO, time, note })}
           onClose={() => setSlot(null)}
+          onSubmit={(dayISO, time, note) => respondRequest(slot.id, { action: slot.mode, dayISO, time, note })}
         />
       )}
     </div>

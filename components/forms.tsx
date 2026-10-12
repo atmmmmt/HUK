@@ -8,7 +8,7 @@ import { useStore } from "@/lib/store";
 import type { Classification, Letter, MeetingOutcome, Priority, RequestItem, RoleKey } from "@/lib/types";
 import { Sheet } from "@/components/ui";
 
-const PRIORITIES: Priority[] = ["عادي", "هام", "عاجل", "عاجل جداً"];
+const PRIORITIES: Priority[] = ["عادي", "هام", "عاجل", "عاجل وسري"];
 
 type PremiumOption<T extends string> = {
   value: T;
@@ -94,7 +94,7 @@ export function isoIn(days: number) {
 }
 
 /** المهلة الافتراضية لكل أولوية، كما في قواعد التصعيد */
-const defaultDays: Record<Priority, number> = { "عاجل جداً": 1, "عاجل": 1, "هام": 2, "عادي": 5 };
+const defaultDays: Record<Priority, number> = { "عاجل وسري": 1, "عاجل جداً": 1, "عاجل": 1, "هام": 2, "عادي": 5 };
 
 /** قائمة المكلَّفين مجمّعة حسب الجهة */
 export function OwnerSelect({ id, value, onChange }: { id?: string; value: string; onChange: (v: string) => void }) {
@@ -131,14 +131,12 @@ export function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
   const [priority, setPriority] = useState<Priority>("هام");
   const [dueISO, setDue] = useState(isoIn(defaultDays["هام"]));
   const [closeCriteria, setCriteria] = useState("");
-  const [source, setSource] = useState("توجيه السيد المحافظ");
-  const [classification, setClass] = useState<Classification>("عادي");
 
   function submit(e?: React.FormEvent) {
     e?.preventDefault();
     if (!title.trim()) return toast("اكتب عنوان التكليف", "warn");
     if (!ownerId) return toast("اختر المكلَّف", "warn");
-    void run(() => issueAssignment({ title, ownerId, priority, dueISO, closeCriteria, source, classification }), onClose);
+    void run(() => issueAssignment({ title, ownerId, priority, dueISO, closeCriteria }), onClose);
   }
 
   return (
@@ -172,7 +170,7 @@ export function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
               { value: "عادي", label: "عادي", meta: "حسب الجدول الزمني المحدد" },
               { value: "هام", label: "هام", meta: "مهلة افتراضية 48 ساعة" },
               { value: "عاجل", label: "عاجل", meta: "رد خلال 24 ساعة" },
-              { value: "عاجل جداً", label: "عاجل جداً", meta: "أولوية قصوى · خلال 24 ساعة" },
+              { value: "عاجل وسري", label: "عاجل وسري", meta: "عاجل ومصنّف سرّي تلقائياً · خلال 24 ساعة" },
             ]}
             onChange={(p) => { setPriority(p); setDue(isoIn(defaultDays[p])); }}
           />
@@ -185,33 +183,6 @@ export function NewAssignmentSheet({ onClose }: { onClose: () => void }) {
         <div className="field">
           <label htmlFor="as-cc">معيار الإغلاق</label>
           <input id="as-cc" value={closeCriteria} onChange={(e) => setCriteria(e.target.value)} placeholder="مثال: تقرير فني معتمد + جدول كميات" />
-        </div>
-        <div className="field">
-          <label htmlFor="as-src">المصدر</label>
-          <PremiumSelect
-            id="as-src"
-            value={source}
-            options={[
-              { value: "توجيه السيد المحافظ", label: "توجيه السيد المحافظ", meta: "تكليف صادر مباشرة عن مكتب المحافظ" },
-              { value: "قرار اجتماع", label: "قرار اجتماع", meta: "ناتج عن اجتماع أو محضر رسمي" },
-              { value: "كتاب وارد", label: "كتاب وارد", meta: "تكليف مرتبط بمراسلة واردة" },
-              { value: "خطة سنوية", label: "خطة سنوية", meta: "بند ضمن خطة العمل المعتمدة" },
-              { value: "طلب مجلس المحافظة", label: "طلب مجلس المحافظة", meta: "طلب أو متابعة واردة من المجلس" },
-            ]}
-            onChange={setSource}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="as-cl">درجة السرّية</label>
-          <PremiumSelect
-            id="as-cl"
-            value={classification}
-            options={[
-              { value: "عادي", label: "عادي", meta: "متاح ضمن نطاق الصلاحيات المعتاد" },
-              { value: "سرّي", label: "سرّي", meta: "يظهر فقط لمن يملك تصريحاً مناسباً" },
-            ]}
-            onChange={setClass}
-          />
         </div>
       </form>
     </Sheet>

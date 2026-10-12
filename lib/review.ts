@@ -71,7 +71,7 @@ export async function runReviewSweep(now = new Date()): Promise<number> {
         channel: "تنبيه التطبيق",
         toId: a.issuerId,
         link: { portal: "diwan", section: "assignments" },
-        urgent: a.priority === "عاجل جداً" || a.priority === "عاجل",
+        urgent: a.priority === "عاجل وسري" || a.priority === "عاجل جداً" || a.priority === "عاجل",
       });
       sent++;
     }
@@ -81,7 +81,7 @@ export async function runReviewSweep(now = new Date()): Promise<number> {
       kind: "تكليف",
       title: "انتهت مهلة تكليفك",
       body: `«${a.title}» — ${slaText(a)}. يرجى رفع ما أُنجز.`,
-      channel: a.priority === "عاجل جداً" ? "رسالة نصية" : "تنبيه التطبيق",
+      channel: a.priority === "عاجل وسري" || a.priority === "عاجل جداً" ? "رسالة نصية" : "تنبيه التطبيق",
       toId: a.ownerId,
       link: { portal: "directorates", section: "inbox" },
       urgent: true,

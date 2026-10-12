@@ -10,7 +10,7 @@ export const stampNow = () =>
 export const arDate = (iso: string) =>
   new Date(iso + "T12:00:00").toLocaleDateString("ar-SY-u-nu-latn", { day: "2-digit", month: "long", year: "numeric" });
 
-export const PRIORITIES: Priority[] = ["عادي", "هام", "عاجل", "عاجل جداً"];
+export const PRIORITIES: Priority[] = ["عادي", "هام", "عاجل", "عاجل وسري"];
 
 export function validISO(s: unknown): s is string {
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(new Date(s + "T12:00:00").getTime());
@@ -26,7 +26,7 @@ async function nextRef(): Promise<string> {
 
 export interface NewAssignment {
   title: string;
-  source: string;
+  source?: string;
   ownerId: string;
   priority: Priority;
   dueISO: string;
@@ -64,7 +64,7 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
     status: "مُسند",
     chain: { sent: at, delivered: at },
     attachments: [],
-    classification: input.classification === "سرّي" ? "سرّي" : "عادي",
+    classification: input.priority === "عاجل وسري" ? "سرّي" : "عادي",
     escalation: 0,
     ...(input.meetingId ? { meetingId: input.meetingId } : {}),
   };
@@ -82,7 +82,7 @@ export async function createAssignment(issuerId: string, input: NewAssignment): 
     channel: "تنبيه التطبيق",
     toId: owner.id,
     ...(link ? { link } : {}),
-    urgent: a.priority === "عاجل جداً",
+    urgent: a.priority === "عاجل وسري" || a.priority === "عاجل",
   });
   return a;
 }

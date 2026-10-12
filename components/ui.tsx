@@ -107,7 +107,7 @@ export function StatusChip({ status }: { status: string }) {
 }
 
 export function PriorityChip({ p }: { p: Priority }) {
-  const map: Record<Priority, string> = { "عادي": "", "هام": "info", "عاجل": "warn", "عاجل جداً": "danger" };
+  const map: Record<Priority, string> = { "عادي": "", "هام": "info", "عاجل": "warn", "عاجل وسري": "danger", "عاجل جداً": "danger" };
   return <span className={`chip ${map[p]}`}>{p}</span>;
 }
 

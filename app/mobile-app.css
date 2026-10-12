@@ -1152,3 +1152,43 @@ html[data-theme="dark"] .premium-select-option.selected {
     scroll-margin-top: calc(76px + env(safe-area-inset-top, 0px));
   }
 }
+
+
+/* ============================================================
+   Simplified governor mobile home — compact quick categories
+   ============================================================ */
+@media (max-width: 900px) {
+  .m-today { gap: 8px !important; }
+
+  .m-today .mt-quick {
+    gap: 8px !important;
+    padding-top: 2px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .m-today .mt-quick .mt-q {
+    flex: 0 0 60px !important;
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+    grid-template-rows: 50px auto !important;
+    gap: 5px !important;
+    font-size: 10.5px !important;
+  }
+
+  .m-today .mt-quick .mt-q-ico {
+    width: 50px !important;
+    height: 50px !important;
+    border-radius: 16px !important;
+  }
+
+  .m-today .mt-quick .mt-q-ico svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .m-today .mt-quick .mt-q > span:last-child {
+    font-size: 10.5px !important;
+    font-weight: 700;
+  }
+}

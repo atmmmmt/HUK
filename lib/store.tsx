@@ -9,7 +9,7 @@ import type {
 } from "./types";
 
 export interface NewAssignmentInput {
-  title: string; source: string; ownerId: string; priority: Priority; dueISO: string;
+  title: string; source?: string; ownerId: string; priority: Priority; dueISO: string;
   closeCriteria: string; partnerIds?: string[]; classification?: Classification;
 }
 export type RequestResponse =

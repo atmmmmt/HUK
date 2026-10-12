@@ -173,14 +173,16 @@ export function assignmentQueryFor(person: Person): Record<string, unknown> {
 
 /** هل يرى هذا الشخص تكليفاً بعينه؟ يُطبَّق على الخادم قبل إرسال أي بيانات. */
 export function seesAssignment(person: Person, a: Assignment, ctx: Ctx = {}): boolean {
-  if (clearanceRank(person.clearance) < clearanceRank(a.classification)) return false;
-
-  if (assignmentOversight.includes(person.role)) return true;
-
   const involved =
     a.ownerId === person.id ||
     a.issuerId === person.id ||
     (a.partnerIds ?? []).includes(person.id);
+
+  // إسناد التكليف لشخص بعينه هو تخويل مباشر لرؤية التكليف، حتى لو كان سرياً.
+  // منع هذا سابقاً كان يسمح بوصول الإشعار للمكلَّف ثم يحجب التكليف نفسه عنه.
+  if (!involved && clearanceRank(person.clearance) < clearanceRank(a.classification)) return false;
+
+  if (assignmentOversight.includes(person.role)) return true;
 
   switch (person.role) {
     case "assistant":
@@ -267,7 +269,8 @@ export function winsConflict(a: Person, b: Person): Person {
 /* ─────────────── المهل ─────────────── */
 
 export const slaHours: Record<Priority, number | null> = {
-  "عاجل جداً": 24,
+  "عاجل وسري": 24,
+  "عاجل جداً": 24, // توافق مع سجلات قديمة فقط
   "عاجل": 24,
   "هام": 48,
   "عادي": null,

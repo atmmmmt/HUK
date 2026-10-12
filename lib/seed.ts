@@ -177,7 +177,7 @@ export const assignments: Assignment[] = [
   },
   {
     id: "a2", ref: "3655474-2026", title: "مراجعة العقود القانونية للمشاريع الخدمية", source: "توجيه السيد المحافظ", entityId: "e5", issuerId: "p1", ownerId: "p14", partnerIds: ["p15"],
-    priority: "عاجل جداً", due: "18 أيلول 2026", dueISO: "2026-09-18", closeCriteria: "مذكرة رأي قانوني موقّعة لكل عقد", progress: 80, status: "متأخر",
+    priority: "عاجل وسري", due: "18 أيلول 2026", dueISO: "2026-09-18", closeCriteria: "مذكرة رأي قانوني موقّعة لكل عقد", progress: 80, status: "متأخر",
     chain: { sent: "08 أيلول · 08:00", delivered: "08 أيلول · 08:00", read: "08 أيلول · 08:22", acknowledged: "08 أيلول · 08:40", started: "08 أيلول · 12:00" },
     attachments: [{ name: "العقود المرفقة.zip", size: "18.6 م.ب" }], classification: "سرّي", escalation: 3,
   },
@@ -201,9 +201,9 @@ export const assignments: Assignment[] = [
   },
   {
     id: "a6", ref: "3655478-2026", title: "معالجة انقطاع المياه في حي الثكنة", source: "توجيه السيد المحافظ", entityId: "e4", issuerId: "p1", ownerId: "p12", partnerIds: ["p13"],
-    priority: "عاجل جداً", due: "23 أيلول 2026", dueISO: "2026-09-23", closeCriteria: "تقرير ميداني + صور + تأكيد عودة الضخ", progress: 15, status: "مُسند",
+    priority: "عاجل وسري", due: "23 أيلول 2026", dueISO: "2026-09-23", closeCriteria: "تقرير ميداني + صور + تأكيد عودة الضخ", progress: 15, status: "مُسند",
     chain: { sent: "21 أيلول · 17:40", delivered: "21 أيلول · 17:41" },
-    attachments: [], classification: "عادي", escalation: 1,
+    attachments: [], classification: "سرّي", escalation: 1,
   },
   {
     id: "a7", ref: "3655479-2026", title: "رفع تقرير المخالفات العمرانية الربعي", source: "خطة سنوية", entityId: "e2", issuerId: "p3", ownerId: "p9", partnerIds: [],
@@ -331,7 +331,7 @@ export const letters: Letter[] = [
 
 export const decisions: Decision[] = [
   { id: "d1", title: "المصادقة على المخطط التنظيمي للتوسع الشمالي", source: "مديرية التخطيط العمراني", entityId: "e2", age: "منذ يومين", priority: "عاجل", awaiting: "governor" },
-  { id: "d2", title: "تخصيص موازنة طوارئ لمديرية الصحة", source: "مديرية الصحة", entityId: "e3", age: "منذ 4 ساعات", priority: "عاجل جداً", awaiting: "governor", amount: "180 مليون ل.س" },
+  { id: "d2", title: "تخصيص موازنة طوارئ لمديرية الصحة", source: "مديرية الصحة", entityId: "e3", age: "منذ 4 ساعات", priority: "عاجل وسري", awaiting: "governor", amount: "180 مليون ل.س" },
   { id: "d3", title: "اعتماد برنامج الوفد الاستثماري", source: "إدارة المراسم", entityId: "e0", age: "منذ ساعة", priority: "هام", awaiting: "chief" },
   { id: "d4", title: "الموافقة على عقد صيانة شبكة الإنارة", source: "مديرية الخدمات الفنية", entityId: "e1", age: "منذ 6 ساعات", priority: "هام", awaiting: "deputy", amount: "95 مليون ل.س" },
   { id: "d5", title: "اعتماد خطة الاستجابة الشتوية الموحّدة", source: "الدفاع المدني", entityId: "e6", age: "منذ يوم", priority: "عاجل", awaiting: "governor" },
@@ -384,7 +384,7 @@ export const requests: RequestItem[] = [
 
 export const notifications: Notification[] = [
   { id: "n1", kind: "تصعيد", title: "تكليف متأخر ثلاثة أيام", body: "«مراجعة العقود القانونية للمشاريع الخدمية» تجاوز موعده — صُعّد إلى مدير المكتب.", at: "منذ 12 دقيقة", read: false, channel: "تنبيه التطبيق", toId: "p1", link: { portal: "diwan", section: "assignments" }, urgent: true },
-  { id: "n2", kind: "تكليف", title: "تكليف جديد أُسند إليك", body: "«معالجة انقطاع المياه في حي الثكنة» — عاجل جداً، يستحق خلال يومين.", at: "منذ 35 دقيقة", read: false, channel: "رسالة نصية", toId: "p12", link: { portal: "directorates", section: "inbox" }, urgent: true },
+  { id: "n2", kind: "تكليف", title: "تكليف جديد أُسند إليك", body: "«معالجة انقطاع المياه في حي الثكنة» — عاجل وسري، يستحق خلال يومين.", at: "منذ 35 دقيقة", read: false, channel: "رسالة نصية", toId: "p12", link: { portal: "directorates", section: "inbox" }, urgent: true },
   { id: "n3", kind: "اجتماع", title: "تذكير باجتماع بعد ساعة", body: "اجتماع خلية الأزمة الدوري — قاعة الاجتماعات الكبرى · 10:00 ص.", at: "منذ ساعة", read: false, channel: "تنبيه التطبيق", toId: "p1", link: { portal: "diwan", section: "meetings" } },
   { id: "n4", kind: "قاعة", title: "طلب حجز بانتظار موافقتك", body: "مؤسسة المياه تطلب حجز قاعة الاجتماعات الفرعية غداً 11:00.", at: "منذ ساعة", read: false, channel: "تنبيه التطبيق", toId: "p19", link: { portal: "diwan", section: "halls" } },
   { id: "n5", kind: "مراسلة", title: "كتاب وارد مُحال إليك", body: "«تعميم بشأن أتمتة المعاملات الإدارية» من وزارة الإدارة المحلية.", at: "منذ 3 ساعات", read: true, channel: "تنبيه التطبيق", toId: "p20", link: { portal: "diwan", section: "correspondence" } },
@@ -420,7 +420,7 @@ export const audit: AuditEntry[] = [
 /* ───────────────────────── جداول مرجعية ───────────────────────── */
 
 export const escalationRules = [
-  { when: "تكليف عاجل جداً أو عاجل", act: "يجب أن يصل رد خلال 24 ساعة", to: "المكلَّف", level: 1 },
+  { when: "تكليف عاجل وسري أو عاجل", act: "يجب أن يصل رد خلال 24 ساعة", to: "المكلَّف", level: 1 },
   { when: "تكليف هام", act: "يجب أن يصل رد خلال 48 ساعة كحد أقصى", to: "المكلَّف", level: 1 },
   { when: "تكليف عادي", act: "يُحدَّد جدوله الزمني عند الإسناد (مثال: خمسة أيام)", to: "المكلَّف", level: 0 },
   { when: "انتهاء الجدول الزمني المحدد", act: "إشعار مراجعة إلى مُصدِر التكليف ليراجع المكلَّف", to: "مُصدِر التكليف", level: 2 },

@@ -108,7 +108,8 @@ export type AssignmentStatus =
   | "متأخر"
   | "مُجمَّد";
 
-export type Priority = "عادي" | "هام" | "عاجل" | "عاجل جداً";
+/** الأولويات المتاحة حالياً، مع إبقاء «عاجل جداً» لقراءة السجلات القديمة فقط. */
+export type Priority = "عادي" | "هام" | "عاجل" | "عاجل وسري" | "عاجل جداً";
 
 export interface DeliveryChain {
   sent?: string;

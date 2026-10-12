@@ -136,7 +136,8 @@ export function Overview() {
           )}
           </div>}
 
-          {showDecisions && <Panel title={canApproveDecision(me) ? "بانتظار اعتمادكم" : "معاملات التوقيع"} icon={<Stamp size={17} />} hint={`${decisions.length} معاملة`}>
+          {showDecisions && <div className="gov-mobile-hide">
+          <Panel title={canApproveDecision(me) ? "بانتظار اعتمادكم" : "معاملات التوقيع"} icon={<Stamp size={17} />} hint={`${decisions.length} معاملة`}>
             <div className="grid" style={{ gap: 10 }}>
               {decisions.slice(0, 4).map((d) => (
                 <div key={d.id} className="card hover pad" style={{ padding: 13 }}>
@@ -148,7 +149,8 @@ export function Overview() {
                 </div>
               ))}
             </div>
-          </Panel>}
+          </Panel>
+          </div>}
 
           {showAssignments && <div className="gov-mobile-hide">
           <Panel title="توجيهات السيد المحافظ" icon={<MessageSquare size={17} />} hint="آخر ما صدر">
@@ -860,7 +862,7 @@ export function AssignmentSheet({ a, onClose }: { a: Assignment; onClose: () => 
           <div className="row wrap" style={{ gap: 8, marginBottom: 14 }}>
             <StatusChip status={a.status} />
             <PriorityChip p={a.priority} />
-            <ClassChip c={a.classification} />
+            {a.classification === "سرّي" && a.priority !== "عاجل وسري" && <ClassChip c={a.classification} />}
             {a.escalation > 0 && <span className="chip danger"><AlarmClock size={13} /> مستوى تصعيد {a.escalation}</span>}
           </div>
           <Bar value={a.progress} />

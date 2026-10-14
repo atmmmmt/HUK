@@ -1192,3 +1192,159 @@ html[data-theme="dark"] .premium-select-option.selected {
     font-weight: 700;
   }
 }
+
+
+/* ============================================================
+   Governor home quick dock — premium unified actions
+   ============================================================ */
+@media (max-width: 900px) {
+  .m-today {
+    display: block !important;
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+
+  .m-today .mt-smart-dock {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 3px;
+    width: 100%;
+    padding: 7px;
+    border-radius: 22px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.98), rgba(250,251,253,.96));
+    border: 1px solid rgba(18, 37, 62, .06);
+    box-shadow:
+      0 1px 2px rgba(10, 26, 48, .035),
+      0 10px 30px rgba(10, 26, 48, .075);
+    overflow: visible;
+    isolation: isolate;
+    animation: itemIn .48s var(--e-out) both .04s;
+  }
+
+  .m-today .mt-smart-dock::before {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 16px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(201,163,78,.025), transparent 25%, transparent 75%, rgba(10,26,48,.018));
+    z-index: -1;
+  }
+
+  .m-today .mt-dock-item {
+    position: relative;
+    min-width: 0;
+    height: 66px;
+    padding: 6px 2px 5px;
+    display: grid;
+    grid-template-rows: 36px auto;
+    place-items: center;
+    align-content: center;
+    gap: 3px;
+    border-radius: 16px;
+    color: var(--ink-2);
+    transition:
+      transform .18s var(--e-soft),
+      background .22s var(--e-soft),
+      color .22s var(--e-soft);
+  }
+
+  .m-today .mt-dock-item:active {
+    transform: scale(.94);
+  }
+
+  .m-today .mt-dock-icon {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: rgba(10, 26, 48, .045);
+    color: var(--navy-700);
+    transition:
+      background .25s var(--e-soft),
+      color .25s var(--e-soft),
+      transform .2s var(--e-back);
+  }
+
+  .m-today .mt-dock-item.primary .mt-dock-icon {
+    background: rgba(201, 163, 78, .12);
+    color: var(--gold-700);
+  }
+
+  .m-today .mt-dock-item.lead {
+    background: var(--navy-900);
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(10, 26, 48, .16);
+  }
+
+  .m-today .mt-dock-item.lead .mt-dock-icon {
+    background: var(--gold);
+    color: var(--navy-900);
+    box-shadow: 0 3px 10px rgba(201, 163, 78, .28);
+  }
+
+  .m-today .mt-dock-item.lead .mt-dock-label {
+    color: #fff;
+  }
+
+  .m-today .mt-dock-label {
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 10.5px;
+    line-height: 1.15;
+    font-weight: 760;
+    color: inherit;
+  }
+
+  .m-today .mt-dock-icon i {
+    position: absolute;
+    top: -6px;
+    inset-inline-end: -7px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    display: grid;
+    place-items: center;
+    border-radius: 99px;
+    background: var(--danger);
+    color: #fff;
+    font-style: normal;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
+  }
+
+  /* نوقف ستايلات صف الاختصارات القديم حتى ما تتداخل مع التصميم الجديد */
+  .m-today > .mt-quick {
+    display: none !important;
+  }
+
+  html[data-theme="dark"] .m-today .mt-smart-dock {
+    background: rgba(15, 28, 46, .96);
+    border-color: rgba(255,255,255,.06);
+    box-shadow: 0 10px 28px rgba(0,0,0,.22);
+  }
+
+  html[data-theme="dark"] .m-today .mt-dock-icon {
+    background: rgba(255,255,255,.055);
+    color: #b9c8dc;
+  }
+
+  html[data-theme="dark"] .m-today .mt-dock-item.primary .mt-dock-icon {
+    background: rgba(201,163,78,.16);
+    color: var(--gold);
+  }
+
+  html[data-theme="dark"] .m-today .mt-dock-icon i {
+    box-shadow: 0 0 0 2px #0f1c2e;
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "governorate-exec-v13-premium-quick-dock";
+const CACHE_VERSION = "governorate-exec-v14-executive-tabbar";
 const APP_SHELL = [
   "/",
   "/diwan/overview/",

@@ -33,12 +33,17 @@ export default function TabBar({
   const router = useRouter();
   const { me, logout } = useStore();
   const nav = navByPortal[portal].filter((item) => canAccessSection(me, portal, item.key));
-  const keys = primary[portal];
-  const bottomEligible = nav.filter((n) => n.key !== "halls");
+  const executiveBottom = portal === "diwan" && (me.role === "governor" || me.role === "deputy");
+  const keys = executiveBottom ? ["overview", "followup", "decisions"] : primary[portal];
+  const bottomEligible = executiveBottom
+    ? nav.filter((n) => !["halls", "calendar", "correspondence"].includes(n.key))
+    : nav.filter((n) => n.key !== "halls");
   const preferred = keys.map((k) => bottomEligible.find((n) => n.key === k)).filter(Boolean) as typeof nav;
-  const tabs = [...preferred, ...bottomEligible.filter((n) => !preferred.includes(n))].slice(0, 4);
+  const tabs = executiveBottom
+    ? preferred
+    : [...preferred, ...bottomEligible.filter((n) => !preferred.includes(n))].slice(0, 4);
   const tabKeys = new Set(tabs.map((n) => n.key));
-  // «القاعات» تبقى دائماً داخل المزيد حتى لا تزاحم أقسام المتابعة اليومية.
+  // القاعات دائماً في «المزيد»، وللقيادة أيضاً التقويم والوارد يبقيان داخل «المزيد».
   const rest = nav.filter((n) => !tabKeys.has(n.key));
   const allowed = portalsFor(me);
   const tap = () => { try { navigator.vibrate?.(8); } catch {} };

@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Shell from "@/components/shell";
+import { writeUsageEvent } from "@/lib/db";
 import { canAccessSection, homeSectionFor, portalsFor } from "@/lib/access";
 import { navByPortal } from "@/lib/nav";
 import { currentUser } from "@/lib/session";
@@ -28,6 +29,12 @@ export default async function SectionPage({
   if (!me) redirect(`/login/?next=${encodeURIComponent(`/${portal}/${section}/`)}`);
 
   if (!canAccessSection(me, typedPortal, section)) {
+    await writeUsageEvent(me.id, "denied", {
+      path: `/${typedPortal}/${section}/`,
+      portal: typedPortal,
+      section,
+      reason: "محاولة فتح قسم خارج الصلاحيات",
+    }).catch(() => {});
     const samePortalHome = homeSectionFor(me, typedPortal);
     if (samePortalHome) redirect(`/${typedPortal}/${samePortalHome}/`);
 

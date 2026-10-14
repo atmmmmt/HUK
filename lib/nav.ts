@@ -12,6 +12,7 @@ export interface NavItem {
 export const navByPortal: Record<Portal, NavItem[]> = {
   diwan: [
     { key: "overview", label: "لوحة اليوم", icon: "LayoutGrid", group: "المكتب", title: "لوحة اليوم", sub: "صورة المحافظة في شاشة واحدة — ما يحتاج قراركم الآن" },
+    { key: "followup", label: "المتابعة", icon: "TrendingUp", group: "المتابعة", title: "المتابعة التنفيذية", sub: "ملخص واضح لما يحتاج انتباهكم الآن عبر جميع المكلّفين" },
     { key: "calendar", label: "التقويم والمواعيد", icon: "CalendarDays", group: "المكتب", title: "التقويم والمواعيد", sub: "برنامج اليوم والاستقبالات وطلبات المقابلة" },
     { key: "meetings", label: "الاجتماعات والمخرجات", icon: "Users", group: "المكتب", title: "الاجتماعات واللقاءات", sub: "من الدعوة إلى المحضر إلى تحويل كل قرار إلى تكليف" },
     { key: "decisions", label: "بانتظار الاعتماد", icon: "Stamp", group: "المكتب", title: "القرارات بانتظار الاعتماد", sub: "صندوق التوقيع — ما لا يمضي إلا بقراركم" },
@@ -40,6 +41,7 @@ export const navByPortal: Record<Portal, NavItem[]> = {
     { key: "users", label: "المستخدمون", icon: "Users", group: "الهيكل", title: "المستخدمون والحسابات", sub: "إنشاء الحسابات وإسناد الأدوار والجهات وإدارة الإنابات" },
     { key: "roles", label: "الأدوار والصلاحيات", icon: "ShieldCheck", group: "الصلاحيات", title: "الأدوار والصلاحيات", sub: "من يرى ماذا ومن يعتمد ماذا — من المحافظ نزولاً" },
     { key: "escalation", label: "قواعد التصعيد", icon: "AlarmClock", group: "الصلاحيات", title: "المهل وقواعد التصعيد", sub: "متى يُنبَّه ومن يُبلَّغ ومتى يصل الأمر إلى المحافظ" },
+    { key: "usage", label: "تحليلات الاستخدام", icon: "TrendingUp", group: "الرقابة", title: "تحليلات الاستخدام", sub: "الدخول والنشاط ونقاط التعثّر في استخدام النظام" },
     { key: "audit", label: "سجل التدقيق", icon: "ScrollText", group: "الرقابة", title: "سجل التدقيق", sub: "كل إجراء مسجّل باسم صاحبه — ولا يملك أحد حذفه" },
   ],
 };

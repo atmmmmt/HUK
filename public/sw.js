@@ -1,4 +1,4 @@
-const CACHE_VERSION = "governorate-exec-v11-assignment-access-home";
+const CACHE_VERSION = "governorate-exec-v12-followup-usage";
 const APP_SHELL = [
   "/",
   "/diwan/overview/",

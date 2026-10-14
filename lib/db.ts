@@ -24,6 +24,27 @@ export interface UserDoc extends Person {
   passwordHash: string;
   active: boolean;
   lastLogin?: string;
+  lastLoginISO?: string;
+  lastOpen?: string;
+  lastOpenISO?: string;
+  lastSeen?: string;
+  lastSeenISO?: string;
+  lastExit?: string;
+  lastExitISO?: string;
+}
+
+export type UsageEventType = "open" | "login" | "logout" | "page_view" | "denied" | "close";
+
+export interface UsageEvent {
+  id: string;
+  userId: string;
+  type: UsageEventType;
+  at: string;
+  atISO: string;
+  path?: string;
+  portal?: string;
+  section?: string;
+  reason?: string;
 }
 
 // الاتصال يُعاد استخدامه بين عمليات إعادة التحميل في بيئة التطوير
@@ -68,6 +89,11 @@ async function ensureIndexes(d: Db) {
       { key: { target: 1 }, name: "note_target" },
     ]),
     d.collection("documents").createIndex({ assignmentId: 1 }, { name: "document_assignment" }),
+    d.collection("usage").createIndexes([
+      { key: { userId: 1, atISO: -1 }, name: "usage_user_time" },
+      { key: { type: 1, atISO: -1 }, name: "usage_type_time" },
+      { key: { path: 1, type: 1 }, name: "usage_path_type" },
+    ]),
   ]);
 }
 
@@ -188,6 +214,7 @@ export const collections = {
   notifications: async () => (await db()).collection<Notification>("notifications"),
   audit: async () => (await db()).collection<AuditEntry>("audit"),
   requests: async () => (await db()).collection<RequestItem>("requests"),
+  usage: async () => (await db()).collection<UsageEvent>("usage"),
 };
 
 /** يزيل حقل _id من نتائج القراءة حتى تعبر إلى الواجهة كبيانات بسيطة */
@@ -210,6 +237,48 @@ export async function writeAudit(actorId: string, action: string, target: string
     at: now.toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" }),
     actorId, action, target, ip,
   } as AuditEntry);
+}
+
+/** يسجّل استخدام النظام ويحدّث آخر ظهور للمستخدم.
+ * heartbeat لا يُخزّن كسجل مستقل حتى لا تتضخم القاعدة؛ آخر ظهور فقط.
+ */
+export async function writeUsageEvent(
+  userId: string,
+  type: UsageEventType | "heartbeat",
+  detail: Pick<UsageEvent, "path" | "portal" | "section" | "reason"> = {},
+) {
+  const now = new Date();
+  const atISO = now.toISOString();
+  const at = now.toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" });
+  const users = await collections.users();
+
+  const userSet: Record<string, string> = { lastSeen: at, lastSeenISO: atISO };
+  if (type === "login") {
+    userSet.lastLogin = at;
+    userSet.lastLoginISO = atISO;
+  }
+  if (type === "open") {
+    userSet.lastOpen = at;
+    userSet.lastOpenISO = atISO;
+  }
+  if (type === "logout" || type === "close") {
+    userSet.lastExit = at;
+    userSet.lastExitISO = atISO;
+  }
+  await users.updateOne({ id: userId }, { $set: userSet });
+
+  if (type === "heartbeat") return;
+  await (await collections.usage()).insertOne({
+    id: "u" + now.getTime() + Math.floor(Math.random() * 1000),
+    userId,
+    type,
+    at,
+    atISO,
+    ...(detail.path ? { path: detail.path } : {}),
+    ...(detail.portal ? { portal: detail.portal } : {}),
+    ...(detail.section ? { section: detail.section } : {}),
+    ...(detail.reason ? { reason: detail.reason } : {}),
+  });
 }
 
 /** ينشئ إشعاراً موجّهاً لشخص */

@@ -1,16 +1,17 @@
 "use client";
 
-import { Assignments, Calendar, Correspondence, Decisions, EntityDecisions, Meetings, Overview } from "@/components/diwan";
+import { Assignments, Calendar, Correspondence, Decisions, EntityDecisions, FollowUp, Meetings, Overview } from "@/components/diwan";
 import { Delegations, Files, Halls, Notes, People } from "@/components/resources";
 import {
   Entities, EntityInbox, EntityPerformance, EntityReplies, EntityRequests, EntityStructure, EntityTasks,
 } from "@/components/directorates";
-import { AdminAudit, AdminEntities, AdminEscalation, AdminRoles, AdminUsers } from "@/components/admin";
+import { AdminAudit, AdminEntities, AdminEscalation, AdminRoles, AdminUsage, AdminUsers } from "@/components/admin";
 import type { Portal } from "@/lib/types";
 
 const views: Record<Portal, Record<string, () => React.JSX.Element>> = {
   diwan: {
     overview: Overview,
+    followup: FollowUp,
     calendar: Calendar,
     meetings: Meetings,
     decisions: Decisions,
@@ -39,6 +40,7 @@ const views: Record<Portal, Record<string, () => React.JSX.Element>> = {
     users: AdminUsers,
     roles: AdminRoles,
     escalation: AdminEscalation,
+    usage: AdminUsage,
     audit: AdminAudit,
   },
 };

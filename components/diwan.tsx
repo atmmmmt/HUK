@@ -191,6 +191,125 @@ function PriorityChipInline({ p }: { p: Assignment["priority"] }) {
   return <PriorityChip p={p} />;
 }
 
+
+/* ═══════════════════════ المتابعة التنفيذية ═══════════════════════ */
+
+export function FollowUp() {
+  const { assignments, people, me } = useStore();
+  const router = useRouter();
+
+  const visible = useMemo(
+    () => assignments.filter((a) => seesAssignment(me, a)),
+    [assignments, me],
+  );
+  const open = visible.filter((a) => a.status !== "مُغلق");
+  const late = open.filter((a) => a.status === "متأخر" || a.escalation >= 2);
+  const review = open.filter((a) => a.status === "قيد المراجعة");
+  const urgent = open.filter((a) => a.priority === "عاجل" || a.priority === "عاجل وسري");
+
+  const riskScore = (a: Assignment) => {
+    let score = 0;
+    if (a.status === "متأخر") score += 100;
+    score += a.escalation * 24;
+    if (a.priority === "عاجل وسري") score += 38;
+    else if (a.priority === "عاجل") score += 24;
+    if (a.status === "قيد المراجعة") score += 18;
+    if (a.progress <= 25 && a.status !== "مُسند") score += 8;
+    return score;
+  };
+
+  const ownerName = (id: string) => people.find((p) => p.id === id)?.name ?? "—";
+
+  const reasonOf = (a: Assignment) => {
+    const reasons: string[] = [];
+    if (a.status === "متأخر") reasons.push("متأخر");
+    if (a.escalation >= 2) reasons.push("مصعّد");
+    if (a.priority === "عاجل وسري") reasons.push("عاجل وسري");
+    else if (a.priority === "عاجل") reasons.push("عاجل");
+    if (a.status === "قيد المراجعة") reasons.push("بانتظار المراجعة");
+    if (!reasons.length && a.progress <= 25) reasons.push("إنجاز منخفض");
+    return reasons.slice(0, 2).join(" · ") || a.status;
+  };
+
+  const attention = [...open]
+    .filter((a) => riskScore(a) > 0)
+    .sort((a, b) => riskScore(b) - riskScore(a))
+    .slice(0, 8);
+
+  const peopleRows = people
+    .filter((p) => p.role !== "admin" && p.role !== "governor")
+    .map((p) => {
+      const mine = open.filter((a) => a.ownerId === p.id);
+      const mineLate = mine.filter((a) => a.status === "متأخر" || a.escalation >= 2);
+      const mineUrgent = mine.filter((a) => a.priority === "عاجل" || a.priority === "عاجل وسري");
+      const avg = mine.length ? Math.round(mine.reduce((sum, a) => sum + a.progress, 0) / mine.length) : 0;
+      return { p, mine, mineLate, mineUrgent, avg };
+    })
+    .sort((a, b) =>
+      b.mineLate.length - a.mineLate.length ||
+      b.mineUrgent.length - a.mineUrgent.length ||
+      b.mine.length - a.mine.length
+    );
+
+  return (
+    <div className="grid stagger executive-followup" style={{ gap: 16 }}>
+      <div className="grid g-4">
+        <Kpi label="يحتاج تدخل" value={late.length} meta="متأخر أو مصعّد" icon={<TriangleAlert size={17} />} tone={late.length ? "danger" : "ok"} />
+        <Kpi label="بانتظار المراجعة" value={review.length} meta="جاهز لقراركم" icon={<Stamp size={17} />} tone="warn" />
+        <Kpi label="عاجل الآن" value={urgent.length} meta="عاجل أو عاجل وسري" icon={<Clock3 size={17} />} tone="gold" />
+        <Kpi label="تكليف مفتوح" value={open.length} meta="ضمن نطاق المتابعة" icon={<ListTodo size={17} />} tone="navy" />
+      </div>
+
+      <Panel title="ما يحتاج انتباهكم الآن" icon={<TriangleAlert size={17} />} hint={attention.length ? "مرتّب حسب الحاجة للتدخل" : "لا ملفات حرجة حالياً"}>
+        {attention.length === 0 ? (
+          <Empty text="لا توجد ملفات تستدعي تدخلاً مباشراً الآن" hint="التكليفات المفتوحة ضمن المسار الطبيعي" />
+        ) : (
+          <div className="grid" style={{ gap: 9 }}>
+            {attention.map((a) => (
+              <button
+                key={a.id}
+                className="card hover pad"
+                style={{ textAlign: "right", width: "100%", padding: 12 }}
+                onClick={() => router.push("/diwan/assignments/?open=" + encodeURIComponent(a.id))}
+              >
+                <div className="row between wrap" style={{ gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <b style={{ display: "block", fontSize: 13.5 }}>{a.title}</b>
+                    <span className="tiny muted">{entityOf(a.entityId).short} · {ownerName(a.ownerId)}</span>
+                  </div>
+                  <div className="row wrap" style={{ gap: 5 }}>
+                    <span className={"chip " + (a.status === "متأخر" || a.escalation >= 2 ? "danger" : "warn")}>{reasonOf(a)}</span>
+                    <span className="chip">{a.progress}%</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </Panel>
+
+      <Panel title="متابعة المكلّفين" icon={<Users size={17} />} hint="ملخص سريع لكل شخص">
+        <div className="grid" style={{ gap: 8 }}>
+          {peopleRows.map(({ p, mine, mineLate, mineUrgent, avg }) => (
+            <div key={p.id} className="card pad row between wrap" style={{ padding: 11, gap: 10 }}>
+              <div style={{ minWidth: 170, flex: "1 1 220px" }}>
+                <PersonLine id={p.id} />
+              </div>
+              <div className="row wrap" style={{ gap: 5, justifyContent: "flex-end" }}>
+                <span className="chip navy">{mine.length} مفتوح</span>
+                {mineLate.length > 0 && <span className="chip danger">{mineLate.length} متأخر</span>}
+                {mineUrgent.length > 0 && <span className="chip warn">{mineUrgent.length} عاجل</span>}
+                {mine.length > 0 && <span className="chip">{avg}% متوسط الإنجاز</span>}
+                {mine.length === 0 && <span className="chip ok">لا تكليفات مفتوحة</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+    </div>
+  );
+}
+
 /* ═══════════════════════ التقويم والمواعيد ═══════════════════════ */
 
 export function Calendar() {

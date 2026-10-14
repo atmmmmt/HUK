@@ -44,7 +44,7 @@ export function can(person: Person, action: Action, ctx: Ctx = {}): boolean {
 /* ─────────────── نطاق الأقسام لكل دور ─────────────── */
 
 const ALL_DIWAN = [
-  "overview", "calendar", "meetings", "decisions", "assignments", "correspondence",
+  "overview", "followup", "calendar", "meetings", "decisions", "assignments", "correspondence",
   "halls", "delegations", "files", "people", "notes",
 ] as const;
 
@@ -52,7 +52,7 @@ const ALL_DIRECTORATES = [
   "entities", "inbox", "tasks", "replies", "meetings", "decisions", "requests", "structure", "performance", "notes",
 ] as const;
 
-const ALL_ADMIN = ["entities", "users", "roles", "escalation", "audit"] as const;
+const ALL_ADMIN = ["entities", "users", "roles", "escalation", "usage", "audit"] as const;
 
 export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly string[]>>> = {
   // القيادة

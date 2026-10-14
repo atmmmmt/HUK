@@ -434,6 +434,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await call("/api/auth/logout/", { method: "POST" }).catch(() => {});
+    try { sessionStorage.removeItem("gov.usage.open"); } catch { /* محجوب */ }
     router.replace("/login");
   }, [router]);
 

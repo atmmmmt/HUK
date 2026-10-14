@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { collections, writeAudit } from "@/lib/db";
+import { collections, writeAudit, writeUsageEvent } from "@/lib/db";
 import { createSession } from "@/lib/session";
 import { homeSectionFor, portalsFor } from "@/lib/access";
 import { body, handle, ipOf } from "@/lib/api";
@@ -27,10 +27,7 @@ export async function POST(request: Request) {
     }
 
     await createSession(user);
-    await users.updateOne(
-      { id: user.id },
-      { $set: { lastLogin: new Date().toLocaleString("ar-SY-u-nu-latn", { dateStyle: "short", timeStyle: "short" }) } },
-    );
+    await writeUsageEvent(user.id, "login", { path: "/login" }).catch(() => {});
     await writeAudit(user.id, "سجّل الدخول", user.username, ipOf(request));
 
     const homes = Object.fromEntries(

@@ -37,6 +37,64 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
   const [scrolled, setScrolled] = useState(false);
   const [finding, setFinding] = useState(false);
 
+  // تحليلات استخدام خفيفة: زيارة الصفحة + آخر ظهور. لا تُسجّل محتوى الحقول أو المراسلات.
+  useEffect(() => {
+    if (!ready) return;
+    const path = `/${portal}/${section}/`;
+    let firstOpen = false;
+    try {
+      firstOpen = sessionStorage.getItem("gov.usage.open") !== "1";
+      if (firstOpen) sessionStorage.setItem("gov.usage.open", "1");
+    } catch { /* sessionStorage قد يكون محجوباً */ }
+
+    if (firstOpen) {
+      void fetch("/api/usage/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "open", portal, section, path }),
+        keepalive: true,
+      }).catch(() => {});
+    }
+
+    void fetch("/api/usage/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "page_view", portal, section, path }),
+      keepalive: true,
+    }).catch(() => {});
+  }, [ready, portal, section]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const heartbeat = () => {
+      if (document.visibilityState !== "visible") return;
+      void fetch("/api/usage/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "heartbeat", portal, section, path: window.location.pathname }),
+        keepalive: true,
+      }).catch(() => {});
+    };
+    heartbeat();
+    const timer = window.setInterval(heartbeat, 90_000);
+    const onVisible = () => { if (document.visibilityState === "visible") heartbeat(); };
+    const onLeave = () => {
+      try {
+        navigator.sendBeacon(
+          "/api/usage/",
+          new Blob([JSON.stringify({ type: "close", portal, section, path: window.location.pathname })], { type: "application/json" }),
+        );
+      } catch { /* أفضل جهد عند إغلاق التطبيق */ }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pagehide", onLeave);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pagehide", onLeave);
+    };
+  }, [ready, portal, section]);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 56);
     onScroll();

@@ -39,6 +39,7 @@ function LoginForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "تعذّر تسجيل الدخول");
+      try { sessionStorage.removeItem("gov.usage.open"); } catch { /* محجوب */ }
       let seen = "0";
       try { seen = localStorage.getItem("gov.welcomed") ?? "0"; } catch { /* محجوب */ }
       const requestedHome = portal && typeof data?.homes?.[portal] === "string" ? data.homes[portal] : null;

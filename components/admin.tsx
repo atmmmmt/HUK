@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlarmClock, ArrowLeft, Building2, CheckCircle2, Plus, ScrollText, ShieldCheck, Trash2,
   TriangleAlert, Users, XCircle,
 } from "lucide-react";
 import { audit, entities, entityOf, people, roles } from "@/lib/lookup";
 import { escalationRules } from "@/lib/constants";
+import { navByPortal } from "@/lib/nav";
 import { actionLabels, canManageSystem, reachLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Action, Entity } from "@/lib/types";
@@ -370,6 +371,194 @@ export function AdminEscalation() {
           </div>
         </Panel>
       </div>
+    </div>
+  );
+}
+
+
+/* ═══════════════════════ تحليلات الاستخدام ═══════════════════════ */
+
+type UsageReport = {
+  days: number;
+  summary: {
+    active24: number;
+    sessions24: number;
+    denied: number;
+    usersTracked: number;
+  };
+  users: Array<{
+    userId: string;
+    name: string;
+    title: string;
+    role: string;
+    entityId: string;
+    active: boolean;
+    online: boolean;
+    lastLogin: string | null;
+    lastLoginISO: string | null;
+    lastOpen: string | null;
+    lastOpenISO: string | null;
+    lastSeen: string | null;
+    lastSeenISO: string | null;
+    lastExit: string | null;
+    lastExitISO: string | null;
+    visits: number;
+    sessions: number;
+    logins: number;
+    topPage: string | null;
+    topPageVisits: number;
+    denied: number;
+    troublePage: string | null;
+    troubleCount: number;
+  }>;
+  friction: Array<{ path: string; attempts: number; users: number }>;
+};
+
+function usagePageLabel(path: string | null) {
+  if (!path) return "—";
+  const m = path.match(/^\/(diwan|directorates|admin)\/([^/]+)/);
+  if (!m) return path;
+  const portal = m[1] as keyof typeof navByPortal;
+  return navByPortal[portal].find((n) => n.key === m[2])?.label ?? path;
+}
+
+function usageTime(iso: string | null, fallback: string | null) {
+  if (!iso) return fallback ?? "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return fallback ?? "—";
+  return d.toLocaleString("ar-SY-u-nu-latn", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+export function AdminUsage() {
+  const [report, setReport] = useState<UsageReport | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/usage/?days=14", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "تعذّر تحميل التقرير");
+      setReport(data as UsageReport);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "تعذّر تحميل التقرير");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void load(); }, []);
+
+  if (loading && !report) {
+    return <div className="card pad"><div className="skel" style={{ height: 260 }} /></div>;
+  }
+
+  if (!report) {
+    return (
+      <div className="card pad" style={{ textAlign: "center" }}>
+        <TriangleAlert size={28} style={{ color: "var(--warn)", marginBottom: 10 }} />
+        <b style={{ display: "block", marginBottom: 6 }}>تعذّر تحميل تحليلات الاستخدام</b>
+        <p className="tiny muted" style={{ marginBottom: 12 }}>{error}</p>
+        <button className="btn primary" onClick={() => void load()}>إعادة المحاولة</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid stagger" style={{ gap: 16 }}>
+      <div className="row between wrap" style={{ gap: 10 }}>
+        <div>
+          <b style={{ display: "block", fontSize: 15 }}>تقرير استخدام آخر {report.days} يوماً</b>
+          <span className="tiny muted">يسجّل حركة الاستخدام فقط، وليس محتوى المعاملات أو الرسائل.</span>
+        </div>
+        <button className="btn ghost sm" disabled={loading} onClick={() => void load()}>
+          {loading ? "جارٍ التحديث…" : "تحديث التقرير"}
+        </button>
+      </div>
+
+      <div className="grid g-4">
+        <Kpi label="نشط خلال 24 ساعة" value={report.summary.active24} icon={<Users size={17} />} tone="ok" />
+        <Kpi label="مرات فتح التطبيق خلال 24 ساعة" value={report.summary.sessions24} icon={<CheckCircle2 size={17} />} tone="navy" />
+        <Kpi label="محاولات وصول مرفوضة" value={report.summary.denied} icon={<TriangleAlert size={17} />} tone={report.summary.denied ? "danger" : "ok"} />
+        <Kpi label="مستخدمون ظهر لهم نشاط" value={report.summary.usersTracked} icon={<ScrollText size={17} />} />
+      </div>
+
+      <Panel title="نشاط المستخدمين" icon={<Users size={17} />} hint="آخر دخول · آخر ظهور · نقاط التعثّر" flush>
+        <div className="tbl-wrap">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th>المستخدم</th>
+                <th>الحالة</th>
+                <th>آخر فتح</th>
+                <th>آخر ظهور / خروج</th>
+                <th>الأكثر استخداماً</th>
+                <th>التعثّر</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.users.map((u) => (
+                <tr key={u.userId}>
+                  <td>
+                    <div className="t-main">{u.name}</div>
+                    <div className="t-sub">{u.title}</div>
+                  </td>
+                  <td>
+                    {!u.active ? <span className="chip">معطّل</span>
+                      : u.online ? <span className="chip ok live">متصل الآن</span>
+                        : <span className="chip">غير متصل</span>}
+                  </td>
+                  <td className="tiny"><div>{usageTime(u.lastOpenISO, u.lastOpen)}</div>{u.lastLoginISO && <div className="muted" style={{ marginTop: 3 }}>دخول: {usageTime(u.lastLoginISO, u.lastLogin)}</div>}</td>
+                  <td className="tiny">
+                    <div>{usageTime(u.lastSeenISO, u.lastSeen)}</div>
+                    {u.lastExitISO && <div className="muted" style={{ marginTop: 3 }}>خرج: {usageTime(u.lastExitISO, u.lastExit)}</div>}
+                  </td>
+                  <td>
+                    <div className="t-main" style={{ fontSize: 12.5 }}>{usagePageLabel(u.topPage)}</div>
+                    <div className="t-sub">{u.topPageVisits ? u.topPageVisits + " زيارة" : "لا بيانات بعد"}</div>
+                  </td>
+                  <td>
+                    {u.denied > 0 ? (
+                      <>
+                        <span className="chip danger">{u.denied} محاولة</span>
+                        <div className="t-sub" style={{ marginTop: 5 }}>{usagePageLabel(u.troublePage)}</div>
+                      </>
+                    ) : <span className="chip ok">لا تعثّر مسجّل</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+
+      <Panel title="أكثر نقاط التعثّر" icon={<TriangleAlert size={17} />} hint="صفحات حاول المستخدمون فتحها ولم تسمح بها صلاحياتهم">
+        {report.friction.length === 0 ? (
+          <Empty text="لا توجد محاولات وصول مرفوضة ضمن الفترة" hint="هذا مؤشر جيد على وضوح التنقّل والصلاحيات" />
+        ) : (
+          <div className="grid" style={{ gap: 9 }}>
+            {report.friction.map((f, i) => (
+              <div key={f.path} className="card pad row between wrap" style={{ padding: 12, gap: 10 }}>
+                <div className="row" style={{ gap: 10, minWidth: 0 }}>
+                  <span className={"chip " + (i === 0 ? "danger" : i < 3 ? "warn" : "")}>{i + 1}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <b style={{ fontSize: 13.5 }}>{usagePageLabel(f.path)}</b>
+                    <div className="tiny muted ltr" style={{ marginTop: 3 }}>{f.path}</div>
+                  </div>
+                </div>
+                <span className="tiny muted">{f.attempts} محاولة · {f.users} مستخدم</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Panel>
     </div>
   );
 }

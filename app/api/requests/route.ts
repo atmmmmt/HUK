@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // كل طلب يصل إلى الاختصاص المسؤول عنه، لا إلى قسم عام لا يخصه.
     const users = await collections.users();
-    const targetRoles: RoleKey[] = r.kind === "حجز قاعة" ? ["halls"] : ["chief"];
+    const targetRoles: RoleKey[] = r.kind === "حجز قاعة" ? ["halls", "protocol"] : ["chief"];
     const targets = await users.find({ role: { $in: targetRoles }, active: true }).toArray();
     for (const t of targets) {
       const preferredSection =

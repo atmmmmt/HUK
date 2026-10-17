@@ -28,7 +28,7 @@ export const defaultGrants: Record<RoleKey, Record<Action, Grant>> = {
   head: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   employee: { view: "partial", create: "none", edit: "partial", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   registry: { view: "partial", create: "full", edit: "full", assign: "partial", approve: "none", close: "none", archive: "full", delete: "none" },
-  protocol: { view: "partial", create: "full", edit: "full", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
+  protocol: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
   halls: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
   admin: { view: "partial", create: "full", edit: "full", assign: "none", approve: "none", close: "none", archive: "none", delete: "partial" },
 };
@@ -253,7 +253,7 @@ export function canApproveDecision(person: Person): boolean {
 
 /** اعتماد حجوزات القاعات محصور بسلسلة الحجز الفعلية. */
 export function canApproveBooking(person: Person): boolean {
-  return ["halls", "governor", "deputy"].includes(person.role);
+  return ["halls", "protocol", "governor", "deputy"].includes(person.role);
 }
 
 export function canManageSystem(person: Person): boolean {
@@ -362,7 +362,7 @@ export function canScheduleMeeting(person: Person): boolean {
 }
 
 export function canRespondRequest(person: Person, kind?: string): boolean {
-  if (kind === "حجز قاعة") return ["halls", "governor", "deputy"].includes(person.role);
+  if (kind === "حجز قاعة") return canApproveBooking(person);
   return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
 }
 

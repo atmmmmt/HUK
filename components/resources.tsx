@@ -60,7 +60,7 @@ export function Halls() {
                     </div>
                     <PersonLine id={req.byId} />
                   </div>
-                  {me.role === "halls" && (
+                  {canApprove && (
                     <div className="row" style={{ gap: 7, marginTop: 10 }}>
                       <button
                         className="btn gold sm"

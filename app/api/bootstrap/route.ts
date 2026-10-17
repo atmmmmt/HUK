@@ -70,7 +70,7 @@ export async function GET() {
     const canSeeRequests =
       canAccessSection(me, "directorates", "requests") ||
       canRespondRequest(me) ||
-      me.role === "halls";
+      canRespondRequest(me, "حجز قاعة");
     const needsAllPeople =
       ["governor", "deputy", "secgen", "chief", "followup", "admin"].includes(me.role) ||
       canIssueAssignment(me) ||

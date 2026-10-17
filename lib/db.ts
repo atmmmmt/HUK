@@ -162,7 +162,26 @@ async function syncStructure(d: Db) {
   }
 
   for (const m of seed.moves) {
-    await users.updateOne({ id: m.id, entityId: m.from }, { $set: { entityId: m.to }, $unset: { unit: "" } });
+    const unit = "unit" in m ? { $set: { entityId: m.to, unit: m.unit } } : { $set: { entityId: m.to }, $unset: { unit: "" } };
+    await users.updateOne({ id: m.id, entityId: m.from }, unit);
+  }
+
+  // مراجع الحسابات الملغاة تنتقل قبل حذفها: الملكية إلى مدير الجهة، والقاعات إلى المراسم
+  const leaving = Object.keys(seed.reassigned);
+  if (await users.countDocuments({ id: { $in: leaving } })) {
+    const single: [string, string][] = [
+      ["assignments", "ownerId"], ["assignments", "issuerId"], ["bookings", "requesterId"], ["meetings", "chairId"],
+      ["meetings", "secretaryId"], ["letters", "registrarId"], ["decisions", "submittedBy"], ["delegations", "hostId"],
+      ["files", "ownerId"], ["requests", "byId"],
+    ];
+    const lists: [string, string][] = [["assignments", "partnerIds"], ["meetings", "inviteeIds"], ["meetings", "confirmed"], ["meetings", "apologized"]];
+    await d.collection("halls").updateMany({ supervisorId: { $in: leaving } }, { $set: { supervisorId: "p17" } });
+    for (const [from, to] of Object.entries(seed.reassigned)) {
+      for (const [col, field] of single) await d.collection(col).updateMany({ [field]: from }, { $set: { [field]: to } });
+      await d.collection("meetings").updateMany({ "outcomes.ownerId": from }, { $set: { "outcomes.$[o].ownerId": to } }, { arrayFilters: [{ "o.ownerId": from }] });
+    }
+    for (const [col, field] of lists) await d.collection(col).updateMany({ [field]: { $in: leaving } }, { $pull: { [field]: { $in: leaving } } as never });
+    await d.collection("notifications").deleteMany({ toId: { $in: leaving } });
   }
 
   const goneUsers = await users.deleteMany({ id: { $in: seed.retired.people } });

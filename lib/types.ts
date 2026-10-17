@@ -11,9 +11,10 @@ export type RoleKey =
   | "chief"
   | "followup"
   | "director"
+  | "branch"
+  | "office"
   | "head"
   | "employee"
-  | "area"
   | "registry"
   | "protocol"
   | "halls"
@@ -37,7 +38,11 @@ export interface Entity {
   id: string;
   name: string;
   short: string;
-  kind: "ديوان" | "مديرية" | "مؤسسة" | "دائرة" | "مجلس" | "منطقة" | "حي";
+  kind: "ديوان" | "مكتب" | "مديرية" | "مؤسسة" | "هيئة" | "دائرة" | "مجلس";
+  /** أجهزة المحافظة نفسها (مديرية المحافظة) أو المديريات الرئيسية (مديريات المحافظة) */
+  tier?: "governorate" | "main";
+  /** ترتيب العرض كما في ملف البيانات؛ الجهات المضافة من لوحة التحكم تأتي بعدها */
+  order?: number;
   managerId: string;
   units: string[];
   staffCount: number;

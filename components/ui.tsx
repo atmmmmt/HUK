@@ -64,7 +64,7 @@ export function Bar({ value }: { value: number }) {
 
 export function Ava({ id, size }: { id: string; size?: "sm" | "lg" }) {
   const p = personOf(id);
-  const tone = p.role === "governor" || p.role === "deputy" ? "gold" : p.role === "director" ? "teal" : p.role === "chief" ? "plum" : "";
+  const tone = p.role === "governor" || p.role === "deputy" ? "gold" : p.role === "director" || p.role === "branch" ? "teal" : p.role === "chief" ? "plum" : "";
   return <span className={`ava ${size ?? ""} ${tone}`} title={p.name}>{p.initials}</span>;
 }
 

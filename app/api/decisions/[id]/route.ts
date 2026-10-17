@@ -30,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     );
 
     const users = await collections.users();
-    const director = await users.findOne({ entityId: current.entityId, role: "director" });
+    const director = await users.findOne({ entityId: current.entityId, role: { $in: ["director", "branch"] } });
     if (director) {
       await pushNotification({
         kind: "تصعيد",

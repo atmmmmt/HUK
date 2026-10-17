@@ -42,7 +42,7 @@ interface Store {
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
   resolveDecision: (id: string, action: "approve" | "return") => Promise<void>;
-  addEntity: (input: { name: string; kind: string; units: string[] }) => Promise<void>;
+  addEntity: (input: { name: string; kind: string; tier: string; units: string[] }) => Promise<void>;
   toggleEntity: (id: string, active: boolean) => Promise<void>;
   logout: () => Promise<void>;
   meetings: Meeting[];
@@ -285,7 +285,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, action === "approve" ? "اعتُمدت المعاملة وسُجّلت في سجل التدقيق" : "أُعيدت المعاملة مع الملاحظات");
   }, [guard, patchLocal]);
 
-  const addEntity = useCallback(async (input: { name: string; kind: string; units: string[] }) => {
+  const addEntity = useCallback(async (input: { name: string; kind: string; tier: string; units: string[] }) => {
     await guard(async () => {
       const { entity } = await call("/api/entities/", { method: "POST", body: JSON.stringify(input) });
       patchLocal((b) => ({ ...b, entities: [...b.entities, entity] }));

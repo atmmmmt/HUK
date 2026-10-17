@@ -42,6 +42,16 @@ export const roles: Role[] = [
     grants: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
   },
   {
+    key: "branch", title: "مدير فرع", scope: "فرعه فقط", reach: "بوابة المديريات",
+    summary: "يدير فرع جهته في المحافظة بصلاحيات مدير المديرية نفسها: يوزّع المهام ويرفع الردود والمعاملات باسم الفرع فقط.",
+    grants: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
+  },
+  {
+    key: "office", title: "مدير مكتب", scope: "مكتبه", reach: "داخل الجهة",
+    summary: "يدير مكتباً داخل جهته: يرى عمل مكتبه والمهام المرتبطة به ويوزّع العمل ضمن حدوده.",
+    grants: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
+  },
+  {
     key: "head", title: "رئيس قسم", scope: "وحدته", reach: "داخل المديرية",
     summary: "يرى عمل وحدته والمهام المرتبطة بها ويوزّع العمل ضمن حدود القسم.",
     grants: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
@@ -50,11 +60,6 @@ export const roles: Role[] = [
     key: "employee", title: "موظف منفّذ", scope: "المسند إليه", reach: "مهامه فقط",
     summary: "يرى تكليفاته ومشاركاته واجتماعاته وطلباته فقط ويحدّث التنفيذ ويرفع المرفقات.",
     grants: { view: "partial", create: "none", edit: "partial", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
-  },
-  {
-    key: "area", title: "مسؤول منطقة أو حي", scope: "نطاقه الجغرافي", reach: "نطاقه فقط",
-    summary: "يتابع ما يخص منطقته أو حيّه ويرفع الطلبات والتقارير ضمن نطاقه.",
-    grants: { view: "partial", create: "full", edit: "partial", assign: "partial", approve: "none", close: "none", archive: "none", delete: "none" },
   },
   {
     key: "registry", title: "الديوان وأمانة السر", scope: "المراسلات والمحاضر", reach: "اختصاص أمانة السر",
@@ -83,27 +88,47 @@ export const roleOf = (key: string) => roles.find((r) => r.key === key)!;
 /* ───────────────────────── الجهات ───────────────────────── */
 
 export const entities: Entity[] = [
-  { id: "e0", name: "ديوان مكتب السيد المحافظ", short: "الديوان", kind: "ديوان", managerId: "p3", units: ["السكرتارية", "المتابعة", "أمانة السر", "المراسم"], staffCount: 24, active: true, compliance: 96, openTasks: 14, lateTasks: 1, accent: "navy" },
+  // ── مديرية المحافظة (الواجهة الأولى): أجهزة المحافظة نفسها
+  { id: "e0", name: "مكتب المحافظ", short: "مكتب المحافظ", kind: "ديوان", tier: "governorate", managerId: "p3", units: ["السكرتارية", "أمانة السر", "المتابعة"], staffCount: 24, active: true, compliance: 96, openTasks: 14, lateTasks: 1, accent: "navy" },
+  { id: "e13", name: "مكتب النائب", short: "مكتب النائب", kind: "مكتب", tier: "governorate", managerId: "p2", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  { id: "e14", name: "مكتب النائب الثاني", short: "مكتب النائب الثاني", kind: "مكتب", tier: "governorate", managerId: "p35", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  { id: "e5", name: "المديرية القانونية", short: "القانونية", kind: "مديرية", tier: "governorate", managerId: "p14", units: ["العقود", "الدعاوى", "الاستشارات"], staffCount: 38, active: true, compliance: 83, openTasks: 11, lateTasks: 2, accent: "gold" },
+  { id: "e15", name: "مديرية الرقابة الداخلية", short: "الرقابة الداخلية", kind: "مديرية", tier: "governorate", managerId: "p36", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "plum" },
+  { id: "e10", name: "مديرية المتابعة والشكاوى", short: "المتابعة والشكاوى", kind: "مديرية", tier: "governorate", managerId: "p32", units: ["دائرة متابعة تنفيذ القرارات", "دائرة المتابعة الميدانية", "دائرة الشكاوى"], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e7", name: "المديرية المالية", short: "المالية", kind: "مديرية", tier: "governorate", managerId: "p21", units: ["الموازنة", "المحاسبة", "التدقيق"], staffCount: 76, active: true, compliance: 86, openTasks: 13, lateTasks: 1, accent: "plum" },
+  { id: "e16", name: "مديرية الشؤون الإدارية", short: "الشؤون الإدارية", kind: "مديرية", tier: "governorate", managerId: "p37", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e11", name: "مديرية الإعلام", short: "الإعلام", kind: "مديرية", tier: "governorate", managerId: "p33", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "plum" },
+  { id: "e17", name: "مديرية الاستثمار", short: "الاستثمار", kind: "مديرية", tier: "governorate", managerId: "p38", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  { id: "e18", name: "مديرية الدعم التنفيذي", short: "الدعم التنفيذي", kind: "مديرية", tier: "governorate", managerId: "p39", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e8", name: "مديرية العلاقات العامة لمحافظة الرقة", short: "العلاقات العامة", kind: "مديرية", tier: "governorate", managerId: "p30", units: ["دائرة العلاقات المجتمعية", "دائرة تنظيم الفعاليات", "دائرة التواصل الحكومي", "دائرة الشراكات والعلاقات المدنية"], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e19", name: "المراسم", short: "المراسم", kind: "دائرة", tier: "governorate", managerId: "p17", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "plum" },
 
-  // المرحلة الأولى: المديريات المركزية
-  { id: "e1", name: "مديرية الخدمات الفنية", short: "الخدمات الفنية", kind: "مديرية", managerId: "p5", units: ["شعبة الصيانة", "قسم الطرق", "قسم الإنارة"], staffCount: 186, active: true, compliance: 74, openTasks: 31, lateTasks: 6, accent: "gold" },
-  { id: "e2", name: "مديرية التخطيط العمراني", short: "التخطيط العمراني", kind: "مديرية", managerId: "p8", units: ["قسم الدراسات", "قسم الرخص", "قسم المساحة"], staffCount: 142, active: true, compliance: 88, openTasks: 19, lateTasks: 2, accent: "teal" },
-  { id: "e3", name: "مديرية الصحة", short: "الصحة", kind: "مديرية", managerId: "p10", units: ["الرعاية الأولية", "المشافي", "الصحة البيئية"], staffCount: 310, active: true, compliance: 91, openTasks: 22, lateTasks: 1, accent: "plum" },
-  { id: "e4", name: "المؤسسة العامة للمياه", short: "مؤسسة المياه", kind: "مؤسسة", managerId: "p12", units: ["التشغيل", "الشبكات", "الجباية"], staffCount: 264, active: true, compliance: 69, openTasks: 27, lateTasks: 8, accent: "navy" },
-  { id: "e5", name: "مديرية الشؤون القانونية", short: "الشؤون القانونية", kind: "دائرة", managerId: "p14", units: ["العقود", "الدعاوى", "الاستشارات"], staffCount: 38, active: true, compliance: 83, openTasks: 11, lateTasks: 2, accent: "gold" },
-  { id: "e6", name: "مديرية الدفاع المدني", short: "الدفاع المدني", kind: "مديرية", managerId: "p16", units: ["الإطفاء", "الإنقاذ", "خطط الطوارئ"], staffCount: 198, active: true, compliance: 94, openTasks: 9, lateTasks: 0, accent: "teal" },
-  { id: "e7", name: "مديرية المالية", short: "المالية", kind: "مديرية", managerId: "p21", units: ["الموازنة", "المحاسبة", "التدقيق"], staffCount: 76, active: true, compliance: 86, openTasks: 13, lateTasks: 1, accent: "plum" },
+  // ── مديريات المحافظة (الواجهة الثانية): المديريات الرئيسية
+  { id: "e1", name: "مديرية الخدمات الفنية", short: "الخدمات الفنية", kind: "مديرية", tier: "main", managerId: "p5", units: ["شعبة الصيانة", "قسم الطرق", "قسم الإنارة"], staffCount: 186, active: true, compliance: 74, openTasks: 31, lateTasks: 6, accent: "gold" },
+  { id: "e2", name: "مديرية التخطيط العمراني", short: "التخطيط العمراني", kind: "مديرية", tier: "main", managerId: "p8", units: ["قسم الدراسات", "قسم الرخص", "قسم المساحة"], staffCount: 142, active: true, compliance: 88, openTasks: 19, lateTasks: 2, accent: "teal" },
+  { id: "e3", name: "مديرية الصحة", short: "الصحة", kind: "مديرية", tier: "main", managerId: "p10", units: ["الرعاية الأولية", "المشافي", "الصحة البيئية"], staffCount: 310, active: true, compliance: 91, openTasks: 22, lateTasks: 1, accent: "plum" },
+  { id: "e20", name: "مديرية التربية", short: "التربية", kind: "مديرية", tier: "main", managerId: "p40", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e21", name: "مديرية الزراعة", short: "الزراعة", kind: "مديرية", tier: "main", managerId: "p41", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e4", name: "المؤسسة العامة للمياه", short: "مؤسسة المياه", kind: "مؤسسة", tier: "main", managerId: "p12", units: ["التشغيل", "الشبكات", "الجباية"], staffCount: 264, active: true, compliance: 69, openTasks: 27, lateTasks: 8, accent: "navy" },
+  { id: "e6", name: "مديرية الدفاع المدني", short: "الدفاع المدني", kind: "مديرية", tier: "main", managerId: "p16", units: ["الإطفاء", "الإنقاذ", "خطط الطوارئ"], staffCount: 198, active: true, compliance: 94, openTasks: 9, lateTasks: 0, accent: "teal" },
+  { id: "e9", name: "مديرية الدعم والتوريد", short: "الدعم والتوريد", kind: "مديرية", tier: "main", managerId: "p31", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
 
-  // مناطق محافظة الرقة: حسابات لرفع الإحصائيات عند الطلب
-  { id: "a1", name: "منطقة الطبقة", short: "الطبقة", kind: "منطقة", managerId: "p22", units: ["مكتب المنطقة"], staffCount: 54, active: true, compliance: 81, openTasks: 6, lateTasks: 1, accent: "navy" },
-  { id: "a2", name: "منطقة تل أبيض", short: "تل أبيض", kind: "منطقة", managerId: "p23", units: ["مكتب المنطقة"], staffCount: 88, active: true, compliance: 89, openTasks: 8, lateTasks: 0, accent: "gold" },
-  { id: "a3", name: "منطقة معدان", short: "معدان", kind: "منطقة", managerId: "p24", units: ["مكتب المنطقة"], staffCount: 47, active: true, compliance: 77, openTasks: 5, lateTasks: 2, accent: "teal" },
-
-  // أحياء مدينة الرقة
-  { id: "h1", name: "حي المشلب", short: "المشلب", kind: "حي", managerId: "p27", units: ["مكتب الحي"], staffCount: 18, active: true, compliance: 85, openTasks: 3, lateTasks: 0, accent: "plum" },
-  { id: "h2", name: "حي الدرعية", short: "الدرعية", kind: "حي", managerId: "p28", units: ["مكتب الحي"], staffCount: 21, active: true, compliance: 92, openTasks: 2, lateTasks: 0, accent: "navy" },
-  { id: "h3", name: "حي الرميلة", short: "الرميلة", kind: "حي", managerId: "p29", units: ["مكتب الحي"], staffCount: 16, active: true, compliance: 73, openTasks: 4, lateTasks: 1, accent: "gold" },
+  // فروع الجهات المركزية في المحافظة
+  { id: "e12", name: "هيئة الاستثمار السورية — فرع الرقة", short: "هيئة الاستثمار", kind: "هيئة", tier: "main", managerId: "p34", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
 ];
+
+/** حسابات انتقلت إلى جهة أخرى: تُنقل في القواعد القائمة إن كانت ما تزال في جهتها القديمة */
+export const moves = [
+  { id: "p2", from: "e0", to: "e13" },
+  { id: "p17", from: "e0", to: "e19" },
+];
+
+/** جهات وحسابات أُلغيت من الهيكل: تُحذف من القواعد القائمة عند التشغيل */
+export const retired = {
+  entities: ["a1", "a2", "a3", "h1", "h2", "h3"],
+  people: ["p22", "p23", "p24", "p27", "p28", "p29"],
+  roles: ["area"],
+};
 
 export const entityOf = (id: string) => entities.find((e) => e.id === id)!;
 
@@ -111,7 +136,8 @@ export const entityOf = (id: string) => entities.find((e) => e.id === id)!;
 
 export const people: Person[] = [
   { id: "p1", name: "السيد المحافظ", title: "محافظ الرقة", entityId: "e0", role: "governor", phone: "0930 000 001", ext: "100", office: "الطابق الرابع — مكتب المحافظ", duties: ["رسم السياسة التنفيذية للمحافظة", "اعتماد القرارات والتكليفات الكبرى", "ترؤس مجلس المحافظة وخلية الأزمة"], clearance: "سرّي", avgResponseHours: 3, initials: "م" },
-  { id: "p2", name: "نائب المحافظ", title: "نائب المحافظ", entityId: "e0", role: "deputy", phone: "0930 000 002", ext: "101", office: "الطابق الرابع", duties: ["الإنابة عن المحافظ", "متابعة الملفات الخدمية", "رئاسة اللجنة التنفيذية"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ن" },
+  { id: "p2", name: "نائب المحافظ", title: "نائب المحافظ", entityId: "e13", role: "deputy", phone: "0930 000 002", ext: "101", office: "الطابق الرابع", duties: ["الإنابة عن المحافظ", "متابعة الملفات الخدمية", "رئاسة اللجنة التنفيذية"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ن" },
+  { id: "p35", name: "النائب الثاني", title: "النائب الثاني للمحافظ", entityId: "e14", role: "deputy", phone: "0930 000 035", ext: "105", office: "الطابق الرابع", duties: ["الإنابة عن المحافظ فيما يُكلَّف به", "متابعة الملفات المسندة إلى مكتبه"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ث" },
   { id: "p25", name: "معاون المحافظ", title: "معاون المحافظ", entityId: "e0", role: "assistant", phone: "0930 000 025", ext: "103", office: "الطابق الرابع", duties: ["الإنابة في الاعتماد والمتابعة", "الإشراف على الملفات المكلّف بها"], clearance: "سرّي", avgResponseHours: 6, initials: "ع" },
   { id: "p26", name: "الأمين العام", title: "الأمين العام للمحافظة", entityId: "e0", unit: "أمانة السر", role: "secgen", phone: "0930 000 026", ext: "104", office: "الطابق الثالث", duties: ["تنظيم سير العمل بين الديوان والمديريات", "متابعة تنفيذ القرارات وأرشفتها"], clearance: "سرّي", avgResponseHours: 4, initials: "أ" },
   { id: "p3", name: "مدير مكتب المحافظ", title: "مدير مكتب السيد المحافظ", entityId: "e0", unit: "السكرتارية", role: "chief", phone: "0930 000 003", ext: "102", office: "الطابق الرابع — مكتب المدير", duties: ["إدارة تقويم المحافظ والمواعيد", "فرز الوارد وتحديد ما يصل إلى المحافظ", "إصدار التكليفات نيابة عن المحافظ"], clearance: "سرّي", avgResponseHours: 2, initials: "م" },
@@ -125,23 +151,48 @@ export const people: Person[] = [
   { id: "p11", name: "رئيس الرعاية الأولية", title: "رئيس دائرة الرعاية الأولية", entityId: "e3", unit: "الرعاية الأولية", role: "head", phone: "0930 000 011", ext: "243", office: "مبنى المديريات", duties: ["تشغيل مراكز الرعاية", "حصر الاحتياجات الدوائية"], clearance: "عادي", avgResponseHours: 10, initials: "ر" },
   { id: "p12", name: "مدير مؤسسة المياه", title: "المدير العام لمؤسسة المياه", entityId: "e4", role: "director", phone: "0930 000 012", ext: "250", office: "مبنى المؤسسة", duties: ["إدارة التوريد والشبكات", "خطة معالجة الانقطاعات"], clearance: "عادي", avgResponseHours: 13, initials: "م" },
   { id: "p13", name: "رئيس قسم الشبكات", title: "رئيس قسم الشبكات", entityId: "e4", unit: "الشبكات", role: "head", phone: "0930 000 013", ext: "254", office: "مبنى المؤسسة", duties: ["صيانة شبكات النقل", "رصد الهدر"], clearance: "عادي", avgResponseHours: 16, initials: "ش" },
-  { id: "p14", name: "مدير الشؤون القانونية", title: "مدير الشؤون القانونية", entityId: "e5", role: "director", phone: "0930 000 014", ext: "260", office: "الطابق الثاني", duties: ["مراجعة العقود", "تمثيل المحافظة في الدعاوى"], clearance: "سرّي", avgResponseHours: 8, initials: "ق" },
+  { id: "p14", name: "مدير المديرية القانونية", title: "مدير المديرية القانونية", entityId: "e5", role: "director", phone: "0930 000 014", ext: "260", office: "الطابق الثاني", duties: ["مراجعة العقود", "تمثيل المحافظة في الدعاوى"], clearance: "سرّي", avgResponseHours: 8, initials: "ق" },
   { id: "p15", name: "المستشار القانوني", title: "مستشار قانوني — العقود", entityId: "e5", unit: "العقود", role: "employee", phone: "0930 000 015", ext: "263", office: "الطابق الثاني", duties: ["صياغة العقود", "إبداء الرأي القانوني"], clearance: "عادي", avgResponseHours: 12, initials: "س" },
   { id: "p16", name: "مدير الدفاع المدني", title: "مدير الدفاع المدني", entityId: "e6", role: "director", phone: "0930 000 016", ext: "270", office: "مركز الدفاع المدني", duties: ["خطط الطوارئ الموسمية", "جاهزية فرق الإنقاذ"], clearance: "سرّي", avgResponseHours: 4, initials: "د" },
-  { id: "p17", name: "مسؤول المراسم", title: "مسؤول المراسم والعلاقات العامة", entityId: "e0", unit: "المراسم", role: "protocol", phone: "0930 000 017", ext: "112", office: "الطابق الرابع", duties: ["برامج الوفود الرسمية", "ترتيبات التشريفات والتغطية الإعلامية"], clearance: "عادي", avgResponseHours: 5, initials: "ر" },
+  { id: "p17", name: "مسؤول المراسم", title: "مسؤول المراسم", entityId: "e19", role: "protocol", phone: "0930 000 017", ext: "112", office: "الطابق الرابع", duties: ["برامج الوفود الرسمية", "ترتيبات التشريفات والتغطية الإعلامية"], clearance: "عادي", avgResponseHours: 5, initials: "ر" },
   { id: "p18", name: "أمين سر المجلس", title: "أمين سر مجلس المحافظة", entityId: "e7", unit: "أمانة المجلس", role: "registry", phone: "0930 000 018", ext: "280", office: "مبنى المجلس", duties: ["قيد الوارد والصادر", "تحرير المحاضر وترقيم الكتب"], clearance: "عادي", avgResponseHours: 6, initials: "س" },
   { id: "p19", name: "مشرف القاعات", title: "مشرف القاعات والمرافق", entityId: "e0", unit: "السكرتارية", role: "halls", phone: "0930 000 019", ext: "115", office: "الطابق الأرضي", duties: ["جاهزية القاعات والتجهيزات", "تأكيد الحجوزات وحل التعارضات"], clearance: "عادي", avgResponseHours: 3, initials: "ق" },
   { id: "p21", name: "مدير المالية", title: "مدير المالية", entityId: "e7", role: "director", phone: "0930 000 021", ext: "290", office: "مبنى المديريات — الطابق الأول", duties: ["إعداد الموازنة ومتابعة تنفيذها", "اعتماد الصرف ضمن السقوف المقررة"], clearance: "سرّي", avgResponseHours: 7, initials: "م" },
-  { id: "p22", name: "مسؤول منطقة الطبقة", title: "مسؤول منطقة الطبقة", entityId: "a1", role: "area", phone: "0930 000 022", ext: "310", office: "مكتب منطقة الطبقة", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة ما يخص المنطقة من تكليفات"], clearance: "عادي", avgResponseHours: 11, initials: "ت" },
-  { id: "p23", name: "مسؤول منطقة تل أبيض", title: "مسؤول منطقة تل أبيض", entityId: "a2", role: "area", phone: "0930 000 023", ext: "320", office: "مكتب منطقة تل أبيض", duties: ["رفع إحصائيات المنطقة الدورية", "التنسيق مع المديريات المركزية"], clearance: "عادي", avgResponseHours: 8, initials: "ع" },
-  { id: "p24", name: "مسؤول منطقة معدان", title: "مسؤول منطقة معدان", entityId: "a3", role: "area", phone: "0930 000 024", ext: "330", office: "مكتب منطقة معدان", duties: ["رفع إحصائيات المنطقة الدورية", "متابعة الخدمات في المنطقة"], clearance: "عادي", avgResponseHours: 13, initials: "ب" },
-  { id: "p27", name: "مسؤول حي المشلب", title: "مسؤول حي المشلب", entityId: "h1", role: "area", phone: "0930 000 027", ext: "340", office: "مكتب حي المشلب", duties: ["رفع إحصائيات الحي", "متابعة شكاوى الخدمات في الحي"], clearance: "عادي", avgResponseHours: 9, initials: "ج" },
-  { id: "p28", name: "مسؤول حي الدرعية", title: "مسؤول حي الدرعية", entityId: "h2", role: "area", phone: "0930 000 028", ext: "350", office: "مكتب حي الدرعية", duties: ["رفع إحصائيات الحي", "التنسيق مع مديرية الخدمات"], clearance: "عادي", avgResponseHours: 7, initials: "ع" },
-  { id: "p29", name: "مسؤول حي الرميلة", title: "مسؤول حي الرميلة", entityId: "h3", role: "area", phone: "0930 000 029", ext: "360", office: "مكتب حي الرميلة", duties: ["رفع إحصائيات الحي", "متابعة الخدمات في الحي"], clearance: "عادي", avgResponseHours: 14, initials: "خ" },
+  { id: "p30", name: "مدير العلاقات العامة", title: "مدير العلاقات العامة لمحافظة الرقة", entityId: "e8", role: "director", phone: "0930 000 030", ext: "370", office: "مبنى المديريات", duties: ["الإشراف على العلاقات المجتمعية والتواصل الحكومي", "تنظيم الفعاليات وبناء الشراكات المدنية"], clearance: "عادي", avgResponseHours: 8, initials: "ع" },
+  { id: "p31", name: "مدير الدعم والتوريد", title: "مدير الدعم والتوريد", entityId: "e9", role: "director", phone: "0930 000 031", ext: "380", office: "مبنى المديريات", duties: ["تأمين احتياجات الجهات من المواد والخدمات", "متابعة عمليات التوريد والتسليم"], clearance: "عادي", avgResponseHours: 8, initials: "د" },
+  { id: "p32", name: "مدير المتابعة", title: "مدير مديرية المتابعة والشكاوى", entityId: "e10", role: "director", phone: "0930 000 032", ext: "390", office: "مبنى المديريات", duties: ["متابعة تنفيذ القرارات ميدانياً", "معالجة الشكاوى ورفع نتائجها"], clearance: "عادي", avgResponseHours: 6, initials: "م" },
+  { id: "p33", name: "مدير الإعلام", title: "مدير الإعلام في المحافظة", entityId: "e11", role: "director", phone: "0930 000 033", ext: "395", office: "مبنى المديريات", duties: ["إدارة التغطية الإعلامية لأعمال المحافظة", "إصدار البيانات والأخبار الرسمية"], clearance: "عادي", avgResponseHours: 5, initials: "إ" },
+  { id: "p34", name: "مدير فرع هيئة الاستثمار", title: "مدير فرع هيئة الاستثمار السورية في الرقة", entityId: "e12", role: "branch", phone: "0930 000 034", ext: "400", office: "مبنى هيئة الاستثمار", duties: ["متابعة المشاريع والفرص الاستثمارية في المحافظة", "التنسيق مع الديوان في ملفات المستثمرين"], clearance: "عادي", avgResponseHours: 8, initials: "س" },
+  { id: "p36", name: "مدير الرقابة الداخلية", title: "مدير مديرية الرقابة الداخلية", entityId: "e15", role: "director", phone: "0930 000 036", ext: "410", office: "مبنى المديريات", duties: ["التدقيق على أعمال أجهزة المحافظة", "رفع تقارير الرقابة إلى المحافظ"], clearance: "عادي", avgResponseHours: 8, initials: "ر" },
+  { id: "p37", name: "مدير الشؤون الإدارية", title: "مدير مديرية الشؤون الإدارية", entityId: "e16", role: "director", phone: "0930 000 037", ext: "420", office: "مبنى المديريات", duties: ["شؤون العاملين والدوام", "تنظيم الملاكات والقرارات الإدارية"], clearance: "عادي", avgResponseHours: 8, initials: "ش" },
+  { id: "p38", name: "مدير الاستثمار", title: "مدير مديرية الاستثمار", entityId: "e17", role: "director", phone: "0930 000 038", ext: "430", office: "مبنى المديريات", duties: ["متابعة المشاريع الاستثمارية في المحافظة", "تسهيل إجراءات المستثمرين"], clearance: "عادي", avgResponseHours: 8, initials: "س" },
+  { id: "p39", name: "مدير الدعم التنفيذي", title: "مدير مديرية الدعم التنفيذي", entityId: "e18", role: "director", phone: "0930 000 039", ext: "440", office: "مبنى المديريات", duties: ["دعم تنفيذ قرارات المحافظ", "تنسيق الموارد اللازمة للتنفيذ"], clearance: "عادي", avgResponseHours: 8, initials: "د" },
+  { id: "p40", name: "مدير التربية", title: "مدير التربية", entityId: "e20", role: "director", phone: "0930 000 040", ext: "450", office: "مبنى المديريات", duties: ["الإشراف على المدارس والعملية التعليمية", "خطط الامتحانات والعام الدراسي"], clearance: "عادي", avgResponseHours: 8, initials: "ت" },
+  { id: "p41", name: "مدير الزراعة", title: "مدير الزراعة", entityId: "e21", role: "director", phone: "0930 000 041", ext: "460", office: "مبنى المديريات", duties: ["خطط المواسم الزراعية", "الإرشاد الزراعي ودعم الفلاحين"], clearance: "عادي", avgResponseHours: 8, initials: "ز" },
   { id: "p20", name: "مدير النظام", title: "مدير النظام", entityId: "e0", role: "admin", phone: "0930 000 020", ext: "119", office: "غرفة النظم", duties: ["إدارة الجهات والأدوار والمستخدمين", "ضبط القوالب وقواعد التصعيد", "مراجعة سجل التدقيق"], clearance: "عادي", avgResponseHours: 2, initials: "ن" },
 ];
 
 export const personOf = (id: string) => people.find((p) => p.id === id)!;
+
+/** كلمة المرور الأولى لحسابات البذرة ما لم يُضبط SEED_PASSWORD */
+export const defaultPassword = "Aleppo@2026";
+
+/** اسم الدخول لكل شخص */
+export const usernames: Record<string, string> = {
+  p1: "governor", p2: "deputy", p3: "office.chief", p4: "followup",
+  p5: "tech.director", p6: "roads.head", p7: "roads.eng",
+  p8: "urban.director", p9: "permits.head",
+  p10: "health.director", p11: "primary.head",
+  p12: "water.director", p13: "networks.head",
+  p14: "legal.director", p15: "legal.advisor",
+  p16: "civil.defense", p17: "protocol", p18: "registry", p19: "halls", p20: "sysadmin",
+  p21: "finance.director",
+  p25: "assistant", p26: "secgen",
+  p30: "pr.director", p31: "supply.director", p32: "followup.director", p33: "media.director",
+  p34: "investment.branch", p35: "deputy2",
+  p36: "audit.director", p37: "hr.director", p38: "investment.director", p39: "support.director",
+  p40: "education.director", p41: "agriculture.director",
+};
 
 /* ───────────────────────── القاعات والحجوزات ───────────────────────── */
 

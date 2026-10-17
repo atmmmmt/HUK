@@ -8,7 +8,7 @@ import type { Classification, Person, RoleKey } from "@/lib/types";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ROLES: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "chief", "followup", "director", "head", "employee", "area", "registry", "protocol", "halls", "admin"];
+const ROLES: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "chief", "followup", "director", "branch", "office", "head", "employee", "registry", "protocol", "halls", "admin"];
 
 /** إنشاء حساب جديد — من لوحة التحكم */
 export async function POST(request: Request) {

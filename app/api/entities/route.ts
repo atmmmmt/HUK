@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const me = await requireUser();
     if (!canManageSystem(me)) throw new ForbiddenError("إضافة الجهات من صلاحية مدير النظام");
 
-    const input = await body<{ name: string; kind: Entity["kind"]; units: string[]; managerId?: string }>(request);
+    const input = await body<{ name: string; kind: Entity["kind"]; tier?: Entity["tier"]; units: string[]; managerId?: string }>(request);
     const name = input.name?.trim();
     if (!name) throw new Error("اسم الجهة مطلوب");
 
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       name,
       short: name.replace(/^مديرية |^المؤسسة العامة لل|^دائرة /, ""),
       kind: input.kind ?? "مديرية",
+      tier: input.tier === "governorate" ? "governorate" : "main",
       managerId: input.managerId ?? me.id,
       units: (input.units ?? []).map((u) => u.trim()).filter(Boolean),
       staffCount: 0,

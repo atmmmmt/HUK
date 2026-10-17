@@ -18,7 +18,7 @@ export interface GuideTopic {
 
 const BOSSES: RoleKey[] = ["governor", "deputy", "assistant"];
 const DIWAN: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "chief", "followup", "registry", "protocol", "halls"];
-const DIRECTORATE: RoleKey[] = ["director", "head", "employee", "area"];
+const DIRECTORATE: RoleKey[] = ["director", "branch", "office", "head", "employee"];
 
 export const guideTopics: GuideTopic[] = [
   {
@@ -227,7 +227,7 @@ export const guideTopics: GuideTopic[] = [
     title: "الجهات والمديريات",
     where: { portal: "directorates", section: "entities" },
     roles: ["governor", "deputy", "secgen", "followup"],
-    summary: "قائمة كل المديريات والمؤسسات والمناطق مع مديرها ونسبة التزامها.",
+    summary: "قائمة كل المديريات والمؤسسات والهيئات مع مديرها ونسبة التزامها.",
     steps: ["من يملك صلاحية المتجاوزة يختار الجهة من القائمة أعلى الشاشة ليرى تفاصيلها."],
   },
   {
@@ -242,7 +242,7 @@ export const guideTopics: GuideTopic[] = [
     id: "tasks",
     title: "المهام الداخلية",
     where: { portal: "directorates", section: "tasks" },
-    roles: ["director", "head", "employee"],
+    roles: ["director", "branch", "office", "head", "employee"],
     summary: "توزيع العمل على الأقسام والموظفين ومتابعة أحمالهم.",
     steps: [
       "المدير ورئيس القسم يوزّعان المهام، والموظف يرى المسند إليه فقط.",
@@ -253,7 +253,7 @@ export const guideTopics: GuideTopic[] = [
     id: "replies",
     title: "الردود والتقارير",
     where: { portal: "directorates", section: "replies" },
-    roles: ["governor", "deputy", "secgen", "followup", "director", "head", "employee", "area"],
+    roles: ["governor", "deputy", "secgen", "followup", "director", "branch", "office", "head", "employee"],
     summary: "الردود والتقارير ضمن نطاق الجهة أو نطاق الرقابة المسموح.",
     steps: ["بعد «تسليم للمراجعة» يظهر التقرير هنا حتى يعتمده الديوان أو يعيده للتصحيح."],
   },
@@ -261,7 +261,7 @@ export const guideTopics: GuideTopic[] = [
     id: "requests",
     title: "الطلبات إلى الديوان",
     where: { portal: "directorates", section: "requests" },
-    roles: ["director", "head", "employee", "area"],
+    roles: ["director", "branch", "office", "head", "employee"],
     summary: "حجز قاعة، موعد لدى المحافظ، طلب اجتماع، أو تمديد مهلة.",
     steps: ["«طلب جديد» ← نوع الطلب والموضوع والتفاصيل ← رفع الطلب.", "يصل إلى مكتب المحافظ (وطلبات القاعات إلى مشرفها أيضاً)، ويُرد عليه من «بانتظار الاعتماد» أو من التقويم لطلبات المقابلة.", "كل طلب يُتابَع حتى يصل ردّ الديوان: بانتظار الرد، موافق، أو مرفوض."],
   },
@@ -277,7 +277,7 @@ export const guideTopics: GuideTopic[] = [
     id: "performance",
     title: "مؤشرات الأداء",
     where: { portal: "directorates", section: "performance" },
-    roles: ["governor", "deputy", "secgen", "followup", "director", "area"],
+    roles: ["governor", "deputy", "secgen", "followup", "director", "branch"],
     summary: "الالتزام بالمواعيد، توزيع الأحمال، ومواضع الاختناق لكل جهة.",
     steps: ["اسحب مخطط المقارنة أفقياً لرؤية كل الجهات."],
   },
@@ -321,9 +321,10 @@ export const roleGuides: Record<RoleKey, { title: string; daily: string[] }> = {
   chief: { title: "مدير مكتب المحافظ", daily: ["إدارة التقويم وطلبات المقابلة.", "فرز الوارد وإصدار التكليفات ومتابعة ما أصدره المكتب دون اعتماد نهائي."] },
   followup: { title: "مكتب المتابعة", daily: ["متابعة كل التكليفات في كل الجهات (اطلاع فقط).", "مراقبة مؤشرات الالتزام وتصعيد المتأخر."] },
   director: { title: "مدير المديرية", daily: ["أقرّ باستلام الوارد من الديوان.", "وزّع المهام الداخلية وتابع الأحمال.", "سلّم التقارير للمراجعة قبل مواعيدها."] },
+  branch: { title: "مدير الفرع", daily: ["أقرّ باستلام الوارد من الديوان.", "وزّع مهام الفرع وتابع الأحمال.", "سلّم التقارير للمراجعة قبل مواعيدها."] },
+  office: { title: "مدير المكتب", daily: ["تابع مهام مكتبك ووزّعها على الموظفين.", "حدّث نسب الإنجاز."] },
   head: { title: "رئيس القسم", daily: ["تابع مهام وحدتك ووزّعها على الموظفين.", "حدّث نسب الإنجاز."] },
   employee: { title: "الموظف المنفّذ", daily: ["افتح «المهام الداخلية» لترى المسند إليك فقط.", "أقرّ بالاستلام، ابدأ التنفيذ، ثم سلّم للمراجعة."] },
-  area: { title: "مسؤول المنطقة أو الحي", daily: ["تابع إحصائيات نطاقك ومؤشراته.", "ارفع طلباتك إلى الديوان من «الطلبات»."] },
   registry: { title: "أمانة السر", daily: ["قيد الكتب الواردة والصادرة وإحالتها.", "تسجيل محاضر الاجتماعات."] },
   protocol: { title: "المراسم والإعلام", daily: ["إعداد برامج الوفود والزيارات وجدولة اللقاءات التشريفية.", "تابع القاعات والتكليفات المرتبطة بالمراسم فقط؛ لا تدخل المديريات."] },
   halls: { title: "مشرف القاعات", daily: ["الموافقة على طلبات الحجز أو رفضها.", "متابعة تجهيزات كل قاعة."] },

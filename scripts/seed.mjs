@@ -41,22 +41,9 @@ if (!uri) {
 const seed = await import("../lib/seed.ts");
 
 const fresh = process.argv.includes("--fresh");
-const PASSWORD = process.env.SEED_PASSWORD ?? "Aleppo@2026";
+const PASSWORD = process.env.SEED_PASSWORD ?? seed.defaultPassword;
 
-/** اسم الدخول لكل شخص */
-const usernames = {
-  p1: "governor", p2: "deputy", p3: "office.chief", p4: "followup",
-  p5: "tech.director", p6: "roads.head", p7: "roads.eng",
-  p8: "urban.director", p9: "permits.head",
-  p10: "health.director", p11: "primary.head",
-  p12: "water.director", p13: "networks.head",
-  p14: "legal.director", p15: "legal.advisor",
-  p16: "civil.defense", p17: "protocol", p18: "registry", p19: "halls", p20: "sysadmin",
-  p21: "finance.director",
-  p22: "area.tabqa", p23: "area.telabyad", p24: "area.maadan",
-  p27: "hay.mashlab", p28: "hay.daraiya", p29: "hay.rumaila",
-  p25: "assistant", p26: "secgen",
-};
+const { usernames } = seed;
 
 const client = new MongoClient(uri, { serverSelectionTimeoutMS: 15000 });
 
@@ -124,6 +111,15 @@ try {
     if (res.upsertedCount) created++;
   }
   console.log(`  users          ${String(await users.countDocuments()).padStart(3)} حساب (+${created})`);
+
+  // الجهات والحسابات الملغاة من الهيكل
+  const { retired } = seed;
+  const goneUsers = await users.deleteMany({ id: { $in: retired.people } });
+  const goneEntities = await db.collection("entities").deleteMany({ id: { $in: retired.entities } });
+  await db.collection("roles").deleteMany({ key: { $in: retired.roles } });
+  if (goneUsers.deletedCount || goneEntities.deletedCount) {
+    console.log(`  حُذف ${goneUsers.deletedCount} حساباً و${goneEntities.deletedCount} جهات ملغاة`);
+  }
 
   // الفهارس
   await users.createIndex({ username: 1 }, { unique: true });

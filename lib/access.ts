@@ -23,9 +23,10 @@ export const defaultGrants: Record<RoleKey, Record<Action, Grant>> = {
   chief: { view: "full", create: "full", edit: "full", assign: "full", approve: "none", close: "none", archive: "full", delete: "none" },
   followup: { view: "full", create: "none", edit: "none", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   director: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
+  branch: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
+  office: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   head: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   employee: { view: "partial", create: "none", edit: "partial", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
-  area: { view: "partial", create: "full", edit: "partial", assign: "partial", approve: "none", close: "none", archive: "none", delete: "none" },
   registry: { view: "partial", create: "full", edit: "full", assign: "partial", approve: "none", close: "none", archive: "full", delete: "none" },
   protocol: { view: "partial", create: "full", edit: "full", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   halls: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
@@ -91,14 +92,19 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
   director: {
     directorates: ["inbox", "tasks", "replies", "meetings", "decisions", "requests", "structure", "performance", "notes"],
   },
+  // مدير الفرع يدير فرعه كما يدير المدير مديريته.
+  branch: {
+    directorates: ["inbox", "tasks", "replies", "meetings", "decisions", "requests", "structure", "performance", "notes"],
+  },
+  // مدير المكتب يعمل ضمن مكتبه داخل الجهة كرئيس القسم.
+  office: {
+    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "structure", "notes"],
+  },
   head: {
     directorates: ["inbox", "tasks", "replies", "meetings", "requests", "structure", "notes"],
   },
   employee: {
     directorates: ["inbox", "tasks", "replies", "meetings", "requests", "notes"],
-  },
-  area: {
-    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "performance", "notes"],
   },
 
   // اختصاصات الديوان
@@ -136,6 +142,11 @@ export function portalsFor(person: Person): Portal[] {
 /** أول قسم صالح داخل البوابة، للاستعمال عند التحويل والتنقل. */
 export function homeSectionFor(person: Person, portal: Portal): string | null {
   return sectionsFor(person, portal)[0] ?? null;
+}
+
+/** مدير الجهة: مدير المديرية أو مدير الفرع — يملكان الصلاحيات نفسها على جهتهما. */
+export function isEntityManager(person: Pick<Person, "role">): boolean {
+  return person.role === "director" || person.role === "branch";
 }
 
 export function clearanceRank(c: string): number {
@@ -189,8 +200,9 @@ export function seesAssignment(person: Person, a: Assignment, ctx: Ctx = {}): bo
       // المعاون لا يرى جميع تكليفات المديريات تلقائياً؛ فقط ما يخص الديوان أو ما شارك فيه.
       return a.entityId === person.entityId || involved;
     case "director":
-    case "area":
+    case "branch":
       return a.entityId === person.entityId;
+    case "office":
     case "head": {
       if (a.entityId !== person.entityId) return false;
       if (involved) return true;
@@ -215,7 +227,7 @@ export function canAdvance(person: Person, a: Assignment, to: string): boolean {
   const isOwner = a.ownerId === person.id;
   const isIssuer = a.issuerId === person.id;
   const canSign = canApproveDecision(person);
-  const isDirectorOfEntity = person.role === "director" && person.entityId === a.entityId;
+  const isDirectorOfEntity = isEntityManager(person) && person.entityId === a.entityId;
 
   switch (to) {
     case "مُستلَم":
@@ -250,7 +262,7 @@ export function canManageSystem(person: Person): boolean {
 
 /* ─────────────── أولوية القاعات عند التعارض ─────────────── */
 
-export const bookingLadder: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "director"];
+export const bookingLadder: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "director", "branch"];
 
 export function bookingRank(role: RoleKey): number {
   const i = bookingLadder.indexOf(role);
@@ -298,8 +310,10 @@ export function reachLabel(person: Person, entityShort?: string): string {
       return "التكليفات ومؤشرات الجهات — اطلاع";
     case "director":
       return (entityShort ?? "جهته") + " فقط";
-    case "area":
-      return (entityShort ?? "نطاقه") + " فقط";
+    case "branch":
+      return (entityShort ?? "فرعه") + " فقط";
+    case "office":
+      return person.unit ?? "مكتبه";
     case "head":
       return person.unit ?? "وحدته";
     case "employee":
@@ -328,7 +342,7 @@ export const actionLabels: Record<Action, string> = {
 
 export const portalLabels: Record<Portal, { title: string; sub: string }> = {
   diwan: { title: "مديرية المحافظة", sub: "مكتب السيد المحافظ — الديوان المركزي" },
-  directorates: { title: "مديريات المحافظة", sub: "المديريات المركزية والمناطق" },
+  directorates: { title: "مديريات المحافظة", sub: "المديريات والمؤسسات والهيئات" },
   admin: { title: "لوحة التحكم", sub: "إدارة الجهات والأدوار والإعدادات" },
 };
 
@@ -353,11 +367,11 @@ export function canRespondRequest(person: Person, kind?: string): boolean {
 }
 
 export function canRaiseRequest(person: Person): boolean {
-  return ["director", "head", "area", "employee"].includes(person.role);
+  return ["director", "branch", "office", "head", "employee"].includes(person.role);
 }
 
 export function canSubmitDecision(person: Person): boolean {
-  return ["director", "registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
+  return ["director", "branch", "registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
 }
 
 /** من يستطيع اختيار جهة أخرى عند رفع معاملة؛ البقية يرفعون باسم جهتهم فقط. */

@@ -23,6 +23,7 @@ export function AdminEntities() {
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState("");
   const [kind, setKind] = useState<Entity["kind"]>("مديرية");
+  const [tier, setTier] = useState<NonNullable<Entity["tier"]>>("main");
   const [units, setUnits] = useState("");
 
   async function add(e: React.FormEvent) {
@@ -30,7 +31,7 @@ export function AdminEntities() {
     if (!name.trim() || busy) return;
     setBusy(true);
     try {
-      await addEntity({ name: name.trim(), kind, units: units.split("،").map((u) => u.trim()).filter(Boolean) });
+      await addEntity({ name: name.trim(), kind, tier, units: units.split("،").map((u) => u.trim()).filter(Boolean) });
       setName(""); setUnits(""); setAdding(false);
     } catch {
       /* الرسالة تظهر من المتجر */
@@ -64,12 +65,13 @@ export function AdminEntities() {
       <Panel title="الجهات والمؤسسات المسجّلة" icon={<Building2 size={17} />} flush>
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>الجهة</th><th>النوع</th><th>المدير</th><th>الوحدات</th><th>الموظفون</th><th>الالتزام</th><th>الحالة</th></tr></thead>
+            <thead><tr><th>الجهة</th><th>النوع</th><th>تتبع لـ</th><th>المدير</th><th>الوحدات</th><th>الموظفون</th><th>الالتزام</th><th>الحالة</th></tr></thead>
             <tbody>
               {list.map((e) => (
                 <tr key={e.id}>
                   <td className="t-main">{e.name}</td>
                   <td><span className="chip navy">{e.kind}</span></td>
+                  <td className="tiny muted">{e.tier === "governorate" ? "مديرية المحافظة" : "مديريات المحافظة"}</td>
                   <td><PersonLine id={e.managerId} /></td>
                   <td className="tiny muted">{e.units.length ? e.units.join(" · ") : "—"}</td>
                   <td className="tiny">{e.staffCount}</td>
@@ -106,7 +108,14 @@ export function AdminEntities() {
             <div className="field">
               <label htmlFor="ekind">النوع</label>
               <select id="ekind" value={kind} onChange={(e) => setKind(e.target.value as Entity["kind"])}>
-                {["مديرية", "مؤسسة", "دائرة", "مجلس"].map((k) => <option key={k} value={k}>{k}</option>)}
+                {["مديرية", "مؤسسة", "هيئة", "دائرة", "مكتب", "مجلس"].map((k) => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="etier">تتبع لـ</label>
+              <select id="etier" value={tier} onChange={(e) => setTier(e.target.value as NonNullable<Entity["tier"]>)}>
+                <option value="main">مديريات المحافظة — المديريات الرئيسية</option>
+                <option value="governorate">مديرية المحافظة — أجهزة المحافظة</option>
               </select>
             </div>
             <div className="field">

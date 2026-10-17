@@ -46,7 +46,7 @@ export interface Bootstrap {
 
 export function setData(d: Bootstrap) {
   roles = d.roles ?? [];
-  entities = d.entities ?? [];
+  entities = [...(d.entities ?? [])].sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
   people = d.people ?? [];
   halls = d.halls ?? [];
   meetings = d.meetings ?? [];

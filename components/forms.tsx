@@ -622,7 +622,7 @@ export function NewMeetingSheet({ onClose, preset = [] }: { onClose: () => void;
     .map((r) => others.find((p) => p.role === r)).filter(Boolean) as typeof others;
   const shown = q.trim()
     ? others.filter((p) => `${p.title} ${p.name} ${entityOf(p.entityId).name}`.includes(q.trim()))
-    : others.filter((p) => invited.includes(p.id) || ["deputy", "assistant", "secgen", "chief", "director"].includes(p.role));
+    : others.filter((p) => invited.includes(p.id) || ["deputy", "assistant", "secgen", "chief", "director", "branch"].includes(p.role));
   const toggle = (id: string) => setInvited((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
 
   const submit = (e?: React.FormEvent) => {

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { decisions, entities, entityOf, hallOf, letters, meetings } from "@/lib/lookup";
 import { lifecycle, todaySchedule } from "@/lib/constants";
-import { canAccessSection, canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canScheduleMeeting, canRegisterLetters, canRespondRequest, seesAssignment, slaLabel } from "@/lib/access";
+import { canAccessSection, canAdvance, canApproveDecision, canSubmitDecision, canIssueAssignment, canManageMeetings, canScheduleMeeting, canRegisterLetters, canRespondRequest, isEntityManager, seesAssignment, slaLabel } from "@/lib/access";
 import { useStore } from "@/lib/store";
 import type { Assignment, Meeting, Person } from "@/lib/types";
 import {
@@ -705,7 +705,7 @@ export function Decisions({ own = false }: { own?: boolean } = {}) {
   const canApprove = canApproveDecision(me);
   const canSubmit = canSubmitDecision(me);
   const canAttachTo = (d: (typeof decisions)[number]) =>
-    canApprove || d.submittedBy === me.id || (me.role === "director" ? d.entityId === me.entityId : canSubmit);
+    canApprove || d.submittedBy === me.id || (isEntityManager(me) ? d.entityId === me.entityId : canSubmit);
   const list = own ? decisions.filter((d) => d.entityId === me.entityId || d.submittedBy === me.id) : decisions;
   const pendingReqs = own ? [] : requests.filter((r) => r.kind !== "موعد لدى المحافظ" && r.status === "بانتظار الرد" && canRespondRequest(me, r.kind));
 

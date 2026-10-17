@@ -1,4 +1,5 @@
 import "server-only";
+import bcrypt from "bcryptjs";
 import { Db, MongoClient } from "mongodb";
 import type {
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
@@ -132,21 +133,52 @@ async function syncIdentity(d: Db) {
       { ordered: false },
     );
     await syncPlaceNames(d);
+    await syncStructure(d);
   } catch (err) {
     console.error("[db] تعذّرت مطابقة الأسماء:", err instanceof Error ? err.message : err);
   }
 }
 
+/* ───────── هيكل الجهات والحسابات ─────────
+   الجهات والحسابات الجديدة في ملف البيانات تُضاف إن غابت (بكلمة مرور البذرة)،
+   والملغاة من الهيكل تُحذف. كلمات المرور وما أنشأه المستخدمون لا يُمَسّ. */
+
+async function syncStructure(d: Db) {
+  const entities = d.collection("entities");
+  await entities.bulkWrite(
+    seed.entities.map(({ id, name, short, kind, tier, units, ...rest }, order) => ({
+      updateOne: { filter: { id }, update: { $set: { name, short, kind, tier, units, order }, $setOnInsert: rest }, upsert: true },
+    })),
+    { ordered: false },
+  );
+
+  const users = d.collection("users");
+  const have = new Set((await users.find({}, { projection: { id: 1, username: 1 } }).toArray()).flatMap((u) => [u.id, u.username]));
+  const missing = seedPeople.filter((p) => !have.has(p.id) && !have.has(seed.usernames[p.id]));
+  if (missing.length) {
+    const hash = await bcrypt.hash(process.env.SEED_PASSWORD ?? seed.defaultPassword, 10);
+    await users.insertMany(missing.map((p) => ({ ...p, username: seed.usernames[p.id] ?? p.id, passwordHash: hash, active: true })));
+    console.log(`[db] أُضيف ${missing.length} حساباً جديداً`);
+  }
+
+  for (const m of seed.moves) {
+    await users.updateOne({ id: m.id, entityId: m.from }, { $set: { entityId: m.to }, $unset: { unit: "" } });
+  }
+
+  const goneUsers = await users.deleteMany({ id: { $in: seed.retired.people } });
+  const goneEntities = await entities.deleteMany({ id: { $in: seed.retired.entities } });
+  await d.collection("roles").deleteMany({ key: { $in: seed.retired.roles } });
+  if (goneUsers.deletedCount || goneEntities.deletedCount) {
+    console.log(`[db] حُذف ${goneUsers.deletedCount} حساباً و${goneEntities.deletedCount} جهات ملغاة`);
+  }
+}
+
 /* ───────── نقل المنظومة من حلب إلى الرقة ─────────
    قاعدة قائمة عُبّئت ببيانات حلب: تُستبدل النصوص التي تحمل أسماء أماكنها فقط
-   بما في ملف البيانات، وتُحدَّث أسماء دخول حسابات المناطق. الحالات والتقدّم
-   وكلمات المرور وكل ما أنشأه المستخدمون لا يُمَسّ. */
+   بما في ملف البيانات. الحالات والتقدّم وكلمات المرور وكل ما أنشأه المستخدمون
+   لا يُمَسّ. */
 
 const OLD_PLACES = /حلب|تل رفعت|عفرين|منطقة الباب|^الباب$|الجميلية|العزيزية|الخالدية|الأشرفية|حي النور/;
-const RENAMED_USERS: Record<string, [string, string]> = {
-  p22: ["area.talrifaat", "area.tabqa"], p23: ["area.afrin", "area.telabyad"], p24: ["area.albab", "area.maadan"],
-  p27: ["hay.jamiliya", "hay.mashlab"], p28: ["hay.aziziya", "hay.daraiya"], p29: ["hay.khalidiya", "hay.rumaila"],
-};
 
 const isOld = (v: unknown) => typeof v === "string" ? OLD_PLACES.test(v) : Array.isArray(v) && v.some((x) => typeof x === "string" && OLD_PLACES.test(x));
 
@@ -182,17 +214,6 @@ async function syncPlaceNames(d: Db) {
         try { await col.updateOne({ id: src.id }, { $set }); fixed++; }
         catch (err) { console.error(`[db] تعذّر نقل ${name}/${src.id}:`, err instanceof Error ? err.message : err); }
       }
-    }
-  }
-  // أسماء دخول حسابات المناطق — فقط إن كانت ما تزال بالاسم القديم
-  const users = d.collection("users");
-  for (const [id, [from, to]] of Object.entries(RENAMED_USERS)) {
-    if (await users.findOne({ username: to })) continue;
-    try {
-      const r = await users.updateOne({ id, username: from }, { $set: { username: to } });
-      fixed += r.modifiedCount;
-    } catch (err) {
-      console.error(`[db] تعذّر تغيير اسم الدخول ${from}:`, err instanceof Error ? err.message : err);
     }
   }
   if (fixed) console.log(`[db] نُقلت ${fixed} سجلات من أسماء حلب إلى الرقة`);

@@ -1,7 +1,7 @@
 import { collections, pushNotification, writeAudit } from "@/lib/db";
 import { ForbiddenError, requireUser } from "@/lib/session";
 import { handle, ipOf } from "@/lib/api";
-import { canAccessSection, canApproveDecision, canIssueAssignment, canRegisterLetters, canSubmitDecision, clearanceRank, seesAssignment } from "@/lib/access";
+import { canAccessSection, canApproveDecision, canIssueAssignment, canRegisterLetters, canSubmitDecision, clearanceRank, isEntityManager, seesAssignment } from "@/lib/access";
 import { ALLOWED, MAX_UPLOAD, documentsCol, storeFile, type DocumentMeta } from "@/lib/documents";
 import { stampNow } from "@/lib/ops";
 import type { Assignment, Classification, Decision } from "@/lib/types";
@@ -36,8 +36,8 @@ export async function POST(request: Request) {
       decision = (await (await collections.decisions()).findOne({ id: decisionId })) as Decision | null;
       if (!decision) throw new Error("المعاملة غير موجودة");
       if (clearanceRank(decision.classification ?? "عادي") > clearanceRank(me.clearance)) throw new ForbiddenError("المعاملة محجوبة عن درجة تصريحك");
-      const mine = decision.submittedBy === me.id || (me.role === "director" && decision.entityId === me.entityId);
-      if (!mine && !canApproveDecision(me) && !(canSubmitDecision(me) && me.role !== "director")) throw new ForbiddenError("الإرفاق لرافع المعاملة وللديوان");
+      const mine = decision.submittedBy === me.id || (isEntityManager(me) && decision.entityId === me.entityId);
+      if (!mine && !canApproveDecision(me) && !(canSubmitDecision(me) && !isEntityManager(me))) throw new ForbiddenError("الإرفاق لرافع المعاملة وللديوان");
       if (decision.classification === "سرّي") classification = "سرّي";
     } else if (assignmentId) {
       assignment = (await (await collections.assignments()).findOne({ id: assignmentId })) as Assignment | null;

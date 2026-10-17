@@ -28,10 +28,10 @@ function useScope() {
 function ScopeBar({ entityId, setPicked, wide }: { entityId: string; setPicked: (v: string) => void; wide: boolean }) {
   if (!wide) return null;
 
-  const groups: { label: string; kinds: Entity["kind"][] }[] = [
-    { label: "المديريات والمؤسسات", kinds: ["مديرية", "مؤسسة", "دائرة", "مجلس"] },
-    { label: "المناطق", kinds: ["منطقة"] },
-    { label: "الأحياء", kinds: ["حي"] },
+  const groups: { label: string; has: (e: Entity) => boolean }[] = [
+    { label: "أجهزة المحافظة", has: (e) => e.tier === "governorate" && e.kind !== "ديوان" },
+    { label: "المديريات الرئيسية", has: (e) => e.tier !== "governorate" && e.kind !== "هيئة" && e.kind !== "ديوان" },
+    { label: "الهيئات والفروع", has: (e) => e.kind === "هيئة" },
   ];
 
   const current = entities.find((e) => e.id === entityId);
@@ -48,7 +48,7 @@ function ScopeBar({ entityId, setPicked, wide }: { entityId: string; setPicked: 
           <span className="sr-only">الجهة</span>
           <select value={entityId} onChange={(e) => setPicked(e.target.value)} aria-label="اختر الجهة">
             {groups.map((g) => {
-              const list = entities.filter((e) => g.kinds.includes(e.kind));
+              const list = entities.filter(g.has);
               if (!list.length) return null;
               return (
                 <optgroup key={g.label} label={g.label}>

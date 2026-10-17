@@ -1,4 +1,5 @@
 import type { Portal, RoleKey } from "./types";
+import { sectionAccess } from "./access";
 
 /**
  * دليل الاستخدام — مصدر واحد تقرؤه صفحة الدليل والمساعد الذكي معاً.
@@ -18,7 +19,7 @@ export interface GuideTopic {
 
 const BOSSES: RoleKey[] = ["governor", "deputy", "assistant"];
 const DIWAN: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "chief", "followup", "registry", "protocol", "halls"];
-const DIRECTORATE: RoleKey[] = ["director", "branch", "office", "head", "employee"];
+const DIRECTORATE: RoleKey[] = ["director", "branch", "office", "head", "employee", "area"];
 
 export const guideTopics: GuideTopic[] = [
   {
@@ -110,7 +111,7 @@ export const guideTopics: GuideTopic[] = [
     id: "assignments",
     title: "التكليفات ومتابعتها",
     where: { portal: "diwan", section: "assignments" },
-    roles: ["governor", "deputy", "assistant", "secgen", "chief", "followup", "registry", "protocol", "halls"],
+    roles: ["governor", "deputy", "assistant", "execdeputy", "secgen", "chief", "followup", "registry", "protocol", "halls"],
     summary: "تكليفات الديوان ضمن نطاق كل دور؛ الاختصاصات المساندة لا ترى إلا التكليفات التي شاركت فيها أو أُسندت إليها.",
     steps: [
       "استخدم الفلاتر أعلى القائمة لعرض حالة معيّنة (متأخر، قيد التنفيذ، قيد المراجعة…).",
@@ -130,7 +131,7 @@ export const guideTopics: GuideTopic[] = [
     id: "calendar",
     title: "التقويم والمواعيد",
     where: { portal: "diwan", section: "calendar" },
-    roles: ["governor", "deputy", "assistant", "chief", "secgen", "registry", "protocol", "halls"],
+    roles: ["governor", "deputy", "assistant", "chief", "execdeputy", "secgen", "registry", "protocol", "halls"],
     summary: "أيام الأسبوع وعدد المواعيد في كل يوم، وبرنامج اليوم بالتفصيل، وطلبات المقابلة.",
     steps: [
       "اسحب شريط الأيام يميناً ويساراً لرؤية الأسبوع.",
@@ -141,7 +142,7 @@ export const guideTopics: GuideTopic[] = [
     id: "meetings",
     title: "الاجتماعات والمخرجات",
     where: { portal: "diwan", section: "meetings" },
-    roles: ["governor", "deputy", "assistant", "secgen", "chief", "registry", "protocol"],
+    roles: ["governor", "deputy", "assistant", "execdeputy", "secgen", "chief", "registry", "protocol"],
     summary: "المدعو يرى اجتماعاته؛ المراسم تستطيع الجدولة، واعتماد المحاضر وتحويل المخرجات محصور بالأدوار الإدارية المخوّلة.",
     steps: [
       "اضغط بطاقة الاجتماع لفتح تفاصيله: رئيس الجلسة، أمين السر، جدول الأعمال، المخرجات.",
@@ -167,7 +168,7 @@ export const guideTopics: GuideTopic[] = [
     id: "halls",
     title: "القاعات والحجوزات",
     where: { portal: "diwan", section: "halls" },
-    roles: ["halls", "protocol", "governor", "deputy"],
+    roles: ["halls", "protocol", "governor", "deputy", "execdeputy", "secgen"],
     summary: "حجز مركزي للقاعات بلا تعارض، مع سُلّم أولوية بروتوكولي عند تعارض حجزين.",
     steps: [
       "«تقويم القاعات — اليوم» يعرض كل قاعة وحجوزاتها في شريط واحد.",
@@ -253,7 +254,7 @@ export const guideTopics: GuideTopic[] = [
     id: "replies",
     title: "الردود والتقارير",
     where: { portal: "directorates", section: "replies" },
-    roles: ["governor", "deputy", "secgen", "followup", "director", "branch", "office", "head", "employee"],
+    roles: ["governor", "deputy", "followup", "director", "branch", "office", "head", "employee", "area"],
     summary: "الردود والتقارير ضمن نطاق الجهة أو نطاق الرقابة المسموح.",
     steps: ["بعد «تسليم للمراجعة» يظهر التقرير هنا حتى يعتمده الديوان أو يعيده للتصحيح."],
   },
@@ -261,7 +262,7 @@ export const guideTopics: GuideTopic[] = [
     id: "requests",
     title: "الطلبات إلى الديوان",
     where: { portal: "directorates", section: "requests" },
-    roles: ["director", "branch", "office", "head", "employee"],
+    roles: ["director", "branch", "office", "head", "employee", "area"],
     summary: "حجز قاعة، موعد لدى المحافظ، طلب اجتماع، أو تمديد مهلة.",
     steps: ["«طلب جديد» ← نوع الطلب والموضوع والتفاصيل ← رفع الطلب.", "يصل إلى مكتب المحافظ (وطلبات القاعات إلى مشرفها أيضاً)، ويُرد عليه من «بانتظار الاعتماد» أو من التقويم لطلبات المقابلة.", "كل طلب يُتابَع حتى يصل ردّ الديوان: بانتظار الرد، موافق، أو مرفوض."],
   },
@@ -277,7 +278,7 @@ export const guideTopics: GuideTopic[] = [
     id: "performance",
     title: "مؤشرات الأداء",
     where: { portal: "directorates", section: "performance" },
-    roles: ["governor", "deputy", "secgen", "followup", "director", "branch"],
+    roles: ["governor", "deputy", "followup", "director", "branch", "area"],
     summary: "الالتزام بالمواعيد، توزيع الأحمال، ومواضع الاختناق لكل جهة.",
     steps: ["اسحب مخطط المقارنة أفقياً لرؤية كل الجهات."],
   },
@@ -317,13 +318,15 @@ export const roleGuides: Record<RoleKey, { title: string; daily: string[] }> = {
   governor: { title: "السيد المحافظ", daily: ["ابدأ بلوحة اليوم: الحلقة والمتأخر والموعد الجاري.", "اعتمد أو أعد القرارات بسحب البطاقات.", "راجع التزام الجهات وأرسل توجيهاتك من الملاحظات."] },
   deputy: { title: "نائب المحافظ", daily: ["الاعتماد والإغلاق بالصلاحيات نفسها للمحافظ عدا الحذف النهائي.", "متابعة المتأخر في لوحة اليوم."] },
   assistant: { title: "معاون المحافظ", daily: ["اعمل من الديوان على الملفات والتكليفات المكلّف بها.", "اعتمد ما يدخل ضمن صلاحيتك دون الدخول إلى إدارة المديريات."] },
-  secgen: { title: "الأمين العام", daily: ["تنظيم سير العمل بين الديوان والمديريات.", "متابعة تنفيذ القرارات وأرشفتها (دون اعتماد)."] },
+  execdeputy: { title: "نائب رئيس المكتب التنفيذي", daily: ["أصدر التكليفات وتابع ما أصدرته وما أُسند إليك.", "راجع مواعيدك التي دُعيت إليها، ورتّب اللقاءات وحجز القاعات."] },
+  secgen: { title: "الأمين العام", daily: ["أصدر التكليفات وتابع ما أصدرته وما أُسند إليك.", "راجع مواعيدك التي دُعيت إليها، ورتّب اللقاءات وحجز القاعات."] },
   chief: { title: "مدير مكتب المحافظ", daily: ["إدارة التقويم وطلبات المقابلة.", "فرز الوارد وإصدار التكليفات ومتابعة ما أصدره المكتب دون اعتماد نهائي."] },
   followup: { title: "مكتب المتابعة", daily: ["متابعة كل التكليفات في كل الجهات (اطلاع فقط).", "مراقبة مؤشرات الالتزام وتصعيد المتأخر."] },
   director: { title: "مدير المديرية", daily: ["أقرّ باستلام الوارد من الديوان.", "وزّع المهام الداخلية وتابع الأحمال.", "سلّم التقارير للمراجعة قبل مواعيدها."] },
   branch: { title: "مدير الفرع", daily: ["أقرّ باستلام الوارد من الديوان.", "وزّع مهام الفرع وتابع الأحمال.", "سلّم التقارير للمراجعة قبل مواعيدها."] },
   office: { title: "مدير المكتب", daily: ["تابع مهام مكتبك ووزّعها على الموظفين.", "حدّث نسب الإنجاز."] },
   head: { title: "رئيس القسم", daily: ["تابع مهام وحدتك ووزّعها على الموظفين.", "حدّث نسب الإنجاز."] },
+  area: { title: "مسؤول المنطقة", daily: ["تابع ما يخص منطقتك من تكليفات ومؤشرات.", "ارفع طلباتك وتقاريرك إلى الديوان من «الطلبات»."] },
   employee: { title: "الموظف المنفّذ", daily: ["افتح «المهام الداخلية» لترى المسند إليك فقط.", "أقرّ بالاستلام، ابدأ التنفيذ، ثم سلّم للمراجعة."] },
   registry: { title: "أمانة السر", daily: ["قيد الكتب الواردة والصادرة وإحالتها.", "تسجيل محاضر الاجتماعات."] },
   protocol: { title: "المراسم والقاعات", daily: ["إعداد برامج الوفود والزيارات وجدولة اللقاءات التشريفية.", "تابع القاعات والتكليفات المرتبطة بالمراسم فقط؛ لا تدخل المديريات."] },
@@ -332,7 +335,10 @@ export const roleGuides: Record<RoleKey, { title: string; daily: string[] }> = {
 };
 
 export function topicsFor(role: RoleKey): GuideTopic[] {
-  return guideTopics.filter((t) => t.roles === "all" || t.roles.includes(role));
+  // موضوع مرتبط بقسم لا يظهر إلا لمن يفتح ذلك القسم فعلاً
+  return guideTopics.filter((t) =>
+    (t.roles === "all" || t.roles.includes(role)) &&
+    (!t.where || (sectionAccess[role]?.[t.where.portal] ?? []).includes(t.where.section)));
 }
 
 /** نص الدليل كاملاً للمساعد الذكي */

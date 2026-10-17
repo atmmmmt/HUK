@@ -143,6 +143,15 @@ async function syncIdentity(d: Db) {
    الجهات والحسابات الجديدة في ملف البيانات تُضاف إن غابت (بكلمة مرور البذرة)،
    والملغاة من الهيكل تُحذف. كلمات المرور وما أنشأه المستخدمون لا يُمَسّ. */
 
+/** ترحيل يُطبَّق مرة واحدة فقط على كل قاعدة، فلا يعيد فرض حالة غيّرها المستخدمون لاحقاً */
+async function once(d: Db, id: string, run: () => Promise<void>) {
+  const done = d.collection("migrations");
+  if (await done.findOne({ id })) return;
+  await run();
+  await done.insertOne({ id, at: new Date().toISOString() });
+  console.log(`[db] طُبّق الترحيل ${id}`);
+}
+
 async function syncStructure(d: Db) {
   const entities = d.collection("entities");
   await entities.bulkWrite(
@@ -157,7 +166,7 @@ async function syncStructure(d: Db) {
   const missing = seedPeople.filter((p) => !have.has(p.id) && !have.has(seed.usernames[p.id]));
   if (missing.length) {
     const hash = await bcrypt.hash(process.env.SEED_PASSWORD ?? seed.defaultPassword, 10);
-    await users.insertMany(missing.map((p) => ({ ...p, username: seed.usernames[p.id] ?? p.id, passwordHash: hash, active: true })));
+    await users.insertMany(missing.map((p) => ({ ...p, username: seed.usernames[p.id] ?? p.id, passwordHash: hash, active: !seed.phase2.people.includes(p.id) })));
     console.log(`[db] أُضيف ${missing.length} حساباً جديداً`);
   }
 
@@ -183,6 +192,16 @@ async function syncStructure(d: Db) {
     for (const [col, field] of lists) await d.collection(col).updateMany({ [field]: { $in: leaving } }, { $pull: { [field]: { $in: leaving } } as never });
     await d.collection("notifications").deleteMany({ toId: { $in: leaving } });
   }
+
+  // المرحلة الأولى: تُعطَّل جهات المرحلة الثانية وحساباتها مرة واحدة، ويبقى تفعيلها بيد لوحة التحكم
+  await once(d, "phase1-2026-10", async () => {
+    await entities.updateMany({ id: { $in: seed.phase2.entities } }, { $set: { active: false } });
+    await users.updateMany({ id: { $in: seed.phase2.people } }, { $set: { active: false } });
+    await d.collection("halls").updateMany({ supervisorId: { $in: seed.phase2.people } }, { $set: { supervisorId: "p17" } });
+    const username = seed.usernames.p35;
+    const taken = await users.findOne({ username, id: { $ne: "p35" } });
+    await users.updateOne({ id: "p35" }, { $set: { role: "execdeputy", ...(taken ? {} : { username }) } });
+  });
 
   const goneUsers = await users.deleteMany({ id: { $in: seed.retired.people } });
   const goneEntities = await entities.deleteMany({ id: { $in: seed.retired.entities } });

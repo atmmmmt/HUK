@@ -72,7 +72,7 @@ export async function GET() {
       canRespondRequest(me) ||
       canRespondRequest(me, "حجز قاعة");
     const needsAllPeople =
-      ["governor", "deputy", "secgen", "chief", "followup", "admin"].includes(me.role) ||
+      ["governor", "deputy", "chief", "followup", "admin"].includes(me.role) ||
       canIssueAssignment(me) ||
       canManageMeetings(me) ||
       canScheduleMeeting(me);
@@ -80,7 +80,7 @@ export async function GET() {
       ? people
       : people.filter((p) => p.id === me.id || p.entityId === me.entityId);
 
-    const canSeeEntityMetrics = ["governor", "deputy", "secgen", "followup", "admin"].includes(me.role);
+    const canSeeEntityMetrics = ["governor", "deputy", "followup", "admin"].includes(me.role);
     const clientEntities = cleanAll(entities).map((e) =>
       canSeeEntityMetrics || e.id === me.entityId
         ? e
@@ -130,7 +130,7 @@ export async function GET() {
           apologized: m.apologized ?? [], agenda: m.agenda ?? [],
         }))
         .filter((m) =>
-          ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role) ||
+          ["governor", "deputy", "assistant", "chief", "registry"].includes(me.role) ||
           m.chairId === me.id ||
           m.secretaryId === me.id ||
           (m.inviteeIds ?? []).includes(me.id)
@@ -140,7 +140,7 @@ export async function GET() {
         ? cleanAll(decisions)
             .filter((d) => clearanceRank(String(d.classification ?? "عادي")) <= myRank)
             .filter((d) =>
-              ["governor", "deputy", "assistant", "secgen", "chief"].includes(me.role) ||
+              ["governor", "deputy", "assistant", "chief"].includes(me.role) ||
               d.entityId === me.entityId ||
               d.submittedBy === me.id
             )

@@ -104,7 +104,7 @@ try {
       {
         // الاسم والصفة يتبعان ملف البيانات دائماً، وكلمة المرور والحالة لا تُمَسّ
         $set: { name, title, initials },
-        $setOnInsert: { ...rest, username, passwordHash: hash, active: true },
+        $setOnInsert: { ...rest, username, passwordHash: hash, active: !seed.phase2.people.includes(person.id) },
       },
       { upsert: true },
     );

@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       canAccessSection(me, "diwan", "decisions") ||
       canAccessSection(me, "directorates", "decisions");
     if (!d || !canSeeDecision) return new Response("المستند غير موجود", { status: 404 });
-    const leadership = ["governor", "deputy", "assistant", "secgen", "chief"].includes(me.role);
+    const leadership = ["governor", "deputy", "assistant", "chief"].includes(me.role);
     if (!leadership && d.entityId !== me.entityId && d.submittedBy !== me.id) return new Response("المستند غير موجود", { status: 404 });
   } else if (doc.folderId) {
     const folder = await (await collections.files()).findOne({ id: doc.folderId });

@@ -12,7 +12,7 @@ export async function GET() {
     const me = await requireUser();
     const canListAll =
       canManageSystem(me) ||
-      ["governor", "deputy", "secgen", "followup"].includes(me.role);
+      ["governor", "deputy", "followup"].includes(me.role);
     const col = await collections.entities();
     const entities = canListAll
       ? await col.find().toArray()

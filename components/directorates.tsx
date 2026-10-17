@@ -19,7 +19,7 @@ import {
 /** الجهة التي يعمل عليها المستخدم — قابلة للتبديل لمن يرى كل الجهات */
 function useScope() {
   const { me } = useStore();
-  const wide = ["governor", "deputy", "secgen", "followup"].includes(me.role);
+  const wide = ["governor", "deputy", "followup"].includes(me.role);
   const [picked, setPicked] = useState<string>(wide ? "e1" : me.entityId);
   const entityId = wide ? picked : me.entityId;
   return { entityId, setPicked, wide, entity: entityOf(entityId) };
@@ -30,8 +30,9 @@ function ScopeBar({ entityId, setPicked, wide }: { entityId: string; setPicked: 
 
   const groups: { label: string; has: (e: Entity) => boolean }[] = [
     { label: "أجهزة المحافظة", has: (e) => e.tier === "governorate" && e.kind !== "ديوان" },
-    { label: "المديريات الرئيسية", has: (e) => e.tier !== "governorate" && e.kind !== "هيئة" && e.kind !== "ديوان" },
+    { label: "المديريات الرئيسية", has: (e) => e.tier !== "governorate" && !["هيئة", "ديوان", "منطقة"].includes(e.kind) },
     { label: "الهيئات والفروع", has: (e) => e.kind === "هيئة" },
+    { label: "المناطق", has: (e) => e.kind === "منطقة" },
   ];
 
   const current = entities.find((e) => e.id === entityId);
@@ -48,7 +49,7 @@ function ScopeBar({ entityId, setPicked, wide }: { entityId: string; setPicked: 
           <span className="sr-only">الجهة</span>
           <select value={entityId} onChange={(e) => setPicked(e.target.value)} aria-label="اختر الجهة">
             {groups.map((g) => {
-              const list = entities.filter(g.has);
+              const list = entities.filter((e) => e.active && g.has(e));
               if (!list.length) return null;
               return (
                 <optgroup key={g.label} label={g.label}>
@@ -83,7 +84,7 @@ export function Entities() {
       </div>
 
       <div id="entities-grid" className="grid g-3">
-        {entities.map((e) => {
+        {entities.filter((e) => e.active).map((e) => {
           const open2 = assignments.filter((a) => a.entityId === e.id && a.status !== "مُغلق").length;
           return (
             <button key={e.id} className="card hover pad" style={{ textAlign: "right" }} onClick={() => setOpen(e)}>

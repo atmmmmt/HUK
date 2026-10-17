@@ -45,7 +45,7 @@ export async function POST(request: Request) {
             meeting.chairId === me.id ||
             meeting.secretaryId === me.id ||
             (meeting.inviteeIds ?? []).includes(me.id);
-          const broad = ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(me.role);
+          const broad = ["governor", "deputy", "assistant", "chief", "registry"].includes(me.role);
           if (!canSeeMeeting || (!broad && !involved)) throw new ForbiddenError("هذا الاجتماع خارج نطاقك");
         } else if (hall) {
           if (!canAccessSection(me, "diwan", "halls")) throw new ForbiddenError("القاعات خارج اختصاص دورك");
@@ -59,13 +59,13 @@ export async function POST(request: Request) {
             (canAccessSection(me, "directorates", "structure") && person.entityId === me.entityId);
           if (!canSeePeople) throw new ForbiddenError("هذا الشخص خارج نطاقك");
         } else if (entity) {
-          const broad = ["governor", "deputy", "secgen", "followup"].includes(me.role);
+          const broad = ["governor", "deputy", "followup"].includes(me.role);
           const canSeeEntity =
             canAccessSection(me, "directorates", "entities") ||
             canAccessSection(me, "directorates", "performance");
           if (!canSeeEntity || (!broad && entity.id !== me.entityId)) throw new ForbiddenError("هذه الجهة خارج نطاقك");
         } else if (input.target === "general") {
-          if (!["governor", "deputy", "assistant", "secgen", "chief", "followup"].includes(me.role)) {
+          if (!["governor", "deputy", "assistant", "chief", "followup"].includes(me.role)) {
             throw new ForbiddenError("الملاحظات العامة الرسمية خارج اختصاص دورك");
           }
         } else {

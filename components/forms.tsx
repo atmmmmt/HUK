@@ -618,11 +618,11 @@ export function NewMeetingSheet({ onClose, preset = [] }: { onClose: () => void;
   const [summary, setSummary] = useState("");
 
   const others = people.filter((p) => p.id !== me.id && (p as { active?: boolean }).active !== false);
-  const quick = (["deputy", "assistant", "secgen", "chief"] as RoleKey[])
+  const quick = (["deputy", "execdeputy", "secgen", "chief"] as RoleKey[])
     .map((r) => others.find((p) => p.role === r)).filter(Boolean) as typeof others;
   const shown = q.trim()
     ? others.filter((p) => `${p.title} ${p.name} ${entityOf(p.entityId).name}`.includes(q.trim()))
-    : others.filter((p) => invited.includes(p.id) || ["deputy", "assistant", "secgen", "chief", "director", "branch"].includes(p.role));
+    : others.filter((p) => invited.includes(p.id) || ["deputy", "execdeputy", "assistant", "secgen", "chief", "director", "branch"].includes(p.role));
   const toggle = (id: string) => setInvited((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
 
   const submit = (e?: React.FormEvent) => {

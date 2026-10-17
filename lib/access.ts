@@ -19,7 +19,8 @@ export const defaultGrants: Record<RoleKey, Record<Action, Grant>> = {
   governor: { view: "full", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "full", delete: "full" },
   deputy: { view: "full", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "full", delete: "full" },
   assistant: { view: "partial", create: "full", edit: "full", assign: "full", approve: "full", close: "full", archive: "partial", delete: "none" },
-  secgen: { view: "full", create: "full", edit: "full", assign: "full", approve: "none", close: "none", archive: "full", delete: "none" },
+  execdeputy: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
+  secgen: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   chief: { view: "full", create: "full", edit: "full", assign: "full", approve: "none", close: "none", archive: "full", delete: "none" },
   followup: { view: "full", create: "none", edit: "none", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
   director: { view: "partial", create: "full", edit: "full", assign: "full", approve: "partial", close: "partial", archive: "full", delete: "none" },
@@ -27,6 +28,7 @@ export const defaultGrants: Record<RoleKey, Record<Action, Grant>> = {
   office: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   head: { view: "partial", create: "full", edit: "partial", assign: "full", approve: "none", close: "none", archive: "none", delete: "none" },
   employee: { view: "partial", create: "none", edit: "partial", assign: "none", approve: "none", close: "none", archive: "none", delete: "none" },
+  area: { view: "partial", create: "full", edit: "partial", assign: "partial", approve: "none", close: "none", archive: "none", delete: "none" },
   registry: { view: "partial", create: "full", edit: "full", assign: "partial", approve: "none", close: "none", archive: "full", delete: "none" },
   protocol: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
   halls: { view: "partial", create: "full", edit: "full", assign: "none", approve: "partial", close: "none", archive: "none", delete: "none" },
@@ -71,10 +73,13 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
     diwan: ["overview", "calendar", "meetings", "decisions", "assignments", "correspondence", "files", "people", "notes"],
   },
 
-  // الأمين العام ينسّق بين الديوان والجهات ويحتاج رقابة تشغيلية، لا إدارة داخلية للمديريات.
+  // الأمين العام ونائب رئيس المكتب التنفيذي خارج مبنى الديوان: لا اطلاع عام،
+  // بل ما يُسند إليهم وما يصدرونه، ومواعيدهم التي يُدعون إليها، وترتيب القاعات.
+  execdeputy: {
+    diwan: ["calendar", "meetings", "assignments", "halls", "notes"],
+  },
   secgen: {
-    diwan: ["overview", "calendar", "meetings", "decisions", "assignments", "correspondence", "files", "people", "notes"],
-    directorates: ["entities", "inbox", "replies", "performance", "notes"],
+    diwan: ["calendar", "meetings", "assignments", "halls", "notes"],
   },
 
   // مدير المكتب يدير مكتب المحافظ والمتابعة المرتبطة به فقط.
@@ -105,6 +110,9 @@ export const sectionAccess: Record<RoleKey, Partial<Record<Portal, readonly stri
   },
   employee: {
     directorates: ["inbox", "tasks", "replies", "meetings", "requests", "notes"],
+  },
+  area: {
+    directorates: ["inbox", "tasks", "replies", "meetings", "requests", "performance", "notes"],
   },
 
   // اختصاصات الديوان
@@ -154,7 +162,7 @@ export function clearanceRank(c: string): number {
 }
 
 /** أدوار الرقابة العليا التي ترى كل التكليفات بحكم الوظيفة. */
-const assignmentOversight: RoleKey[] = ["governor", "deputy", "secgen", "chief", "followup"];
+const assignmentOversight: RoleKey[] = ["governor", "deputy", "chief", "followup"];
 
 /** استعلام أولي لتقليل ما يُقرأ من MongoDB قبل تطبيق seesAssignment. */
 export function assignmentQueryFor(person: Person): Record<string, unknown> {
@@ -170,7 +178,7 @@ export function assignmentQueryFor(person: Person): Record<string, unknown> {
       ],
     };
   }
-  if (["employee", "registry", "protocol", "halls"].includes(person.role)) {
+  if (["employee", "registry", "protocol", "halls", "secgen", "execdeputy"].includes(person.role)) {
     return {
       $or: [
         { ownerId: person.id },
@@ -214,7 +222,11 @@ export function seesAssignment(person: Person, a: Assignment, ctx: Ctx = {}): bo
     case "registry":
     case "protocol":
     case "halls":
+    case "secgen":
+    case "execdeputy":
       return involved;
+    case "area":
+      return a.entityId === person.entityId;
     case "admin":
       return false;
     default:
@@ -262,7 +274,7 @@ export function canManageSystem(person: Person): boolean {
 
 /* ─────────────── أولوية القاعات عند التعارض ─────────────── */
 
-export const bookingLadder: RoleKey[] = ["governor", "deputy", "assistant", "secgen", "director", "branch"];
+export const bookingLadder: RoleKey[] = ["governor", "deputy", "execdeputy", "assistant", "secgen", "director", "branch"];
 
 export function bookingRank(role: RoleKey): number {
   const i = bookingLadder.indexOf(role);
@@ -302,8 +314,9 @@ export function reachLabel(person: Person, entityShort?: string): string {
       return "كل جهات المحافظة — نيابة المحافظ";
     case "assistant":
       return "الديوان والملفات المكلّف بها";
+    case "execdeputy":
     case "secgen":
-      return "تنسيق الديوان ومتابعة الجهات";
+      return "ما يُسند إليه وما يصدره · مواعيده";
     case "chief":
       return "مكتب المحافظ والمتابعة";
     case "followup":
@@ -318,6 +331,8 @@ export function reachLabel(person: Person, entityShort?: string): string {
       return person.unit ?? "وحدته";
     case "employee":
       return "المهام المسندة إليه";
+    case "area":
+      return (entityShort ?? "نطاقه") + " فقط";
     case "registry":
       return "المراسلات والمحاضر";
     case "protocol":
@@ -349,36 +364,36 @@ export const portalLabels: Record<Portal, { title: string; sub: string }> = {
 /* ─────────────── صلاحيات الإجراءات اليومية ─────────────── */
 
 export function canIssueAssignment(person: Person): boolean {
-  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
+  return ["governor", "deputy", "assistant", "execdeputy", "secgen", "chief"].includes(person.role);
 }
 
 export function canManageMeetings(person: Person): boolean {
-  return ["governor", "deputy", "assistant", "secgen", "chief", "registry"].includes(person.role);
+  return ["governor", "deputy", "assistant", "chief", "registry"].includes(person.role);
 }
 
 /** المراسم يستطيع جدولة لقاء/زيارة، لكنه لا يعتمد محاضر أو يحوّل المخرجات إلى تكليفات. */
 export function canScheduleMeeting(person: Person): boolean {
-  return canManageMeetings(person) || person.role === "protocol";
+  return canManageMeetings(person) || ["protocol", "secgen", "execdeputy"].includes(person.role);
 }
 
 export function canRespondRequest(person: Person, kind?: string): boolean {
   if (kind === "حجز قاعة") return canApproveBooking(person);
-  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
+  return ["governor", "deputy", "assistant", "chief"].includes(person.role);
 }
 
 export function canRaiseRequest(person: Person): boolean {
-  return ["director", "branch", "office", "head", "employee"].includes(person.role);
+  return ["director", "branch", "office", "head", "employee", "area"].includes(person.role);
 }
 
 export function canSubmitDecision(person: Person): boolean {
-  return ["director", "branch", "registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
+  return ["director", "branch", "registry", "chief", "governor", "deputy", "assistant"].includes(person.role);
 }
 
 /** من يستطيع اختيار جهة أخرى عند رفع معاملة؛ البقية يرفعون باسم جهتهم فقط. */
 export function canSubmitDecisionForAnyEntity(person: Person): boolean {
-  return ["governor", "deputy", "assistant", "secgen", "chief"].includes(person.role);
+  return ["governor", "deputy", "assistant", "chief"].includes(person.role);
 }
 
 export function canRegisterLetters(person: Person): boolean {
-  return ["registry", "chief", "secgen", "governor", "deputy", "assistant"].includes(person.role);
+  return ["registry", "chief", "governor", "deputy", "assistant"].includes(person.role);
 }

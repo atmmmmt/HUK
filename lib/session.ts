@@ -34,7 +34,7 @@ export async function decrypt(token?: string): Promise<SessionPayload | null> {
 }
 
 export async function createSession(user: UserDoc) {
-  const token = await encrypt({ uid: user.id, role: user.role, entityId: user.entityId });
+  const token = await encrypt({ uid: user.id, role: user.role, entityId: user.entityId, sv: user.sessionVersion ?? 0 });
   const store = await cookies();
   store.set(COOKIE, token, {
     httpOnly: true,
@@ -57,7 +57,9 @@ export async function currentUser(): Promise<UserDoc | null> {
   if (!payload) return null;
   const users = await collections.users();
   const user = await users.findOne({ id: payload.uid, active: true });
-  return user ?? null;
+  // رفع sessionVersion للمستخدم يُسقط كل جلساته القديمة فوراً
+  if (!user || (payload.sv ?? 0) !== (user.sessionVersion ?? 0)) return null;
+  return user;
 }
 
 /** يستخدم في مسارات API — يرمي استجابة 401 إذا لا جلسة */

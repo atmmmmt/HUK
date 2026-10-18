@@ -25,6 +25,8 @@ export interface UserDoc extends Person {
   passwordHash: string;
   active: boolean;
   lastLogin?: string;
+  /** يُرفع لإبطال كل جلسات المستخدم القائمة (تغيير كلمة المرور، تسجيل خروج إجباري) */
+  sessionVersion?: number;
   lastLoginISO?: string;
   lastOpen?: string;
   lastOpenISO?: string;

@@ -28,10 +28,6 @@ const steps = [
 
 export default function Welcome() {
   const router = useRouter();
-  const [next] = useState(() => {
-    if (typeof window === "undefined") return "/";
-    return new URLSearchParams(window.location.search).get("next") ?? "/";
-  });
   const [i, setI] = useState(0);
   const x0 = useRef<number | null>(null);
   const step = steps[i];
@@ -40,7 +36,11 @@ export default function Welcome() {
 
   function finish() {
     try { localStorage.setItem("gov.welcomed", "1"); } catch { /* محجوب */ }
-    router.push(next);
+    // نقرأ next لحظة الضغط: صفحة الدخول تنتقل إلى هنا بـ router.replace فيُرسم المكوّن قبل تحديث العنوان
+    const next = new URLSearchParams(window.location.search).get("next");
+    // مسار داخلي فقط: يبدأ بـ / وليس // أو /\ (عناوين خارجية)
+    const safe = next && /^\/(?![/\\])/.test(next) ? next : "/";
+    router.push(safe);
   }
 
   // السحب: نحو اليسار للتالي ونحو اليمين للسابق (واجهة عربية)

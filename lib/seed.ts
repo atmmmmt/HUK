@@ -108,7 +108,7 @@ export const entities: Entity[] = [
   { id: "e5", name: "مديرية الشؤون القانونية", short: "الشؤون القانونية", kind: "مديرية", tier: "governorate", managerId: "p14", units: ["العقود", "الدعاوى", "الاستشارات"], staffCount: 38, active: true, compliance: 83, openTasks: 11, lateTasks: 2, accent: "gold" },
   { id: "e10", name: "مديرية الشكاوى والمتابعة", short: "الشكاوى والمتابعة", kind: "مديرية", tier: "governorate", managerId: "p32", units: ["دائرة متابعة تنفيذ القرارات", "دائرة المتابعة الميدانية", "دائرة الشكاوى"], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
   { id: "e8", name: "مديرية العلاقات العامة", short: "العلاقات العامة", kind: "مديرية", tier: "governorate", managerId: "p30", units: ["دائرة العلاقات المجتمعية", "دائرة تنظيم الفعاليات", "دائرة التواصل الحكومي", "دائرة الشراكات والعلاقات المدنية"], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
-  { id: "e17", name: "مديرية الاستثمار", short: "الاستثمار", kind: "مديرية", tier: "governorate", managerId: "p38", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  { id: "e17", name: "مديرية الأملاك والاستثمار", short: "الأملاك والاستثمار", kind: "مديرية", tier: "governorate", managerId: "p38", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
 
   // ── المرحلة الأولى: مديريات الأمين العام
   { id: "e7", name: "مديرية الشؤون المالية", short: "الشؤون المالية", kind: "مديرية", tier: "governorate", managerId: "p21", units: ["الموازنة", "المحاسبة", "التدقيق"], staffCount: 76, active: true, compliance: 86, openTasks: 13, lateTasks: 1, accent: "plum" },
@@ -120,7 +120,7 @@ export const entities: Entity[] = [
   { id: "r3", name: "منطقة الطبقة", short: "الطبقة", kind: "منطقة", tier: "main", managerId: "p44", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
 
   // ── المرحلة الثانية: معطّلة حالياً، تُفعَّل من لوحة التحكم عند الحاجة
-  { id: "e1", name: "مديرية الخدمات الفنية", short: "الخدمات الفنية", kind: "مديرية", tier: "main", managerId: "p5", units: ["شعبة الصيانة", "قسم الطرق", "قسم الإنارة"], staffCount: 186, active: false, compliance: 74, openTasks: 31, lateTasks: 6, accent: "gold" },
+  { id: "e1", name: "مديرية الخدمات الفنية", short: "الخدمات الفنية", kind: "مديرية", tier: "main", managerId: "p5", units: ["شعبة الصيانة", "قسم الطرق", "قسم الإنارة"], staffCount: 186, active: true, compliance: 74, openTasks: 31, lateTasks: 6, accent: "gold" },
   { id: "e2", name: "مديرية التخطيط العمراني", short: "التخطيط العمراني", kind: "مديرية", tier: "main", managerId: "p8", units: ["قسم الدراسات", "قسم الرخص", "قسم المساحة"], staffCount: 142, active: false, compliance: 88, openTasks: 19, lateTasks: 2, accent: "teal" },
   { id: "e3", name: "مديرية الصحة", short: "الصحة", kind: "مديرية", tier: "main", managerId: "p10", units: ["الرعاية الأولية", "المشافي", "الصحة البيئية"], staffCount: 310, active: false, compliance: 91, openTasks: 22, lateTasks: 1, accent: "plum" },
   { id: "e20", name: "مديرية التربية", short: "التربية", kind: "مديرية", tier: "main", managerId: "p40", units: [], staffCount: 1, active: false, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
@@ -131,6 +131,24 @@ export const entities: Entity[] = [
   { id: "e16", name: "مديرية الشؤون الإدارية", short: "الشؤون الإدارية", kind: "مديرية", tier: "governorate", managerId: "p37", units: [], staffCount: 1, active: false, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
   { id: "e18", name: "مديرية الدعم التنفيذي", short: "الدعم التنفيذي", kind: "مديرية", tier: "governorate", managerId: "p39", units: [], staffCount: 1, active: false, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
   { id: "e12", name: "هيئة الاستثمار السورية — فرع الرقة", short: "هيئة الاستثمار", kind: "هيئة", tier: "main", managerId: "p34", units: [], staffCount: 1, active: false, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+
+  // ── الهيكل التنظيمي المعتمد من وزارة التنمية الإدارية: مفعّلة
+  // مرتبطة بالمحافظ مباشرة
+  { id: "e22", name: "مكتب التعاون الدولي", short: "التعاون الدولي", kind: "مكتب", tier: "governorate", managerId: "p45", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e23", name: "مديرية التقانة والتحول الرقمي", short: "التقانة والتحول الرقمي", kind: "مديرية", tier: "governorate", managerId: "p46", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e24", name: "مديرية خدمة المواطن", short: "خدمة المواطن", kind: "مديرية", tier: "governorate", managerId: "p47", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  // بإشراف الأمين العام
+  { id: "e25", name: "مديرية التخطيط والإحصاء", short: "التخطيط والإحصاء", kind: "مديرية", tier: "governorate", managerId: "p48", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "plum" },
+  { id: "e26", name: "مديرية المجالس والتنمية المحلية", short: "المجالس والتنمية المحلية", kind: "مديرية", tier: "governorate", managerId: "p49", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e27", name: "مديرية الآليات", short: "الآليات", kind: "مديرية", tier: "governorate", managerId: "p50", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e28", name: "مديرية التنمية الإدارية", short: "التنمية الإدارية", kind: "مديرية", tier: "governorate", managerId: "p51", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  // بإشراف معاون المحافظ للشؤون الفنية
+  { id: "e29", name: "مديرية البيئة", short: "البيئة", kind: "مديرية", tier: "governorate", managerId: "p52", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e30", name: "مديرية النظافة وإدارة النفايات", short: "النظافة وإدارة النفايات", kind: "مديرية", tier: "governorate", managerId: "p53", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "plum" },
+  { id: "e31", name: "مديرية التراخيص والإشغال العمراني", short: "التراخيص والإشغال", kind: "مديرية", tier: "governorate", managerId: "p54", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
+  { id: "e32", name: "مديرية المخططات والتنمية الحضرية", short: "المخططات والتنمية الحضرية", kind: "مديرية", tier: "governorate", managerId: "p55", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "gold" },
+  { id: "e33", name: "مديرية المناطق الصناعية والحرفية", short: "المناطق الصناعية والحرفية", kind: "مديرية", tier: "governorate", managerId: "p56", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "teal" },
+  { id: "e34", name: "مديرية النقل وهندسة المرور", short: "النقل وهندسة المرور", kind: "مديرية", tier: "governorate", managerId: "p57", units: [], staffCount: 1, active: true, compliance: 100, openTasks: 0, lateTasks: 0, accent: "navy" },
 ];
 
 /** حسابات انتقلت إلى جهة أخرى: تُنقل في القواعد القائمة إن كانت ما تزال في جهتها القديمة */
@@ -151,8 +169,8 @@ export const retired = {
 
 /** المرحلة الثانية: جهات وحسابات معطّلة (لا محذوفة) حتى تُفعَّل من لوحة التحكم */
 export const phase2 = {
-  entities: ["e1", "e2", "e3", "e4", "e6", "e11", "e12", "e16", "e18", "e20", "e21"],
-  people: ["p5", "p8", "p10", "p12", "p16", "p33", "p34", "p37", "p39", "p40", "p41", "p25"],
+  entities: ["e2", "e3", "e4", "e6", "e11", "e12", "e16", "e18", "e20", "e21"],
+  people: ["p8", "p10", "p12", "p16", "p33", "p34", "p37", "p39", "p40", "p41"],
 };
 
 export const entityOf = (id: string) => entities.find((e) => e.id === id)!;
@@ -163,7 +181,7 @@ export const people: Person[] = [
   { id: "p1", name: "السيد المحافظ", title: "محافظ الرقة", entityId: "e0", role: "governor", phone: "0930 000 001", ext: "100", office: "الطابق الرابع — مكتب المحافظ", duties: ["رسم السياسة التنفيذية للمحافظة", "اعتماد القرارات والتكليفات الكبرى", "ترؤس مجلس المحافظة وخلية الأزمة"], clearance: "سرّي", avgResponseHours: 3, initials: "م" },
   { id: "p2", name: "نائب المحافظ", title: "نائب المحافظ", entityId: "e13", role: "deputy", phone: "0930 000 002", ext: "101", office: "الطابق الرابع", duties: ["الإنابة عن المحافظ", "متابعة الملفات الخدمية", "رئاسة اللجنة التنفيذية"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ن" },
   { id: "p35", name: "نائب رئيس المكتب التنفيذي", title: "نائب رئيس المكتب التنفيذي", entityId: "e14", role: "execdeputy", phone: "0930 000 035", ext: "105", office: "الطابق الرابع", duties: ["إصدار التكليفات ومتابعة ما يُسند إليه", "ترتيب اللقاءات وحجز القاعات"], deputyOf: "p1", clearance: "سرّي", avgResponseHours: 5, initials: "ث" },
-  { id: "p25", name: "معاون المحافظ", title: "معاون المحافظ", entityId: "e0", role: "assistant", phone: "0930 000 025", ext: "103", office: "الطابق الرابع", duties: ["الإنابة في الاعتماد والمتابعة", "الإشراف على الملفات المكلّف بها"], clearance: "سرّي", avgResponseHours: 6, initials: "ع" },
+  { id: "p25", name: "معاون المحافظ", title: "معاون المحافظ للشؤون الفنية", entityId: "e0", role: "assistant", phone: "0930 000 025", ext: "103", office: "الطابق الرابع", duties: ["الإشراف على المديريات الفنية", "الإنابة في الاعتماد والمتابعة"], clearance: "سرّي", avgResponseHours: 6, initials: "ع" },
   { id: "p26", name: "الأمين العام", title: "الأمين العام للمحافظة", entityId: "e0", unit: "أمانة السر", role: "secgen", phone: "0930 000 026", ext: "104", office: "الطابق الثالث", duties: ["تنظيم سير العمل بين الديوان والمديريات", "متابعة تنفيذ القرارات وأرشفتها"], clearance: "سرّي", avgResponseHours: 4, initials: "أ" },
   { id: "p3", name: "مدير مكتب المحافظ", title: "مدير مكتب السيد المحافظ", entityId: "e0", unit: "السكرتارية", role: "chief", phone: "0930 000 003", ext: "102", office: "الطابق الرابع — مكتب المدير", duties: ["إدارة تقويم المحافظ والمواعيد", "فرز الوارد وتحديد ما يصل إلى المحافظ", "إصدار التكليفات نيابة عن المحافظ"], clearance: "سرّي", avgResponseHours: 2, initials: "م" },
   { id: "p5", name: "مدير الخدمات الفنية", title: "مدير الخدمات الفنية", entityId: "e1", role: "director", phone: "0930 000 005", ext: "210", office: "مبنى المديريات — الطابق الأول", duties: ["الإشراف على مشاريع الطرق والإنارة", "اعتماد ردود المديرية", "توزيع التكليفات على الأقسام"], clearance: "عادي", avgResponseHours: 9, initials: "خ" },
@@ -184,10 +202,23 @@ export const people: Person[] = [
   { id: "p44", name: "مسؤول منطقة الطبقة", title: "مسؤول منطقة الطبقة", entityId: "r3", role: "area", phone: "0930 000 044", ext: "490", office: "مكتب منطقة الطبقة", duties: ["متابعة ما يخص المنطقة من تكليفات", "رفع إحصائيات المنطقة وطلباتها إلى الديوان"], clearance: "عادي", avgResponseHours: 10, initials: "ط" },
   { id: "p36", name: "مدير الرقابة الداخلية", title: "مدير مديرية الرقابة الداخلية", entityId: "e15", role: "director", phone: "0930 000 036", ext: "410", office: "مبنى المديريات", duties: ["التدقيق على أعمال أجهزة المحافظة", "رفع تقارير الرقابة إلى المحافظ"], clearance: "عادي", avgResponseHours: 8, initials: "ر" },
   { id: "p37", name: "مدير الشؤون الإدارية", title: "مدير مديرية الشؤون الإدارية", entityId: "e16", role: "director", phone: "0930 000 037", ext: "420", office: "مبنى المديريات", duties: ["شؤون العاملين والدوام", "تنظيم الملاكات والقرارات الإدارية"], clearance: "عادي", avgResponseHours: 8, initials: "ش" },
-  { id: "p38", name: "مدير الاستثمار", title: "مدير مديرية الاستثمار", entityId: "e17", role: "director", phone: "0930 000 038", ext: "430", office: "مبنى المديريات", duties: ["متابعة المشاريع الاستثمارية في المحافظة", "تسهيل إجراءات المستثمرين"], clearance: "عادي", avgResponseHours: 8, initials: "س" },
+  { id: "p38", name: "مدير الأملاك والاستثمار", title: "مدير مديرية الأملاك والاستثمار", entityId: "e17", role: "director", phone: "0930 000 038", ext: "430", office: "مبنى المديريات", duties: ["إدارة أملاك المحافظة واستثمارها", "متابعة المشاريع الاستثمارية وتسهيل إجراءات المستثمرين"], clearance: "عادي", avgResponseHours: 8, initials: "س" },
   { id: "p39", name: "مدير الدعم التنفيذي", title: "مدير مديرية الدعم التنفيذي", entityId: "e18", role: "director", phone: "0930 000 039", ext: "440", office: "مبنى المديريات", duties: ["دعم تنفيذ قرارات المحافظ", "تنسيق الموارد اللازمة للتنفيذ"], clearance: "عادي", avgResponseHours: 8, initials: "د" },
   { id: "p40", name: "مدير التربية", title: "مدير التربية", entityId: "e20", role: "director", phone: "0930 000 040", ext: "450", office: "مبنى المديريات", duties: ["الإشراف على المدارس والعملية التعليمية", "خطط الامتحانات والعام الدراسي"], clearance: "عادي", avgResponseHours: 8, initials: "ت" },
   { id: "p41", name: "مدير الزراعة", title: "مدير الزراعة", entityId: "e21", role: "director", phone: "0930 000 041", ext: "460", office: "مبنى المديريات", duties: ["خطط المواسم الزراعية", "الإرشاد الزراعي ودعم الفلاحين"], clearance: "عادي", avgResponseHours: 8, initials: "ز" },
+  { id: "p45", name: "مدير مكتب التعاون الدولي", title: "مدير مكتب التعاون الدولي", entityId: "e22", role: "director", phone: "0930 000 045", ext: "500", office: "المبنى الرئيسي", duties: ["التنسيق مع المنظمات الدولية والجهات المانحة", "متابعة اتفاقيات التعاون ومشاريعها"], clearance: "عادي", avgResponseHours: 8, initials: "د" },
+  { id: "p46", name: "مدير التقانة والتحول الرقمي", title: "مدير مديرية التقانة والتحول الرقمي", entityId: "e23", role: "director", phone: "0930 000 046", ext: "510", office: "المبنى الرئيسي", duties: ["البنية التقنية وأنظمة المحافظة", "مشاريع التحول الرقمي وأتمتة الخدمات"], clearance: "عادي", avgResponseHours: 8, initials: "ق" },
+  { id: "p47", name: "مدير خدمة المواطن", title: "مدير مديرية خدمة المواطن", entityId: "e24", role: "director", phone: "0930 000 047", ext: "520", office: "مركز خدمة المواطن", duties: ["إدارة مراكز خدمة المواطن", "تبسيط الإجراءات ومتابعة رضا المراجعين"], clearance: "عادي", avgResponseHours: 8, initials: "خ" },
+  { id: "p48", name: "مدير التخطيط والإحصاء", title: "مدير مديرية التخطيط والإحصاء", entityId: "e25", role: "director", phone: "0930 000 048", ext: "530", office: "مبنى المديريات", duties: ["إعداد الخطط السنوية للمحافظة", "جمع البيانات والإحصاءات وتحليلها"], clearance: "عادي", avgResponseHours: 8, initials: "ت" },
+  { id: "p49", name: "مدير المجالس والتنمية المحلية", title: "مدير مديرية المجالس والتنمية المحلية", entityId: "e26", role: "director", phone: "0930 000 049", ext: "540", office: "مبنى المديريات", duties: ["متابعة عمل المجالس المحلية", "مشاريع التنمية المحلية في المناطق"], clearance: "عادي", avgResponseHours: 8, initials: "م" },
+  { id: "p50", name: "مدير الآليات", title: "مدير مديرية الآليات", entityId: "e27", role: "director", phone: "0930 000 050", ext: "550", office: "مرآب المحافظة", duties: ["إدارة آليات المحافظة وصيانتها", "توزيع الآليات على الجهات حسب الحاجة"], clearance: "عادي", avgResponseHours: 8, initials: "ل" },
+  { id: "p51", name: "مدير التنمية الإدارية", title: "مدير مديرية التنمية الإدارية", entityId: "e28", role: "director", phone: "0930 000 051", ext: "560", office: "مبنى المديريات", duties: ["تطوير الهياكل والإجراءات الإدارية", "تدريب العاملين وتقييم الأداء"], clearance: "عادي", avgResponseHours: 8, initials: "إ" },
+  { id: "p52", name: "مدير البيئة", title: "مدير مديرية البيئة", entityId: "e29", role: "director", phone: "0930 000 052", ext: "570", office: "مبنى المديريات", duties: ["حماية البيئة ورصد التلوث", "التوعية البيئية ومتابعة المخالفات"], clearance: "عادي", avgResponseHours: 8, initials: "ب" },
+  { id: "p53", name: "مدير النظافة وإدارة النفايات", title: "مدير مديرية النظافة وإدارة النفايات", entityId: "e30", role: "director", phone: "0930 000 053", ext: "580", office: "مبنى المديريات", duties: ["خطط النظافة وجمع النفايات", "إدارة مواقع الترحيل والمعالجة"], clearance: "عادي", avgResponseHours: 8, initials: "ن" },
+  { id: "p54", name: "مدير التراخيص والإشغال العمراني", title: "مدير مديرية التراخيص والإشغال العمراني", entityId: "e31", role: "director", phone: "0930 000 054", ext: "590", office: "مبنى المديريات", duties: ["منح رخص البناء والإشغال", "ضبط مخالفات البناء والإشغال"], clearance: "عادي", avgResponseHours: 8, initials: "ر" },
+  { id: "p55", name: "مدير المخططات والتنمية الحضرية", title: "مدير مديرية المخططات والتنمية الحضرية", entityId: "e32", role: "director", phone: "0930 000 055", ext: "600", office: "مبنى المديريات", duties: ["إعداد المخططات التنظيمية وتعديلها", "مشاريع التنمية الحضرية"], clearance: "عادي", avgResponseHours: 8, initials: "ح" },
+  { id: "p56", name: "مدير المناطق الصناعية والحرفية", title: "مدير مديرية المناطق الصناعية والحرفية", entityId: "e33", role: "director", phone: "0930 000 056", ext: "610", office: "مبنى المديريات", duties: ["إدارة المناطق الصناعية والحرفية", "تخصيص المقاسم ومتابعة المستثمرين الصناعيين"], clearance: "عادي", avgResponseHours: 8, initials: "ص" },
+  { id: "p57", name: "مدير النقل وهندسة المرور", title: "مدير مديرية النقل وهندسة المرور", entityId: "e34", role: "director", phone: "0930 000 057", ext: "620", office: "مبنى المديريات", duties: ["تنظيم النقل الداخلي وخطوطه", "هندسة المرور والإشارات والتقاطعات"], clearance: "عادي", avgResponseHours: 8, initials: "ط" },
   { id: "p20", name: "مدير النظام", title: "مدير النظام", entityId: "e0", role: "admin", phone: "0930 000 020", ext: "119", office: "غرفة النظم", duties: ["إدارة الجهات والأدوار والمستخدمين", "ضبط القوالب وقواعد التصعيد", "مراجعة سجل التدقيق"], clearance: "عادي", avgResponseHours: 2, initials: "ن" },
 ];
 
@@ -208,6 +239,10 @@ export const usernames: Record<string, string> = {
   p36: "audit.director", p37: "hr.director", p38: "investment.director", p39: "support.director",
   p40: "education.director", p41: "agriculture.director",
   p42: "area.thawra", p43: "area.telabyad", p44: "area.tabqa",
+  p45: "intl.office", p46: "digital.director", p47: "citizen.director", p48: "planning.director",
+  p49: "councils.director", p50: "vehicles.director", p51: "admindev.director", p52: "environment.director",
+  p53: "cleaning.director", p54: "permits.director", p55: "masterplan.director", p56: "industrial.director",
+  p57: "transport.director",
 };
 
 /* ───────────────────────── القاعات والحجوزات ───────────────────────── */

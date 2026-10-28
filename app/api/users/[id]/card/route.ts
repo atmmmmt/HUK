@@ -39,7 +39,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const initials = name.replace(/^(السيد|د\.|م\.|أ\.)\s*/, "").trim().charAt(0) || "؟";
     await users.updateOne(
       { id },
-      { $set: { name, phone, initials, passwordHash: await bcrypt.hash(password, 10) }, $inc: { sessionVersion: 1 } },
+      { $set: { name, phone, initials, namedByAdmin: true, passwordHash: await bcrypt.hash(password, 10) }, $inc: { sessionVersion: 1 } },
     );
     await writeAudit(me.id, "أصدر بطاقة دخول", u.username, ipOf(request));
 

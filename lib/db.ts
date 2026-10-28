@@ -1,5 +1,6 @@
 import "server-only";
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 import { Db, MongoClient } from "mongodb";
 import type {
   Assignment, AuditEntry, Booking, Decision, Delegation, DocFile, Entity, Hall, Letter,
@@ -9,6 +10,10 @@ import * as seed from "./seed";
 
 const seedPeople = seed.people;
 const seedRequests = seed.requests;
+
+/** بصمة ملف البيانات؛ ارفع SYNC_LOGIC عند تعديل منطق المطابقة نفسه ليُعاد تطبيقه */
+const SYNC_LOGIC = 1;
+const seedPrint = createHash("sha1").update(SYNC_LOGIC + JSON.stringify(seed)).digest("hex");
 
 const uri = process.env.MONGODB_URI;
 const dbName = process.env.MONGODB_DB ?? "governorate";
@@ -27,6 +32,8 @@ export interface UserDoc extends Person {
   lastLogin?: string;
   /** يُرفع لإبطال كل جلسات المستخدم القائمة (تغيير كلمة المرور، تسجيل خروج إجباري) */
   sessionVersion?: number;
+  /** الاسم أدخله مدير النظام لشاغل المنصب، فلا تستبدله مطابقة البذرة */
+  namedByAdmin?: boolean;
   lastLoginISO?: string;
   lastOpen?: string;
   lastOpenISO?: string;
@@ -107,12 +114,20 @@ async function ensureIndexes(d: Db) {
  */
 async function syncIdentity(d: Db) {
   try {
-    const ops = seedPeople.map((p) => ({
-      updateOne: {
-        filter: { id: p.id, $or: [{ name: { $ne: p.name } }, { title: { $ne: p.title } }, { initials: { $ne: p.initials } }] },
-        update: { $set: { name: p.name, title: p.title, initials: p.initials } },
+    // المطابقة كاملة تكلّف مئات الاستعلامات؛ تُجرى فقط حين يتغير ملف البيانات منذ آخر مرة
+    const marks = d.collection("migrations");
+    if (await marks.findOne({ id: "seed-sync", print: seedPrint })) return;
+
+    // الاسم الذي أدخله مدير النظام عند إصدار البطاقة لا يُستبدل باسم المنصب من البذرة
+    const ops = seedPeople.flatMap((p) => [
+      { updateOne: { filter: { id: p.id, title: { $ne: p.title } }, update: { $set: { title: p.title } } } },
+      {
+        updateOne: {
+          filter: { id: p.id, namedByAdmin: { $ne: true }, $or: [{ name: { $ne: p.name } }, { initials: { $ne: p.initials } }] },
+          update: { $set: { name: p.name, initials: p.initials } },
+        },
       },
-    }));
+    ]);
     const res = await d.collection("users").bulkWrite(ops, { ordered: false });
     if (res.modifiedCount) console.log(`[db] حُدّثت أسماء ${res.modifiedCount} حساباً`);
 
@@ -136,6 +151,7 @@ async function syncIdentity(d: Db) {
     );
     await syncPlaceNames(d);
     await syncStructure(d);
+    await marks.updateOne({ id: "seed-sync" }, { $set: { print: seedPrint, at: new Date().toISOString() } }, { upsert: true });
   } catch (err) {
     console.error("[db] تعذّرت مطابقة الأسماء:", err instanceof Error ? err.message : err);
   }
@@ -229,10 +245,12 @@ async function syncPlaceNames(d: Db) {
     ["letters", seed.letters], ["decisions", seed.decisions], ["requests", seed.requests], ["notifications", seed.notifications],
     ["notes", seed.notes], ["bookings", seed.bookings], ["delegations", seed.delegations], ["files", seed.docFiles],
   ];
-  for (const [name, docs] of sets) {
+  // قراءة واحدة لكل مجموعة بدل استعلام لكل سجل
+  await Promise.all(sets.map(async ([name, docs]) => {
     const col = d.collection(name);
+    const current = new Map((await col.find({ id: { $in: docs.map((x) => x.id) } }).toArray()).map((c) => [c.id, c]));
     for (const src of docs as unknown as Record<string, unknown>[]) {
-      const cur = await col.findOne({ id: src.id });
+      const cur = current.get(src.id);
       if (!cur) continue;
       const $set: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(src)) {
@@ -255,7 +273,7 @@ async function syncPlaceNames(d: Db) {
         catch (err) { console.error(`[db] تعذّر نقل ${name}/${src.id}:`, err instanceof Error ? err.message : err); }
       }
     }
-  }
+  }));
   if (fixed) console.log(`[db] نُقلت ${fixed} سجلات من أسماء حلب إلى الرقة`);
 }
 

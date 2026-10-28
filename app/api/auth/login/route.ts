@@ -26,9 +26,11 @@ export async function POST(request: Request) {
       throw new Error("هذا الحساب معطّل — راجع مدير النظام");
     }
 
-    await createSession(user);
-    await writeUsageEvent(user.id, "login", { path: "/login" }).catch(() => {});
-    await writeAudit(user.id, "سجّل الدخول", user.username, ipOf(request));
+    await Promise.all([
+      createSession(user),
+      writeUsageEvent(user.id, "login", { path: "/login" }).catch(() => {}),
+      writeAudit(user.id, "سجّل الدخول", user.username, ipOf(request)),
+    ]);
 
     const homes = Object.fromEntries(
       portalsFor(user).map((portal) => {

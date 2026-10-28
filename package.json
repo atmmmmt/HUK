@@ -10,6 +10,7 @@
     "seed": "node scripts/seed.mjs",
     "seed:fresh": "node scripts/seed.mjs --fresh",
     "db:check": "node scripts/check-db.mjs",
+    "user:reset": "node scripts/reset-password.mjs",
     "db:up": "node scripts/dev-db.mjs",
     "db:stop": "node scripts/dev-db.mjs --stop",
     "db:status": "node scripts/dev-db.mjs --status",

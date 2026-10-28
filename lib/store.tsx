@@ -20,6 +20,9 @@ export interface NewUserInput {
   entityId: string; unit?: string; clearance?: Classification; phone?: string;
 }
 
+/** بطاقة دخول صدرت للتو — كلمة المرور لا تُحفظ ولا تُعرض مرة ثانية */
+export interface IssuedCard { person: Person; username: string; password: string }
+
 type Toast = { id: number; text: string; tone: "ok" | "info" | "warn" };
 
 interface Store {
@@ -59,6 +62,7 @@ interface Store {
   letterAction: (id: string, action: "handle" | "archive") => Promise<void>;
   createUser: (input: NewUserInput) => Promise<void>;
   setUserActive: (id: string, active: boolean) => Promise<void>;
+  issueCard: (id: string, input: { name: string; phone: string }) => Promise<IssuedCard>;
   saveEscalation: (levels: number[]) => Promise<void>;
   documents: UploadedDoc[];
   files: (DocFile & { locked?: boolean })[];
@@ -384,6 +388,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, active ? "فُعّل الحساب" : "عُطّل الحساب — لا يستطيع صاحبه الدخول");
   }, [guard, patchLocal]);
 
+  const issueCard = useCallback(async (id: string, input: { name: string; phone: string }) => {
+    let card: IssuedCard | undefined;
+    await guard(async () => {
+      const { person, username, password } = await call(`/api/users/${id}/card/`, { method: "POST", body: JSON.stringify(input) });
+      patchLocal((b) => ({ ...b, people: b.people.map((p) => (p.id === id ? person : p)) }));
+      card = { person, username, password };
+    }, "صدرت البطاقة — كلمة المرور السابقة لم تعد تعمل");
+    return card!;
+  }, [guard, patchLocal]);
+
   const saveEscalation = useCallback(async (levels: number[]) => {
     await guard(async () => {
       await call("/api/settings/", { method: "PUT", body: JSON.stringify({ levels }) });
@@ -458,12 +472,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     people: boot?.people ?? [],
     escalationLevels: boot?.settings?.escalationLevels ?? null,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, saveEscalation,
+    registerLetter, letterAction, createUser, setUserActive, issueCard, saveEscalation,
     documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting,
   }), [boot, anon, error, advance, markSeen, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);
+    registerLetter, letterAction, createUser, setUserActive, issueCard, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

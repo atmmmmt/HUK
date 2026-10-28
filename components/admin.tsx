@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlarmClock, ArrowLeft, Building2, CheckCircle2, Plus, ScrollText, ShieldCheck, Trash2,
+  AlarmClock, ArrowLeft, Building2, CheckCircle2, Copy, Download, IdCard, Plus, Printer, ScrollText, ShieldCheck, Trash2,
   TriangleAlert, Users, XCircle,
 } from "lucide-react";
 import { audit, entities, entityOf, people, roles } from "@/lib/lookup";
 import { escalationRules } from "@/lib/constants";
 import { navByPortal } from "@/lib/nav";
 import { actionLabels, canManageSystem, reachLabel } from "@/lib/access";
-import { useStore } from "@/lib/store";
-import type { Action, Entity } from "@/lib/types";
+import { useStore, type IssuedCard } from "@/lib/store";
+import type { Action, Entity, Person } from "@/lib/types";
 import { Ava, Bar, ClassChip, Empty, Kpi, Panel, PersonLine, Pills, Sheet } from "@/components/ui";
 import { NewUserSheet } from "@/components/forms";
 
@@ -140,6 +140,7 @@ export function AdminUsers() {
   const [filter, setFilter] = useState("الكل");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
+  const [cardFor, setCardFor] = useState<string | null>(null);
   const canManage = canManageSystem(me);
   const toggle = async (id: string, active: boolean) => {
     setBusy(id);
@@ -187,6 +188,11 @@ export function AdminUsers() {
                   <td><ClassChip c={p.clearance} /></td>
                   <td className="ltr tiny">{p.phone}</td>
                   <td>
+                    {canManage && p.id !== me.id && (
+                      <button className="chip navy" style={{ marginInlineEnd: 6 }} onClick={() => setCardFor(p.id)}>
+                        <IdCard size={13} /> بطاقة
+                      </button>
+                    )}
                     {p.id === me.id ? <span className="chip gold">أنت</span>
                       : !entityOf(p.entityId).active ? <span className="chip">جهته معطّلة</span>
                         : canManage ? (
@@ -208,8 +214,173 @@ export function AdminUsers() {
       </Panel>
 
       {adding && <NewUserSheet onClose={() => setAdding(false)} />}
+      {cardFor && <CardSheet id={cardFor} onClose={() => setCardFor(null)} />}
     </div>
   );
+}
+
+/* ═══════════════════════ بطاقة الدخول ═══════════════════════ */
+
+/** الاسم في البذرة هو اسم المنصب نفسه؛ لا يُعرض اسماً لشخص حتى يُدخله مدير النظام */
+const isPlaceholderName = (p: Person) => p.name === p.title || p.title.includes(p.name);
+const isPlaceholderPhone = (phone: string) => !phone || phone === "—" || phone.startsWith("0930 000");
+
+function CardSheet({ id, onClose }: { id: string; onClose: () => void }) {
+  const { people, issueCard, toast } = useStore();
+  const p = people.find((x) => x.id === id);
+  const [name, setName] = useState(p && !isPlaceholderName(p) ? p.name : "");
+  const [phone, setPhone] = useState(p && !isPlaceholderPhone(p.phone) ? p.phone : "");
+  const [busy, setBusy] = useState(false);
+  const [card, setCard] = useState<IssuedCard | null>(null);
+  const [image, setImage] = useState("");
+  if (!p) return null;
+  const entity = entityOf(p.entityId);
+  const loginUrl = typeof window === "undefined" ? "" : `${window.location.origin}/login`;
+
+  async function issue(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (name.trim().length < 3 || phone.replace(/\D/g, "").length < 7) return toast("اكتب الاسم الكامل ورقم الجوال", "warn");
+    setBusy(true);
+    try {
+      const c = await issueCard(id, { name: name.trim(), phone: phone.trim() });
+      setCard(c);
+      setImage(await drawCard(c, entity.name, loginUrl));
+    } catch { /* المتجر يعرض السبب */ } finally { setBusy(false); }
+  }
+
+  const text = card ? [
+    "منصة الرقة الذكية — بطاقة الدخول",
+    `الاسم: ${card.person.name}`,
+    `المنصب: ${card.person.title}`,
+    `الجهة: ${entity.name}`,
+    `اسم المستخدم: ${card.username}`,
+    `كلمة المرور: ${card.password}`,
+    `رابط الدخول: ${loginUrl}`,
+    "البطاقة شخصية، لا تشاركها مع أحد.",
+  ].join("\n") : "";
+
+  const download = () => {
+    const a = document.createElement("a");
+    a.href = image;
+    a.download = `بطاقة-${card!.person.name}.png`;
+    a.click();
+  };
+  const print = () => {
+    const w = window.open("", "_blank");
+    if (!w) return toast("اسمح بالنوافذ المنبثقة للطباعة", "warn");
+    w.document.write(`<title>بطاقة الدخول</title><img src="${image}" style="width:100%;max-width:640px;display:block;margin:auto" onload="print()">`);
+    w.document.close();
+  };
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(text); toast("نُسخت معلومات البطاقة"); } catch { toast("تعذّر النسخ", "warn"); }
+  };
+
+  return (
+    <Sheet
+      title={card ? "بطاقة الدخول" : "إصدار بطاقة دخول"}
+      sub={`${p.title} — ${entity.short}`}
+      onClose={onClose}
+      footer={card ? (
+        <>
+          <button className="btn gold" onClick={download}><Download size={16} /> تنزيل صورة</button>
+          <button className="btn primary" onClick={print}><Printer size={16} /> طباعة</button>
+          <button className="btn ghost" onClick={() => void copy()}><Copy size={16} /> نسخ كنص</button>
+        </>
+      ) : (
+        <>
+          <button className="btn gold" onClick={() => void issue()} disabled={busy}><IdCard size={16} /> {busy ? "جارٍ الإصدار…" : "إصدار البطاقة"}</button>
+          <button className="btn ghost" onClick={onClose}>إلغاء</button>
+        </>
+      )}
+    >
+      {card ? (
+        <div className="grid" style={{ gap: 12 }}>
+          {image ? <img src={image} alt="بطاقة الدخول" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
+            : <div className="skel" style={{ height: 420 }} />}
+          <div className="lock-note">
+            <TriangleAlert size={16} />
+            <span>كلمة المرور تظهر <b>هذه المرة فقط</b>. سلّم البطاقة الآن، ولو ضاعت أصدر بطاقة جديدة فتتغير كلمة المرور.</span>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={issue} autoComplete="off">
+          <div className="field">
+            <label htmlFor="cd-name">اسم الشخص الكامل</label>
+            <input id="cd-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="مثال: أحمد محمد العلي" autoFocus />
+          </div>
+          <div className="field">
+            <label htmlFor="cd-phone">رقم الجوال</label>
+            <input id="cd-phone" className="ltr" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="09xx xxx xxx" />
+          </div>
+          <div className="lock-note" style={{ marginTop: 14 }}>
+            <TriangleAlert size={16} />
+            <span>
+              يُسجَّل الاسم والرقم على هذا الحساب، وتُولَّد <b>كلمة مرور جديدة</b> فتتوقف كلمة المرور القديمة ويخرج أي جهاز داخل بها.
+              {(p as { active?: boolean }).active === false && <> الحساب <b>معطّل</b> حالياً؛ فعّله ليتمكن صاحبه من الدخول.</>}
+            </span>
+          </div>
+        </form>
+      )}
+    </Sheet>
+  );
+}
+
+/** ترسم البطاقة على لوح بمقاس صورة جوال لتُرسل أو تُطبع كما هي */
+async function drawCard(card: IssuedCard, entityName: string, loginUrl: string) {
+  const font = getComputedStyle(document.body).fontFamily;
+  await document.fonts.ready;
+  const W = 1080, H = 1350, P = 80;
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d")!;
+  const navy = "#0f2a44", gold = "#c9a24a";
+
+  g.fillStyle = "#f6f3ec"; g.fillRect(0, 0, W, H);
+  g.fillStyle = navy; g.fillRect(0, 0, W, 250);
+  g.fillStyle = gold; g.fillRect(0, 250, W, 10);
+
+  const text = (s: string, x: number, y: number, size: number, color: string, weight = 700, dir: CanvasDirection = "rtl", align: CanvasTextAlign = "right") => {
+    g.direction = dir; g.textAlign = align;
+    g.font = `${weight} ${size}px ${font}`;
+    g.fillStyle = color;
+    g.fillText(s, x, y);
+  };
+  text("محافظة الرقة — منصة الرقة الذكية", W / 2, 105, 34, "#e6c87c", 700, "rtl", "center");
+  text("بطاقة الدخول", W / 2, 195, 68, "#fff", 900, "rtl", "center");
+
+  let y = 340;
+  const row = (label: string, value: string, opts: { ltr?: boolean; big?: boolean } = {}) => {
+    text(label, W - P, y, 28, "#8a7340", 700);
+    const size = opts.big ? 54 : 40;
+    let v = value;
+    g.font = `800 ${size}px ${font}`;
+    while (g.measureText(v).width > W - 2 * P && v.length > 4) v = v.slice(0, -2);
+    if (v !== value) v = v.slice(0, -1) + "…";
+    text(v, W - P, y + size + 14, size, navy, 800, opts.ltr ? "ltr" : "rtl");
+    y += size + 74;
+    g.fillStyle = "#e2dccd"; g.fillRect(P, y - 32, W - 2 * P, 2);
+  };
+  row("الاسم", card.person.name);
+  row("المنصب", card.person.title);
+  row("الجهة", entityName);
+
+  // صندوق بيانات الدخول
+  y += 10;
+  const boxTop = y - 20, boxH = 300;
+  g.fillStyle = "#fff"; g.strokeStyle = gold; g.lineWidth = 4;
+  g.beginPath(); g.roundRect(P - 20, boxTop, W - 2 * P + 40, boxH, 24); g.fill(); g.stroke();
+  y += 30;
+  row("اسم المستخدم", card.username, { ltr: true });
+  row("كلمة المرور", card.password, { ltr: true, big: true });
+
+  y = boxTop + boxH + 70;
+  text("رابط الدخول", W - P, y, 28, "#8a7340", 700);
+  text(loginUrl, W - P, y + 50, 32, navy, 700, "ltr");
+
+  g.fillStyle = navy; g.fillRect(0, H - 110, W, 110);
+  text("البطاقة شخصية — لا تشاركها مع أحد", W / 2, H - 42, 34, "#fff", 800, "rtl", "center");
+
+  return c.toDataURL("image/png");
 }
 
 /* ═══════════════════════ الأدوار والصلاحيات ═══════════════════════ */

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlarmClock, ArrowLeft, Building2, CheckCircle2, Copy, Download, IdCard, Plus, Printer, ScrollText, ShieldCheck, Trash2,
+  AlarmClock, ArrowLeft, Building2, CheckCircle2, Circle, Copy, Download, IdCard, Image as ImageIcon, Plus, Printer, ScrollText, ShieldCheck, Trash2,
   TriangleAlert, Users, XCircle,
 } from "lucide-react";
 import { audit, entities, entityOf, people, roles } from "@/lib/lookup";
@@ -136,12 +136,20 @@ export function AdminEntities() {
 /* ═══════════════════════ المستخدمون ═══════════════════════ */
 
 export function AdminUsers() {
-  const { me, people, setUserActive } = useStore();
+  const { me, people, setUserActive, setUserContacted } = useStore();
   const [filter, setFilter] = useState("الكل");
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [cardFor, setCardFor] = useState<string | null>(null);
+  const [marking, setMarking] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   const canManage = canManageSystem(me);
+  const tracked = people.filter(tracksContact);
+  const contactedCount = tracked.filter(hasContacted).length;
+  const markContacted = async (id: string, contacted: boolean) => {
+    setMarking(id);
+    try { await setUserContacted(id, contacted); } catch { /* المتجر يعرض السبب */ } finally { setMarking(null); }
+  };
   const toggle = async (id: string, active: boolean) => {
     setBusy(id);
     try { await setUserActive(id, active); } catch { /* المتجر يعرض السبب */ } finally { setBusy(null); }
@@ -157,6 +165,16 @@ export function AdminUsers() {
         <Kpi label="إنابات سارية" value={people.filter((p) => p.deputyOf).length} icon={<ArrowLeft size={17} />} tone="warn" />
         <Kpi label="تصاريح سرّية" value={people.filter((p) => p.clearance === "سرّي").length} icon={<TriangleAlert size={17} />} />
       </div>
+
+      {canManage && (
+        <div className="card pad row between wrap" style={{ gap: 12 }}>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <b style={{ display: "block", fontSize: 14, marginBottom: 8 }}>تواصل {contactedCount} من أصل {tracked.length} مسؤولاً</b>
+            <Bar value={tracked.length ? Math.round((contactedCount / tracked.length) * 100) : 0} />
+          </div>
+          <button className="btn primary" onClick={() => setReporting(true)}><ImageIcon size={16} /> صورة المتابعة</button>
+        </div>
+      )}
 
       {canManage && (
         <div className="row" style={{ justifyContent: "flex-end" }}>
@@ -188,6 +206,18 @@ export function AdminUsers() {
                   <td><ClassChip c={p.clearance} /></td>
                   <td className="ltr tiny">{p.phone}</td>
                   <td>
+                    {canManage && tracksContact(p) && (
+                      <button
+                        className={`chip ${hasContacted(p) ? "ok" : ""}`}
+                        style={{ marginInlineEnd: 6 }}
+                        disabled={marking === p.id}
+                        onClick={() => void markContacted(p.id, !hasContacted(p))}
+                        title="اضغط للتبديل"
+                      >
+                        {hasContacted(p) ? <CheckCircle2 size={13} /> : <Circle size={13} />}
+                        {hasContacted(p) ? "تواصل" : "لم يتواصل"}
+                      </button>
+                    )}
                     {canManage && p.id !== me.id && (
                       <button className="chip navy" style={{ marginInlineEnd: 6 }} onClick={() => setCardFor(p.id)}>
                         <IdCard size={13} /> بطاقة
@@ -215,20 +245,138 @@ export function AdminUsers() {
 
       {adding && <NewUserSheet onClose={() => setAdding(false)} />}
       {cardFor && <CardSheet id={cardFor} onClose={() => setCardFor(null)} />}
+      {reporting && <ContactReportSheet people={tracked} onClose={() => setReporting(false)} />}
     </div>
   );
 }
 
+/* ═══════════════════════ متابعة التواصل ═══════════════════════ */
+
+/** المحافظ ومعاونه ومدير النظام خارج التعميم */
+const tracksContact = (p: Person) => !["governor", "assistant", "admin"].includes(p.role);
+/** من صدرت بطاقته قبل وجود علامة التواصل يُعدّ متواصلاً */
+const hasContacted = (p: Person) => p.contacted ?? !!p.namedByAdmin;
+
+function saveImage(url: string, filename: string) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+}
+
+function printImage(url: string, title: string) {
+  const w = window.open("", "_blank");
+  if (!w) return false;
+  w.document.write(`<title>${title}</title><img src="${url}" style="width:100%;display:block;margin:auto" onload="print()">`);
+  w.document.close();
+  return true;
+}
+
+function ContactReportSheet({ people, onClose }: { people: Person[]; onClose: () => void }) {
+  const { toast } = useStore();
+  const [image, setImage] = useState("");
+  useEffect(() => { void drawContactReport(people).then(setImage); }, [people]);
+
+  return (
+    <Sheet
+      title="صورة متابعة التواصل"
+      sub="من تواصل ومن لم يتواصل حتى الآن"
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn gold" disabled={!image} onClick={() => saveImage(image, "متابعة-التواصل.png")}><Download size={16} /> تنزيل صورة</button>
+          <button className="btn primary" disabled={!image} onClick={() => { if (!printImage(image, "متابعة التواصل")) toast("اسمح بالنوافذ المنبثقة للطباعة", "warn"); }}><Printer size={16} /> طباعة</button>
+        </>
+      }
+    >
+      {image ? <img src={image} alt="متابعة التواصل" style={{ width: "100%", borderRadius: 12, border: "1px solid var(--line)" }} />
+        : <div className="skel" style={{ height: 420 }} />}
+    </Sheet>
+  );
+}
+
+/** عمودان: من تواصل باسمه ومنصبه، ومن لم يتواصل بمنصبه؛ يطول اللوح بطول القائمة الأطول */
+async function drawContactReport(people: Person[]) {
+  const font = getComputedStyle(document.body).fontFamily;
+  await document.fonts.ready;
+  const done = people.filter(hasContacted);
+  const pending = people.filter((p) => !hasContacted(p));
+
+  const W = 1600, P = 60, GAP = 40, HEAD = 320, COL_TOP = HEAD + 50, TITLE = 90, FOOT = 90, ROW = 112, ROW_GAP = 12;
+  const colW = (W - 2 * P - GAP) / 2;
+  const rows = Math.max(done.length, pending.length, 1);
+  const H = COL_TOP + TITLE + rows * (ROW + ROW_GAP) + 40 + FOOT;
+
+  const c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d")!;
+  const navy = "#0f2a44", gold = "#c9a24a", green = "#0b7a56", red = "#b3402f", muted = "#6b7280";
+  g.direction = "rtl";
+
+  const text = (s: string, x: number, y: number, size: number, color: string, weight = 700, align: CanvasTextAlign = "right", maxW = Infinity) => {
+    let fs = size;
+    g.font = `${weight} ${fs}px ${font}`;
+    while (g.measureText(s).width > maxW && fs > size * 0.7) {
+      fs -= 1;
+      g.font = `${weight} ${fs}px ${font}`;
+    }
+    g.textAlign = align;
+    g.fillStyle = color;
+    g.fillText(s, x, y);
+  };
+
+  g.fillStyle = "#f6f3ec"; g.fillRect(0, 0, W, H);
+  g.fillStyle = navy; g.fillRect(0, 0, W, HEAD);
+  g.fillStyle = gold; g.fillRect(0, HEAD, W, 10);
+  text("محافظة الرقة — منصة الرقة الذكية", W / 2, 80, 32, "#e6c87c", 700, "center");
+  text("متابعة التواصل مع المسؤولين", W / 2, 165, 72, "#fff", 900, "center");
+  text(`تواصل ${done.length} من أصل ${people.length} — لم يتواصل ${pending.length}`, W / 2, 235, 36, "#dfe8f1", 700, "center");
+  text(new Date().toLocaleDateString("ar-SY-u-nu-latn", { dateStyle: "long" }), W / 2, 285, 28, "#b9c7d6", 600, "center");
+
+  const column = (left: number, title: string, color: string, list: Person[], showName: boolean) => {
+    const right = left + colW;
+    g.fillStyle = color;
+    g.beginPath(); g.roundRect(left, COL_TOP, colW, 70, 16); g.fill();
+    text(`${title} (${list.length})`, left + colW / 2, COL_TOP + 47, 36, "#fff", 800, "center");
+
+    if (!list.length) {
+      text("لا أحد حتى الآن", left + colW / 2, COL_TOP + TITLE + 66, 30, muted, 700, "center");
+      return;
+    }
+    list.forEach((p, i) => {
+      const y = COL_TOP + TITLE + i * (ROW + ROW_GAP);
+      g.fillStyle = "#fff"; g.strokeStyle = "#e2dccd"; g.lineWidth = 2;
+      g.beginPath(); g.roundRect(left, y, colW, ROW, 14); g.fill(); g.stroke();
+      g.fillStyle = color;
+      g.beginPath(); g.arc(right - 48, y + ROW / 2, 26, 0, Math.PI * 2); g.fill();
+      text(String(i + 1), right - 48, y + ROW / 2 + 9, 26, "#fff", 800, "center");
+      const textRight = right - 92, textW = colW - 116;
+      if (showName) {
+        text(p.name, textRight, y + 48, 34, navy, 800, "right", textW);
+        text(p.title, textRight, y + 90, 26, muted, 600, "right", textW);
+      } else {
+        text(p.title, textRight, y + ROW / 2 + 11, 32, navy, 700, "right", textW);
+      }
+    });
+  };
+  column(W - P - colW, "تواصلوا", green, done, true);
+  column(P, "لم يتواصلوا بعد", red, pending, false);
+
+  g.fillStyle = navy; g.fillRect(0, H - FOOT, W, FOOT);
+  text(pending.length ? "نرجو ممن لم يتواصل المبادرة بالتواصل" : "تواصل الجميع، شكراً لتعاونكم", W / 2, H - 32, 34, "#fff", 800, "center");
+
+  return c.toDataURL("image/png");
+}
+
 /* ═══════════════════════ بطاقة الدخول ═══════════════════════ */
 
-/** الاسم في البذرة هو اسم المنصب نفسه؛ لا يُعرض اسماً لشخص حتى يُدخله مدير النظام */
-const isPlaceholderName = (p: Person) => p.name === p.title || p.title.includes(p.name);
 const isPlaceholderPhone = (phone: string) => !phone || phone === "—" || phone.startsWith("0930 000");
 
 function CardSheet({ id, onClose }: { id: string; onClose: () => void }) {
   const { people, issueCard, toast } = useStore();
   const p = people.find((x) => x.id === id);
-  const [name, setName] = useState(p && !isPlaceholderName(p) ? p.name : "");
+  // الاسم في البذرة هو اسم المنصب؛ لا يُعرض اسماً لشخص حتى يُدخله مدير النظام
+  const [name, setName] = useState(p?.namedByAdmin ? p.name : "");
   const [phone, setPhone] = useState(p && !isPlaceholderPhone(p.phone) ? p.phone : "");
   const [busy, setBusy] = useState(false);
   const [card, setCard] = useState<IssuedCard | null>(null);
@@ -259,17 +407,9 @@ function CardSheet({ id, onClose }: { id: string; onClose: () => void }) {
     "البطاقة شخصية، لا تشاركها مع أحد.",
   ].join("\n") : "";
 
-  const download = () => {
-    const a = document.createElement("a");
-    a.href = image;
-    a.download = `بطاقة-${card!.person.name}.png`;
-    a.click();
-  };
+  const download = () => saveImage(image, `بطاقة-${card!.person.name}.png`);
   const print = () => {
-    const w = window.open("", "_blank");
-    if (!w) return toast("اسمح بالنوافذ المنبثقة للطباعة", "warn");
-    w.document.write(`<title>بطاقة الدخول</title><img src="${image}" style="width:100%;max-width:640px;display:block;margin:auto" onload="print()">`);
-    w.document.close();
+    if (!printImage(image, "بطاقة الدخول")) toast("اسمح بالنوافذ المنبثقة للطباعة", "warn");
   };
   const copy = async () => {
     try { await navigator.clipboard.writeText(text); toast("نُسخت معلومات البطاقة"); } catch { toast("تعذّر النسخ", "warn"); }

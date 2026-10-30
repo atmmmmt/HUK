@@ -32,8 +32,6 @@ export interface UserDoc extends Person {
   lastLogin?: string;
   /** يُرفع لإبطال كل جلسات المستخدم القائمة (تغيير كلمة المرور، تسجيل خروج إجباري) */
   sessionVersion?: number;
-  /** الاسم أدخله مدير النظام لشاغل المنصب، فلا تستبدله مطابقة البذرة */
-  namedByAdmin?: boolean;
   lastLoginISO?: string;
   lastOpen?: string;
   lastOpenISO?: string;

@@ -71,6 +71,10 @@ export interface Person {
   clearance: Classification;
   avgResponseHours: number;
   initials: string;
+  /** الاسم أدخله مدير النظام لشاغل المنصب، فلا تستبدله مطابقة البذرة */
+  namedByAdmin?: boolean;
+  /** تواصل شاغل المنصب مع مدير النظام؛ غيابه يعني الاعتماد على namedByAdmin */
+  contacted?: boolean;
 }
 
 export interface Hall {

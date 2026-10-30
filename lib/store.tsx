@@ -62,6 +62,7 @@ interface Store {
   letterAction: (id: string, action: "handle" | "archive") => Promise<void>;
   createUser: (input: NewUserInput) => Promise<void>;
   setUserActive: (id: string, active: boolean) => Promise<void>;
+  setUserContacted: (id: string, contacted: boolean) => Promise<void>;
   issueCard: (id: string, input: { name: string; phone: string }) => Promise<IssuedCard>;
   saveEscalation: (levels: number[]) => Promise<void>;
   documents: UploadedDoc[];
@@ -388,6 +389,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }, active ? "فُعّل الحساب" : "عُطّل الحساب — لا يستطيع صاحبه الدخول");
   }, [guard, patchLocal]);
 
+  const setUserContacted = useCallback(async (id: string, contacted: boolean) => {
+    await guard(async () => {
+      await call(`/api/users/${id}/`, { method: "PATCH", body: JSON.stringify({ contacted }) });
+      patchLocal((b) => ({ ...b, people: b.people.map((p) => (p.id === id ? { ...p, contacted } : p)) }));
+    });
+  }, [guard, patchLocal]);
+
   const issueCard = useCallback(async (id: string, input: { name: string; phone: string }) => {
     let card: IssuedCard | undefined;
     await guard(async () => {
@@ -472,12 +480,12 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     people: boot?.people ?? [],
     escalationLevels: boot?.settings?.escalationLevels ?? null,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, issueCard, saveEscalation,
+    registerLetter, letterAction, createUser, setUserActive, setUserContacted, issueCard, saveEscalation,
     documents: boot?.documents ?? [], files: boot?.files ?? [], uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting,
   }), [boot, anon, error, advance, markSeen, setProgress, setBookingStatus, addNote, markRead, markAllRead,
     resolveDecision, addEntity, toggleEntity, logout, load, toasts, toast, dense, setDense,
     issueAssignment, approveMinutes, assignOutcomes, raiseRequest, respondRequest,
-    registerLetter, letterAction, createUser, setUserActive, issueCard, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);
+    registerLetter, letterAction, createUser, setUserActive, setUserContacted, issueCard, saveEscalation, uploadDocument, submitDecision, scheduleMeeting, rsvpMeeting]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

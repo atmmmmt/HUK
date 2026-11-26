@@ -33,7 +33,7 @@ export default function TabBar({
   const router = useRouter();
   const { me, logout } = useStore();
   const nav = navByPortal[portal].filter((item) => canAccessSection(me, portal, item.key));
-  const executiveBottom = portal === "diwan" && (me.role === "governor" || me.role === "deputy");
+  const executiveBottom = portal === "diwan" && me.role === "deputy";
   const keys = executiveBottom ? ["overview", "followup", "decisions"] : primary[portal];
   const bottomEligible = executiveBottom
     ? nav.filter((n) => !["halls", "calendar", "correspondence"].includes(n.key))

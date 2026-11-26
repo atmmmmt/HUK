@@ -246,7 +246,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
           </button>
 
           <div className="crumbs">
-            <Link href="/" style={{ color: "var(--muted)" }}>البوابات</Link>
+            <Link href="/" style={{ color: "var(--muted)" }}>الرئيسية</Link>
             <span className="dot-sep">/</span>
             <span>{portalLabels[portal].title}</span>
             <span className="dot-sep">/</span>
@@ -357,7 +357,7 @@ export default function Shell({ portal, section }: { portal: Portal; section: st
               <p className="muted" style={{ marginBottom: 16 }}>
                 صفتك الحالية «{me.title}» لا تملك هذا القسم. نطاقك الفعلي هو «{reachLabel(me)}»، وتظهر لك فقط الأدوات المرتبطة باختصاصك.
               </p>
-              <button className="btn primary" onClick={() => router.push("/")}>العودة إلى البوابات</button>
+              <button className="btn primary" onClick={() => router.push("/")}>العودة إلى الرئيسية</button>
             </div>
           ) : (
             <Section portal={portal} section={section} />

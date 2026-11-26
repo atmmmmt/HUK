@@ -780,7 +780,7 @@ body.nav-dragging .btn-add { opacity: 0 !important; transition: opacity .1s; }
   .kpi.interactive:active { transform: scale(.97); }
 
   /* Governor's mobile home: keep summary categories; remove duplicated lower reports. */
-  .role-governor .gov-mobile-hide { display: none !important; }
+  :is(.role-governor, .role-assistant) .gov-mobile-hide { display: none !important; }
 
   /* Notification center is portalled to body, so it never depends on scroll position. */
   .pop-panel {

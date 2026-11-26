@@ -1,31 +1,14 @@
-const CACHE_VERSION = "governorate-exec-v14-executive-tabbar";
-const APP_SHELL = [
-  "/",
-  "/diwan/overview/",
-  "/diwan/assignments/",
-  "/diwan/meetings/",
-  "/diwan/halls/",
-  "/directorates/entities/",
-  "/offline.html",
-  "/manifest.webmanifest",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
-];
+const CACHE_VERSION = "governorate-exec-v15-unified-login";
+const APP_SHELL = ["/offline.html", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_VERSION)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
+  event.waitUntil(caches.keys()
+    .then((keys) => Promise.all(keys.filter((key) => key.startsWith("governorate-exec-") && key !== CACHE_VERSION).map((key) => caches.delete(key))))
+    .then(() => self.clients.claim()));
 });
 
 self.addEventListener("fetch", (event) => {
@@ -33,53 +16,29 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname === "/sw.js") return;
 
-  // Pages: network first, cache only as offline fallback.
+  // لا نخزّن HTML أو بيانات الجلسة أو أي API؛ لا ينبغي إظهار بيانات حساب سابق.
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => (await caches.match(request)) || (await caches.match("/offline.html")))
-    );
+    event.respondWith(fetch(request).catch(async () => (await caches.match("/offline.html")) || Response.error()));
     return;
   }
-
-  // Static assets: return cache immediately and refresh in the background.
-  // This makes the installed PWA feel substantially faster after the first load.
-  if (["style", "script", "image", "font"].includes(request.destination)) {
-    event.respondWith((async () => {
-      const cached = await caches.match(request);
-      const network = fetch(request).then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          void caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      }).catch(() => cached);
-      return cached || network;
-    })());
-    return;
-  }
-
-  // Other GET requests: network first with cache fallback.
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
+  const staticAsset = url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/") || url.pathname.startsWith("/branding/") ||
+    APP_SHELL.includes(url.pathname);
+  if (!staticAsset) return;
+  event.respondWith((async () => {
+    const cached = await caches.match(request);
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        const cache = await caches.open(CACHE_VERSION);
+        await cache.put(request, response.clone()).catch(() => {});
+      }
+      return response;
+    } catch {
+      return cached || Response.error();
+    }
+  })());
 });
-
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

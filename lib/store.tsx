@@ -455,10 +455,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [guard, patchLocal, toast]);
 
   const logout = useCallback(async () => {
-    await call("/api/auth/logout/", { method: "POST" }).catch(() => {});
-    try { sessionStorage.removeItem("gov.usage.open"); } catch { /* محجوب */ }
-    router.replace("/login");
-  }, [router]);
+    try {
+      await call("/api/auth/logout/", { method: "POST" });
+      try { sessionStorage.removeItem("gov.usage.open"); } catch { /* محجوب */ }
+      window.location.replace("/login/");
+    } catch {
+      toast("تعذّر تسجيل الخروج، حاول مجدداً", "warn");
+    }
+  }, [toast]);
 
   const value = useMemo<Store>(() => ({
     ready: !!boot,

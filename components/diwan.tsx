@@ -40,7 +40,7 @@ export function Overview() {
   const showDecisions = canAccessSection(me, "diwan", "decisions");
   const showCorrespondence = canAccessSection(me, "diwan", "correspondence");
   const showMeetings = canAccessSection(me, "diwan", "meetings");
-  const showPerformance = canAccessSection(me, "directorates", "performance");
+  const showPerformance = me.role !== "governor" && me.role !== "assistant" && canAccessSection(me, "directorates", "performance");
 
   return (
     <div className="grid stagger" style={{ gap: 16 }}>

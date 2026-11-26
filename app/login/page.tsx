@@ -1,25 +1,16 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import {
-  ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, TriangleAlert, User,
-} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { ArrowLeft, Eye, EyeOff, LockKeyhole, TriangleAlert, User } from "lucide-react";
 import { DarkStage } from "@/components/motion";
-
-const portalNames = {
-  diwan: "مديرية المحافظة — الديوان",
-  directorates: "مديريات المحافظة",
-  admin: "لوحة التحكم",
-} as const;
+import { canAccessSection } from "@/lib/access";
+import type { Person, Portal } from "@/lib/types";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
+  const portal = params.get("portal");
   const next = params.get("next");
-  const portal = params.get("portal") as "diwan" | "directorates" | "admin" | null;
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -40,12 +31,18 @@ function LoginForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? "تعذّر تسجيل الدخول");
       try { sessionStorage.removeItem("gov.usage.open"); } catch { /* محجوب */ }
-      let seen = "0";
-      try { seen = localStorage.getItem("gov.welcomed") ?? "0"; } catch { /* محجوب */ }
-      const requestedHome = portal && typeof data?.homes?.[portal] === "string" ? data.homes[portal] : null;
-      const home = requestedHome ?? (portal ? data?.home : next ?? data?.home ?? "/");
-      router.replace(seen === "1" ? home : "/welcome/?next=" + encodeURIComponent(home));
-      router.refresh();
+
+      // الروابط القديمة تبقى صالحة، لكن اختيار البوابة ليس مطلوباً.
+      // لا نقبل وجهة خارجية ولا قسماً لا يملكه الدور.
+      const requested = next?.match(/^\/(diwan|directorates|admin)\/([a-z-]+)\/?(?:\?[^#]*)?(?:#.*)?$/);
+      const safeNext = requested && data.user && canAccessSection(data.user as Person, requested[1] as Portal, requested[2]) ? next : null;
+      const requestedHome = portal && ["diwan", "directorates", "admin"].includes(portal) && typeof data.homes?.[portal] === "string" ? data.homes[portal] : null;
+      const home = safeNext ?? requestedHome ?? data.home;
+      if (typeof home !== "string" || !/^\/(diwan|directorates|admin)\/[a-z-]+\/?(?:[?#]|$)/.test(home)) {
+        throw new Error("لا توجد مساحة عمل مخصصة لهذا الحساب. راجع مدير النظام.");
+      }
+      // إعادة تحميل كاملة حتى لا يبقى Store الحساب السابق في الذاكرة.
+      window.location.replace(home);
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذّر تسجيل الدخول");
       setBusy(false);
@@ -53,122 +50,51 @@ function LoginForm() {
   }
 
   return (
-    <div
-      className="auth-card"
-      style={{
-        width: "min(390px, 100%)",
-        padding: "28px 30px 30px",
-        borderRadius: 20,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 22 }}>
-        <div
-          className="auth-crest"
-          style={{ width: 52, height: 52, marginBottom: 0, borderRadius: 13, flex: "none", padding: 5, overflow: "hidden" }}
-        >
-          <img src="/icons/icon.svg" alt="محافظة الرقة" style={{ width: "100%", height: "100%", display: "block", borderRadius: 9 }} />
+    <section className="unified-login" aria-labelledby="login-title">
+      <header className="unified-brand">
+        <img src="/branding/raqqa-mark-white.svg" alt="" width={60} height={60} />
+        <div><b>محافظة الرقة</b><span>Raqqa Governorate</span></div>
+      </header>
+      <div className="auth-card unified-auth-card">
+        <div className="unified-intro">
+          <span className="unified-kicker">منظومة العمل التنفيذي</span>
+          <h1 id="login-title">تسجيل الدخول</h1>
+          <p>أدخل بيانات حسابك للانتقال إلى مساحة عملك.</p>
         </div>
-        {portal && (
-          <Link
-            href="/"
-            className="back-link"
-            style={{ marginBottom: 0, padding: 0, whiteSpace: "nowrap" }}
-          >
-            <ArrowRight size={14} /> تغيير مساحة العمل
-          </Link>
-        )}
+        <form onSubmit={submit} className="unified-form">
+          <div className="field">
+            <label htmlFor="username">اسم المستخدم</label>
+            <div className="input-icon">
+              <User size={19} aria-hidden="true" />
+              <input id="username" autoComplete="username" autoCapitalize="none" spellCheck={false} value={username}
+                onChange={(e) => setUsername(e.target.value)} placeholder="اسم المستخدم" required dir="ltr" />
+            </div>
+          </div>
+          <div className="field">
+            <label htmlFor="password">كلمة المرور</label>
+            <div className="input-icon">
+              <LockKeyhole size={19} aria-hidden="true" />
+              <input id="password" type={show ? "text" : "password"} autoComplete="current-password"
+                value={password} onChange={(e) => setPassword(e.target.value)} placeholder="كلمة المرور" required dir="ltr" />
+              <button type="button" className="in-btn" onClick={() => setShow(!show)}
+                aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={show}>
+                {show ? <EyeOff size={19} /> : <Eye size={19} />}
+              </button>
+            </div>
+          </div>
+          {error && <div className="unified-error" role="alert"><TriangleAlert size={18} /><span>{error}</span></div>}
+          <button type="submit" className="btn primary unified-submit" disabled={busy} aria-busy={busy}>
+            {busy ? "جارٍ التحقق…" : <>تسجيل الدخول <ArrowLeft size={19} /></>}
+          </button>
+        </form>
       </div>
-
-      <div style={{ marginBottom: 24 }}>
-        <p
-          style={{
-            margin: "0 0 8px",
-            color: "var(--gold-700)",
-            fontSize: 13,
-            fontWeight: 700,
-          }}
-        >
-          {portal ? portalNames[portal] : "محافظة الرقة"}
-        </p>
-        <h1 style={{ fontSize: 25, marginBottom: 8 }}>منظومة العمل التنفيذي</h1>
-        <p className="muted" style={{ fontSize: 14, lineHeight: 1.85 }}>
-          أدخل بيانات حسابك للوصول إلى مساحة عملك وفق صلاحياتك.
-        </p>
-      </div>
-
-      <form onSubmit={submit} style={{ display: "grid", gap: 17 }}>
-        <div className="field" style={{ margin: 0 }}>
-          <label htmlFor="username" style={{ display: "block", marginBottom: 7, fontSize: 13, fontWeight: 600 }}>
-            اسم المستخدم
-          </label>
-          <div className="input-icon" style={{ minHeight: 48, borderRadius: 10 }}>
-            <User size={17} />
-            <input
-              id="username"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="governor"
-              required
-              autoFocus
-              dir="ltr"
-              style={{ height: 46 }}
-            />
-          </div>
-        </div>
-
-        <div className="field" style={{ margin: 0 }}>
-          <label htmlFor="password" style={{ display: "block", marginBottom: 7, fontSize: 13, fontWeight: 600 }}>
-            كلمة المرور
-          </label>
-          <div className="input-icon" style={{ minHeight: 48, borderRadius: 10 }}>
-            <LockKeyhole size={17} />
-            <input
-              id="password"
-              type={show ? "text" : "password"}
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              dir="ltr"
-              style={{ height: 46 }}
-            />
-            <button
-              type="button"
-              className="in-btn"
-              onClick={() => setShow(!show)}
-              aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-            >
-              {show ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-
-        {error && (
-          <div
-            className="lock-note"
-            style={{ background: "var(--danger-bg)", borderColor: "#f2cdc8", color: "#8c2a1e", margin: 0 }}
-          >
-            <TriangleAlert size={16} style={{ color: "var(--danger)" }} />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <button
-          className="btn primary"
-          style={{ width: "100%", height: 46, borderRadius: 9, marginTop: 2, justifyContent: "center", gap: 8 }}
-          disabled={busy}
-        >
-          {busy ? "جارٍ التحقق…" : <>دخول <ArrowLeft size={17} /></>}
-        </button>
-      </form>
-    </div>
+    </section>
   );
 }
 
 export default function LoginPage() {
   return (
-    <DarkStage className="auth">
+    <DarkStage className="auth unified-auth">
       <Suspense fallback={<div className="auth-card"><div className="skel" style={{ height: 320 }} /></div>}>
         <LoginForm />
       </Suspense>

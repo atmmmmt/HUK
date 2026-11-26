@@ -1348,3 +1348,67 @@ html[data-theme="dark"] .premium-select-option.selected {
     box-shadow: 0 0 0 2px #0f1c2e;
   }
 }
+
+/* Unified sign-in: shared identity, no portal-selection step. */
+.unified-auth {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 20px max(28px, env(safe-area-inset-bottom, 0px));
+  background: var(--navy-900);
+}
+.unified-auth .stage-shape { display: none; }
+.unified-login { width: min(100%, 420px); min-width: 0; position: relative; z-index: 3; }
+.unified-brand { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 25px; color: #fff; }
+.unified-brand img { object-fit: contain; flex: none; }
+.unified-brand b { display: block; font-size: 20px; line-height: 1.5; font-weight: 800; }
+.unified-brand span { display: block; font-size: 11px; color: #c4d2e4; direction: ltr; text-align: right; }
+.unified-auth-card { width: 100%; padding: 30px; border-radius: 24px; box-sizing: border-box; box-shadow: 0 12px 36px #0003; }
+.unified-intro { margin-bottom: 24px; text-align: center; }
+.unified-kicker { font-size: 13px; font-weight: 700; color: var(--gold-700); }
+.unified-intro h1 { margin: 5px 0 8px; font-size: 27px; line-height: 1.4; }
+.unified-intro p { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.7; }
+.unified-form { display: grid; gap: 17px; }
+.unified-form .field { margin: 0; min-width: 0; }
+.unified-form label { display: block; font-size: 14px; font-weight: 700; margin-bottom: 7px; }
+.unified-form .input-icon { min-height: 54px; height: 54px; border-radius: 12px; padding-inline: 13px; gap: 10px; }
+.unified-form .input-icon input { font-size: 16px; }
+.unified-form .input-icon .in-btn { min-width: 44px; min-height: 44px; }
+.unified-form .unified-submit { width: 100%; min-height: 54px; border-radius: 12px; justify-content: center; gap: 9px; font-size: 15px; font-weight: 800; }
+.unified-error { display: flex; align-items: flex-start; gap: 8px; border: 1px solid #e6aaaa; background: var(--danger-bg); color: var(--danger); padding: 12px; border-radius: 12px; font-size: 13px; overflow-wrap: anywhere; }
+.unified-error svg { flex: none; }
+.unified-form button:focus-visible, .mt-dock-item:focus-visible, .tab:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .unified-auth { padding-inline: 16px; }
+  .unified-auth-card { padding: clamp(19px, 6vw, 28px); border-radius: 22px; }
+  .unified-brand { margin-bottom: 22px; }
+  .unified-brand img { width: 52px; height: 52px; }
+  .unified-brand b { font-size: 18px; }
+  .unified-intro h1 { font-size: 25px; }
+  .unified-intro p { font-size: 13px; }
+  .page-head h1 { font-size: clamp(22px, 6.3vw, 29px) !important; overflow-wrap: anywhere; line-height: 1.4; }
+  .page-head .sub { font-size: 12.5px; line-height: 1.65; }
+  .page-head .page-actions { gap: 6px; }
+  .page-head .chip { white-space: normal; max-width: 100%; }
+  .m-today .mt-smart-dock { grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 6px; padding: 8px; border-radius: 18px; background: var(--card); box-shadow: 0 3px 14px rgba(10,26,48,.08); }
+  .m-today .mt-smart-dock::before { display: none; }
+  .m-today .mt-smart-dock:has(> :nth-child(5)):not(:has(> :nth-child(6))) { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .m-today .mt-smart-dock:has(> :nth-child(5)):not(:has(> :nth-child(6))) > * { grid-column: span 2; }
+  .m-today .mt-smart-dock:has(> :nth-child(5)):not(:has(> :nth-child(6))) > :nth-child(-n+2) { grid-column: span 3; }
+  .m-today .mt-dock-item { min-height: 64px; height: auto; grid-template-rows: 32px auto; gap: 4px; padding: 7px 4px; border-radius: 12px; }
+  .m-today .mt-dock-icon { width: 32px; height: 32px; border-radius: 10px; }
+  .m-today .mt-dock-label { font-size: 12px; line-height: 1.45; overflow: visible; white-space: normal; text-overflow: clip; }
+  .m-today .mt-dock-item.lead { box-shadow: none; }
+  .tabbar { border-radius: 20px; }
+  .tab { min-height: 54px; min-width: 0; font-size: 11px; }
+  .tab > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .more-item { min-height: 54px; }
+}
+@media (max-height: 620px) and (max-width: 900px) {
+  .unified-auth { align-items: start; }
+  .unified-brand { margin-bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .unified-auth-card, .m-today .mt-smart-dock, .tabbar { animation: none !important; }
+  .unified-form *, .m-today .mt-dock-item, .tab { transition: none !important; }
+}

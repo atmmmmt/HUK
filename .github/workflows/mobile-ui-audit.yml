@@ -1,0 +1,67 @@
+name: Mobile UI audit
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mobile-ui-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017/
+      MONGODB_DB: huk_ui_audit
+      UI_AUDIT_URL: http://localhost:3000
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Prepare isolated test environment
+        run: |
+          PASS="$(node -e 'process.stdout.write(require("crypto").randomBytes(24).toString("hex"))')"
+          echo "::add-mask::$PASS"
+          echo "SEED_PASSWORD=$PASS" >> "$GITHUB_ENV"
+          echo "UI_AUDIT_PASSWORD=$PASS" >> "$GITHUB_ENV"
+          SECRET="$(node -e 'process.stdout.write(require("crypto").randomBytes(48).toString("hex"))')"
+          echo "::add-mask::$SECRET"
+          echo "SESSION_SECRET=$SECRET" >> "$GITHUB_ENV"
+      - name: Seed disposable database
+        run: npm run seed
+      - name: Build production application
+        run: npm run build
+      - name: Install browser for the audit
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local application
+        run: |
+          npm start > /tmp/huk-ui-server.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/login/ > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/huk-ui-server.log
+          exit 1
+      - name: Run mobile audit
+        run: node scripts/ui-audit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-ui-report
+          path: ui-audit/
+          if-no-files-found: ignore
+          retention-days: 7
